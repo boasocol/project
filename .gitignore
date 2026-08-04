@@ -1,0 +1,20 @@
+# ===== HT32-IDE 编译产物（必须忽略） =====
+HT32-IDE/HT32/Debug/
+HT32-IDE/HT32/Debug
+
+# ===== IDE 工程配置噪音（可选忽略） =====
+HT32-IDE/HT32/.settings/
+HT32-IDE/HT32/spec.d
+HT32-IDE/HT32/*.launch
+
+# ===== 编译中间产物（兜底） =====
+*.o
+*.d
+*.elf
+*.hex
+*.map
+*.lst
+
+# ===== 系统文件 =====
+Thumbs.db
+Desktop.ini
