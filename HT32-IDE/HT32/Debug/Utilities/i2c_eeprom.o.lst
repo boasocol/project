@@ -1,0 +1,971 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"i2c_eeprom.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common/i2c_eeprom.c"
+  18              		.section	.text.I2C_EEPROM_Init,"ax",%progbits
+  19              		.align	1
+  20              		.global	I2C_EEPROM_Init
+  21              		.syntax unified
+  22              		.code	16
+  23              		.thumb_func
+  25              	I2C_EEPROM_Init:
+  26              	.LFB46:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * @file    i2c_eeprom.c
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * @version $Rev:: 155          $
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * @date    $Date:: 2024-02-16 #$
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * @brief   The source file of i2c_eeprom.
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  **************************************************************************************************
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * @attention
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * Firmware Disclaimer Information
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * 1. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    code, which is supplied by Holtek Semiconductor Inc., (hereinafter referred to as "HOLTEK") i
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    proprietary and confidential intellectual property of HOLTEK, and is protected by copyright l
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    other intellectual property laws.
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * 2. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    code, is confidential information belonging to HOLTEK, and must not be disclosed to any third
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    other than HOLTEK and the customer.
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * 3. The program technical documentation, including the code, is provided "as is" and for customer
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    only. After delivery by HOLTEK, the customer shall use the program technical documentation, i
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    the code, at their own risk. HOLTEK disclaims any expressed, implied or statutory warranties,
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *    the warranties of merchantability, satisfactory quality and fitness for a particular purpose.
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  *
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  * <h2><center>Copyright (C) Holtek Semiconductor Inc. All rights reserved</center></h2>
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****  **************************************************************************************************
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /* Includes ---------------------------------------------------------------------------------------
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** #include "ht32.h"
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** #include "i2c_eeprom.h"
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** #ifndef BOARD_DISABLE_EEPROM
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /** @addtogroup Utilities
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @{
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /** @addtogroup Common
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @{
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /** @addtogroup I2C_EEPROM I2C_EEPROM
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief The source file of i2c_eeprom.
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @{
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /* Private function prototypes --------------------------------------------------------------------
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void _I2C_EEPROM_AckPolling(void);
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /* Global functions -------------------------------------------------------------------------------
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /** @defgroup I2C_EEPROM_Exported_Functions I2C EEPROM exported functions
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @{
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief  Initializes peripherals used by the I2C EEPROM driver.
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @retval None
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   *************************************************************************************************
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void I2C_EEPROM_Init(void)
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** {
+  27              		.loc 1 59 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 24
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* !!! NOTICE !!!
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****      Notice that the local variable (structure) did not have an initial value.
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****      Please confirm that there are no missing members in the parameter settings below in this funct
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitTypeDef I2C_InitStructure;
+  31              		.loc 1 64 3 view .LVU1
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* Enable AFIO & I2C clock                                                                       
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   CKCU_PeripClockConfig_TypeDef CKCUClock = {{0}};
+  32              		.loc 1 67 3 view .LVU2
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   EEPROM_I2C_CLK(CKCUClock) = 1;
+  33              		.loc 1 68 3 view .LVU3
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   CKCUClock.Bit.AFIO        = 1;
+  34              		.loc 1 69 3 view .LVU4
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* !!! NOTICE !!!
+  35              		.loc 1 59 1 is_stmt 0 view .LVU5
+  36 0000 10B5     		push	{r4, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 8
+  39              		.cfi_offset 4, -8
+  40              		.cfi_offset 14, -4
+  41 0002 86B0     		sub	sp, sp, #24
+  42              	.LCFI1:
+  43              		.cfi_def_cfa_offset 32
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   EEPROM_I2C_CLK(CKCUClock) = 1;
+  44              		.loc 1 67 33 view .LVU6
+  45 0004 03AC     		add	r4, sp, #12
+  46 0006 0C22     		movs	r2, #12
+  47 0008 0021     		movs	r1, #0
+  48 000a 2000     		movs	r0, r4
+  49 000c FFF7FEFF 		bl	memset
+  50              	.LVL0:
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   CKCUClock.Bit.AFIO        = 1;
+  51              		.loc 1 68 29 view .LVU7
+  52 0010 114B     		ldr	r3, .L2
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   CKCU_PeripClockConfig(CKCUClock, ENABLE);
+  53              		.loc 1 70 3 view .LVU8
+  54 0012 059A     		ldr	r2, [sp, #20]
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   CKCUClock.Bit.AFIO        = 1;
+  55              		.loc 1 68 29 view .LVU9
+  56 0014 A380     		strh	r3, [r4, #4]
+  57              		.loc 1 70 3 is_stmt 1 view .LVU10
+  58 0016 0499     		ldr	r1, [sp, #16]
+  59 0018 0123     		movs	r3, #1
+  60 001a 0020     		movs	r0, #0
+  61 001c FFF7FEFF 		bl	CKCU_PeripClockConfig
+  62              	.LVL1:
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* Configure I2C SCL pin, I2C SDA pin                                                            
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   HT32_DVB_GPxConfig(EEPROM_I2C_SCL_GPIO_ID, EEPROM_I2C_SCL_AFIO_PIN, EEPROM_I2C_SCL_AFIO_MODE);
+  63              		.loc 1 73 3 view .LVU11
+  64 0020 8021     		movs	r1, #128
+  65 0022 0722     		movs	r2, #7
+  66 0024 0120     		movs	r0, #1
+  67 0026 0902     		lsls	r1, r1, #8
+  68 0028 FFF7FEFF 		bl	AFIO_GPxConfig
+  69              	.LVL2:
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   HT32_DVB_GPxConfig(EEPROM_I2C_SDA_GPIO_ID, EEPROM_I2C_SDA_AFIO_PIN, EEPROM_I2C_SDA_AFIO_MODE);
+  70              		.loc 1 74 3 view .LVU12
+  71 002c 0722     		movs	r2, #7
+  72 002e 0121     		movs	r1, #1
+  73 0030 0220     		movs	r0, #2
+  74 0032 FFF7FEFF 		bl	AFIO_GPxConfig
+  75              	.LVL3:
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* I2C configuration                                                                             
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_GeneralCall = I2C_GENERALCALL_DISABLE;
+  76              		.loc 1 77 3 view .LVU13
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_AddressingMode = I2C_ADDRESSING_7BIT;
+  77              		.loc 1 78 3 view .LVU14
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Acknowledge = I2C_ACK_DISABLE;
+  78              		.loc 1 79 3 view .LVU15
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_OwnAddress = 0x00;
+  79              		.loc 1 80 3 view .LVU16
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Speed = I2C_EEPROM_SPEED;
+  80              		.loc 1 81 3 view .LVU17
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_SpeedOffset = 0;
+  81              		.loc 1 82 3 view .LVU18
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Speed = I2C_EEPROM_SPEED;
+  82              		.loc 1 81 31 is_stmt 0 view .LVU19
+  83 0036 094A     		ldr	r2, .L2+4
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_AddressingMode = I2C_ADDRESSING_7BIT;
+  84              		.loc 1 77 37 view .LVU20
+  85 0038 0023     		movs	r3, #0
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Speed = I2C_EEPROM_SPEED;
+  86              		.loc 1 81 31 view .LVU21
+  87 003a 0192     		str	r2, [sp, #4]
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Speed = I2C_EEPROM_SPEED;
+  88              		.loc 1 80 36 view .LVU22
+  89 003c 6A46     		mov	r2, sp
+  83:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_Init(EEPROM_I2C, &I2C_InitStructure);
+  90              		.loc 1 83 3 view .LVU23
+  91 003e 084C     		ldr	r4, .L2+8
+  92 0040 6946     		mov	r1, sp
+  93 0042 2000     		movs	r0, r4
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_AddressingMode = I2C_ADDRESSING_7BIT;
+  94              		.loc 1 77 37 view .LVU24
+  95 0044 0093     		str	r3, [sp]
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_InitStructure.I2C_Speed = I2C_EEPROM_SPEED;
+  96              		.loc 1 80 36 view .LVU25
+  97 0046 1381     		strh	r3, [r2, #8]
+  98              		.loc 1 83 3 is_stmt 1 view .LVU26
+  99 0048 FFF7FEFF 		bl	I2C_Init
+ 100              	.LVL4:
+  84:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  85:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_Cmd(EEPROM_I2C, ENABLE);
+ 101              		.loc 1 85 3 view .LVU27
+ 102 004c 0121     		movs	r1, #1
+ 103 004e 2000     		movs	r0, r4
+ 104 0050 FFF7FEFF 		bl	I2C_Cmd
+ 105              	.LVL5:
+  86:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 106              		.loc 1 86 1 is_stmt 0 view .LVU28
+ 107 0054 06B0     		add	sp, sp, #24
+ 108              		@ sp needed
+ 109 0056 10BD     		pop	{r4, pc}
+ 110              	.L3:
+ 111              		.align	2
+ 112              	.L2:
+ 113 0058 02400000 		.word	16386
+ 114 005c 801A0600 		.word	400000
+ 115 0060 00900440 		.word	1074040832
+ 116              		.cfi_endproc
+ 117              	.LFE46:
+ 119              		.section	.text._I2C_EEPROM_AckPolling,"ax",%progbits
+ 120              		.align	1
+ 121              		.global	_I2C_EEPROM_AckPolling
+ 122              		.syntax unified
+ 123              		.code	16
+ 124              		.thumb_func
+ 126              	_I2C_EEPROM_AckPolling:
+ 127              	.LFB50:
+  87:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+  88:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+  89:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief  EEPROM page write.
+  90:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  pBuffer : a pointer pointing to data source buffer.
+  91:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  WriteAddr : destination EEPROM address.
+  92:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  NumByteToWrite : numbers of byte.
+  93:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @retval None
+  94:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   *************************************************************************************************
+  95:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void I2C_EEPROM_PageWrite(u8* pBuffer, u8 WriteAddr, u16 NumByteToWrite)
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** {
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   Assert_Param((NumByteToWrite > 0) && ((NumByteToWrite <= (I2C_EEPROM_PAGE_SIZE - (WriteAddr & I2C
+  99:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* acknowledge polling                                                                           
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   _I2C_EEPROM_AckPolling();
+ 102:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 103:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* set EEPROM address                                                                            
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_TX_EMPTY));
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 107:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* page write                                                                                    
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (NumByteToWrite--)
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_TX_EMPTY));
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer++;
+ 113:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 114:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 115:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* end of write                                                                                  
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_TX_EMPTY));
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 119:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief  Write numbers of sequential data to EEPROM.
+ 122:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  pBuffer : a pointer pointing to data source buffer.
+ 123:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  WriteAddr : destination EEPROM address.
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  NumByteToWrite : numbers of byte.
+ 125:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @retval None
+ 126:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   *************************************************************************************************
+ 127:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void I2C_EEPROM_BufferWrite(u8* pBuffer, u8 WriteAddr, u16 NumByteToWrite)
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** {
+ 129:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   u16 Byte2Wr, AvailableByte;
+ 130:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 132:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   Assert_Param(NumByteToWrite <= I2C_EEPROM_CAPACITY);
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 134:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* sequential write                                                                              
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (NumByteToWrite)
+ 136:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     AvailableByte = I2C_EEPROM_PAGE_SIZE - (WriteAddr & I2C_EEPROM_PAGE_MASK);
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_EEPROM_PageWrite(pBuffer, WriteAddr, Byte2Wr);
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer += Byte2Wr;
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     WriteAddr = (WriteAddr + Byte2Wr) & I2C_EEPROM_ADDR_MASK;
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToWrite -= Byte2Wr;
+ 143:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 145:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 146:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+ 147:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief  Read numbers of sequential data from EEPROM.
+ 148:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  pBuffer : a pointer pointing to data destination buffer.
+ 149:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  ReadAddr : source EEPROM address.
+ 150:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @param  NumByteToRead : numbers of byte.
+ 151:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @retval None
+ 152:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   *************************************************************************************************
+ 153:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void I2C_EEPROM_BufferRead(u8* pBuffer, u8 ReadAddr, u16 NumByteToRead)
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** {
+ 155:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 156:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   Assert_Param(NumByteToRead > 0);
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 158:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* acknowledge polling                                                                           
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   _I2C_EEPROM_AckPolling();
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* set EEPROM address                                                                            
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_TX_EMPTY));
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* send read command                                                                             
+ 166:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_TargetAddressConfig(EEPROM_I2C, I2C_EEPROM_DEV_ADDR, I2C_MASTER_READ);
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_SEND_START));
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RECEIVER_MODE));
+ 169:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 170:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* enable master receiver ACK                                                                    
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   if (NumByteToRead > 1)
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 173:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_AckCmd(EEPROM_I2C, ENABLE);
+ 174:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 175:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 176:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* sequential read                                                                               
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (NumByteToRead)
+ 178:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RX_NOT_EMPTY));
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 182:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer++;
+ 183:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToRead--;
+ 184:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 185:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     if (NumByteToRead == 1)
+ 186:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     {
+ 187:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       I2C_AckCmd(EEPROM_I2C, DISABLE);
+ 188:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     }
+ 189:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 190:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 191:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* end of read                                                                                   
+ 192:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 193:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 194:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @}
+ 196:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+ 197:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 198:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /* Private functions ------------------------------------------------------------------------------
+ 199:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /** @defgroup I2C_EEPROM_Private_Functions I2C EEPROM private functions
+ 200:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @{
+ 201:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   */
+ 202:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**************************************************************************************************
+ 203:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @brief  EEPROM acknowledge polling.
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   * @retval None
+ 205:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   *************************************************************************************************
+ 206:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** void _I2C_EEPROM_AckPolling(void)
+ 207:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** {
+ 128              		.loc 1 207 1 is_stmt 1 view -0
+ 129              		.cfi_startproc
+ 130              		@ args = 0, pretend = 0, frame = 0
+ 131              		@ frame_needed = 0, uses_anonymous_args = 0
+ 208:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   u32 reg;
+ 132              		.loc 1 208 3 view .LVU30
+ 209:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 210:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* wait if bus busy                                                                              
+ 211:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (I2C_GetFlagStatus(EEPROM_I2C, I2C_FLAG_BUSBUSY));
+ 133              		.loc 1 211 3 view .LVU31
+ 207:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   u32 reg;
+ 134              		.loc 1 207 1 is_stmt 0 view .LVU32
+ 135 0000 70B5     		push	{r4, r5, r6, lr}
+ 136              	.LCFI2:
+ 137              		.cfi_def_cfa_offset 16
+ 138              		.cfi_offset 4, -16
+ 139              		.cfi_offset 5, -12
+ 140              		.cfi_offset 6, -8
+ 141              		.cfi_offset 14, -4
+ 142              		.loc 1 211 10 discriminator 1 view .LVU33
+ 143 0002 8024     		movs	r4, #128
+ 144 0004 2403     		lsls	r4, r4, #12
+ 145              	.L5:
+ 146              		.loc 1 211 10 is_stmt 1 discriminator 1 view .LVU34
+ 147 0006 2100     		movs	r1, r4
+ 148 0008 0C48     		ldr	r0, .L13
+ 149 000a FFF7FEFF 		bl	I2C_GetFlagStatus
+ 150              	.LVL6:
+ 151 000e 0028     		cmp	r0, #0
+ 152 0010 F9D1     		bne	.L5
+ 212:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 213:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (1)
+ 214:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 215:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     /* send slave address                                                                          
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_TargetAddressConfig(EEPROM_I2C, I2C_EEPROM_DEV_ADDR, I2C_MASTER_WRITE);
+ 217:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 218:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     /* check status                                                                                
+ 219:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     while (1)
+ 220:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     {
+ 221:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       reg = EEPROM_I2C->SR;
+ 222:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 223:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       if (reg & I2C_FLAG_ADRS)
+ 153              		.loc 1 223 15 is_stmt 0 view .LVU35
+ 154 0012 0424     		movs	r4, #4
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 155              		.loc 1 216 5 view .LVU36
+ 156 0014 094D     		ldr	r5, .L13
+ 157              	.L8:
+ 213:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 158              		.loc 1 213 3 is_stmt 1 view .LVU37
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 159              		.loc 1 216 5 view .LVU38
+ 160 0016 0022     		movs	r2, #0
+ 161 0018 5121     		movs	r1, #81
+ 162 001a 0848     		ldr	r0, .L13
+ 163 001c FFF7FEFF 		bl	I2C_TargetAddressConfig
+ 164              	.LVL7:
+ 224:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       {
+ 225:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****         return;
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       }
+ 227:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 228:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       if (reg & I2C_FLAG_RXNACK)
+ 165              		.loc 1 228 15 is_stmt 0 view .LVU39
+ 166 0020 8022     		movs	r2, #128
+ 167 0022 9200     		lsls	r2, r2, #2
+ 168              	.L7:
+ 219:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     {
+ 169              		.loc 1 219 5 is_stmt 1 view .LVU40
+ 221:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 170              		.loc 1 221 7 view .LVU41
+ 221:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 171              		.loc 1 221 11 is_stmt 0 view .LVU42
+ 172 0024 EB68     		ldr	r3, [r5, #12]
+ 173              	.LVL8:
+ 223:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       {
+ 174              		.loc 1 223 7 is_stmt 1 view .LVU43
+ 223:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       {
+ 175              		.loc 1 223 10 is_stmt 0 view .LVU44
+ 176 0026 2342     		tst	r3, r4
+ 177 0028 07D1     		bne	.L12
+ 178              		.loc 1 228 7 is_stmt 1 view .LVU45
+ 179              		.loc 1 228 10 is_stmt 0 view .LVU46
+ 180 002a 1342     		tst	r3, r2
+ 181 002c FAD0     		beq	.L7
+ 229:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       {
+ 230:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****         I2C_ClearFlag(EEPROM_I2C, I2C_FLAG_RXNACK);
+ 182              		.loc 1 230 9 is_stmt 1 view .LVU47
+ 183 002e 8021     		movs	r1, #128
+ 184 0030 0248     		ldr	r0, .L13
+ 185 0032 8900     		lsls	r1, r1, #2
+ 186 0034 FFF7FEFF 		bl	I2C_ClearFlag
+ 187              	.LVL9:
+ 231:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****         break;
+ 188              		.loc 1 231 9 view .LVU48
+ 213:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 189              		.loc 1 213 9 view .LVU49
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 190              		.loc 1 216 5 is_stmt 0 view .LVU50
+ 191 0038 EDE7     		b	.L8
+ 192              	.LVL10:
+ 193              	.L12:
+ 232:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****       }
+ 233:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     }
+ 234:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 235:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 194              		.loc 1 235 1 view .LVU51
+ 195              		@ sp needed
+ 196 003a 70BD     		pop	{r4, r5, r6, pc}
+ 197              	.L14:
+ 198              		.align	2
+ 199              	.L13:
+ 200 003c 00900440 		.word	1074040832
+ 201              		.cfi_endproc
+ 202              	.LFE50:
+ 204              		.section	.text.I2C_EEPROM_PageWrite,"ax",%progbits
+ 205              		.align	1
+ 206              		.global	I2C_EEPROM_PageWrite
+ 207              		.syntax unified
+ 208              		.code	16
+ 209              		.thumb_func
+ 211              	I2C_EEPROM_PageWrite:
+ 212              	.LVL11:
+ 213              	.LFB47:
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 214              		.loc 1 96 1 is_stmt 1 view -0
+ 215              		.cfi_startproc
+ 216              		@ args = 0, pretend = 0, frame = 0
+ 217              		@ frame_needed = 0, uses_anonymous_args = 0
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 218              		.loc 1 96 1 is_stmt 0 view .LVU53
+ 219 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 220              	.LCFI3:
+ 221              		.cfi_def_cfa_offset 24
+ 222              		.cfi_offset 3, -24
+ 223              		.cfi_offset 4, -20
+ 224              		.cfi_offset 5, -16
+ 225              		.cfi_offset 6, -12
+ 226              		.cfi_offset 7, -8
+ 227              		.cfi_offset 14, -4
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 228              		.loc 1 104 11 discriminator 1 view .LVU54
+ 229 0002 E827     		movs	r7, #232
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 230              		.loc 1 96 1 view .LVU55
+ 231 0004 0400     		movs	r4, r0
+ 232 0006 0E00     		movs	r6, r1
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 233              		.loc 1 98 3 is_stmt 1 view .LVU56
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 234              		.loc 1 101 3 view .LVU57
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 235              		.loc 1 96 1 is_stmt 0 view .LVU58
+ 236 0008 1500     		movs	r5, r2
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 237              		.loc 1 101 3 view .LVU59
+ 238 000a FFF7FEFF 		bl	_I2C_EEPROM_AckPolling
+ 239              	.LVL12:
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 240              		.loc 1 104 3 is_stmt 1 view .LVU60
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 241              		.loc 1 104 11 is_stmt 0 discriminator 1 view .LVU61
+ 242 000e BF03     		lsls	r7, r7, #14
+ 243              	.L16:
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 244              		.loc 1 104 10 is_stmt 1 discriminator 1 view .LVU62
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 245              		.loc 1 104 11 is_stmt 0 discriminator 1 view .LVU63
+ 246 0010 3900     		movs	r1, r7
+ 247 0012 1348     		ldr	r0, .L27
+ 248 0014 FFF7FEFF 		bl	I2C_CheckStatus
+ 249              	.LVL13:
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, WriteAddr);
+ 250              		.loc 1 104 10 discriminator 1 view .LVU64
+ 251 0018 0028     		cmp	r0, #0
+ 252 001a F9D0     		beq	.L16
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 253              		.loc 1 105 3 is_stmt 1 view .LVU65
+ 254 001c 3100     		movs	r1, r6
+ 255 001e 1048     		ldr	r0, .L27
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 256              		.loc 1 110 13 is_stmt 0 discriminator 1 view .LVU66
+ 257 0020 E826     		movs	r6, #232
+ 258              	.LVL14:
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 259              		.loc 1 105 3 view .LVU67
+ 260 0022 FFF7FEFF 		bl	I2C_SendData
+ 261              	.LVL15:
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 262              		.loc 1 108 3 is_stmt 1 view .LVU68
+ 263 0026 6519     		adds	r5, r4, r5
+ 264              	.LVL16:
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 265              		.loc 1 110 13 is_stmt 0 discriminator 1 view .LVU69
+ 266 0028 B603     		lsls	r6, r6, #14
+ 267              	.LVL17:
+ 268              	.L17:
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 269              		.loc 1 108 10 is_stmt 1 view .LVU70
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 270              		.loc 1 108 10 is_stmt 0 view .LVU71
+ 271 002a AC42     		cmp	r4, r5
+ 272 002c 0BD1     		bne	.L18
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 273              		.loc 1 116 11 discriminator 1 view .LVU72
+ 274 002e E824     		movs	r4, #232
+ 275              	.LVL18:
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 276              		.loc 1 116 11 discriminator 1 view .LVU73
+ 277 0030 A403     		lsls	r4, r4, #14
+ 278              	.L19:
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 279              		.loc 1 116 10 is_stmt 1 discriminator 1 view .LVU74
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 280              		.loc 1 116 11 is_stmt 0 discriminator 1 view .LVU75
+ 281 0032 2100     		movs	r1, r4
+ 282 0034 0A48     		ldr	r0, .L27
+ 283 0036 FFF7FEFF 		bl	I2C_CheckStatus
+ 284              	.LVL19:
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_GenerateSTOP(EEPROM_I2C);
+ 285              		.loc 1 116 10 discriminator 1 view .LVU76
+ 286 003a 0028     		cmp	r0, #0
+ 287 003c F9D0     		beq	.L19
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 288              		.loc 1 117 3 is_stmt 1 view .LVU77
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 289              		.loc 1 118 1 is_stmt 0 view .LVU78
+ 290              		@ sp needed
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 291              		.loc 1 117 3 view .LVU79
+ 292 003e 0848     		ldr	r0, .L27
+ 293 0040 FFF7FEFF 		bl	I2C_GenerateSTOP
+ 294              	.LVL20:
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 295              		.loc 1 118 1 view .LVU80
+ 296 0044 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 297              	.LVL21:
+ 298              	.L18:
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 299              		.loc 1 110 12 is_stmt 1 discriminator 1 view .LVU81
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 300              		.loc 1 110 13 is_stmt 0 discriminator 1 view .LVU82
+ 301 0046 3100     		movs	r1, r6
+ 302 0048 0548     		ldr	r0, .L27
+ 303 004a FFF7FEFF 		bl	I2C_CheckStatus
+ 304              	.LVL22:
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_SendData(EEPROM_I2C, *pBuffer);
+ 305              		.loc 1 110 12 discriminator 1 view .LVU83
+ 306 004e 0028     		cmp	r0, #0
+ 307 0050 F9D0     		beq	.L18
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer++;
+ 308              		.loc 1 111 5 is_stmt 1 view .LVU84
+ 309 0052 2178     		ldrb	r1, [r4]
+ 310 0054 0248     		ldr	r0, .L27
+ 311 0056 FFF7FEFF 		bl	I2C_SendData
+ 312              	.LVL23:
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 313              		.loc 1 112 5 view .LVU85
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 314              		.loc 1 112 12 is_stmt 0 view .LVU86
+ 315 005a 0134     		adds	r4, r4, #1
+ 316              	.LVL24:
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 317              		.loc 1 112 12 view .LVU87
+ 318 005c E5E7     		b	.L17
+ 319              	.L28:
+ 320 005e C046     		.align	2
+ 321              	.L27:
+ 322 0060 00900440 		.word	1074040832
+ 323              		.cfi_endproc
+ 324              	.LFE47:
+ 326              		.section	.text.I2C_EEPROM_BufferWrite,"ax",%progbits
+ 327              		.align	1
+ 328              		.global	I2C_EEPROM_BufferWrite
+ 329              		.syntax unified
+ 330              		.code	16
+ 331              		.thumb_func
+ 333              	I2C_EEPROM_BufferWrite:
+ 334              	.LVL25:
+ 335              	.LFB48:
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   u16 Byte2Wr, AvailableByte;
+ 336              		.loc 1 128 1 is_stmt 1 view -0
+ 337              		.cfi_startproc
+ 338              		@ args = 0, pretend = 0, frame = 0
+ 339              		@ frame_needed = 0, uses_anonymous_args = 0
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   u16 Byte2Wr, AvailableByte;
+ 340              		.loc 1 128 1 is_stmt 0 view .LVU89
+ 341 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 342              	.LCFI4:
+ 343              		.cfi_def_cfa_offset 24
+ 344              		.cfi_offset 3, -24
+ 345              		.cfi_offset 4, -20
+ 346              		.cfi_offset 5, -16
+ 347              		.cfi_offset 6, -12
+ 348              		.cfi_offset 7, -8
+ 349              		.cfi_offset 14, -4
+ 350 0002 0700     		movs	r7, r0
+ 351 0004 0D00     		movs	r5, r1
+ 352 0006 1600     		movs	r6, r2
+ 129:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 353              		.loc 1 129 3 is_stmt 1 view .LVU90
+ 132:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 354              		.loc 1 132 3 view .LVU91
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 355              		.loc 1 135 3 view .LVU92
+ 356              	.LVL26:
+ 357              	.L30:
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 358              		.loc 1 135 10 view .LVU93
+ 359 0008 002E     		cmp	r6, #0
+ 360 000a 00D1     		bne	.L32
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 361              		.loc 1 144 1 is_stmt 0 view .LVU94
+ 362              		@ sp needed
+ 363              	.LVL27:
+ 364              	.LVL28:
+ 365              	.LVL29:
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 366              		.loc 1 144 1 view .LVU95
+ 367 000c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 368              	.LVL30:
+ 369              	.L32:
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 370              		.loc 1 137 5 is_stmt 1 view .LVU96
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_EEPROM_PageWrite(pBuffer, WriteAddr, Byte2Wr);
+ 371              		.loc 1 138 5 view .LVU97
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 372              		.loc 1 137 55 is_stmt 0 view .LVU98
+ 373 000e 0723     		movs	r3, #7
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 374              		.loc 1 137 19 view .LVU99
+ 375 0010 0822     		movs	r2, #8
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 376              		.loc 1 137 55 view .LVU100
+ 377 0012 2B40     		ands	r3, r5
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     Byte2Wr = (NumByteToWrite > AvailableByte)?(AvailableByte):(NumByteToWrite);
+ 378              		.loc 1 137 19 view .LVU101
+ 379 0014 D31A     		subs	r3, r2, r3
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_EEPROM_PageWrite(pBuffer, WriteAddr, Byte2Wr);
+ 380              		.loc 1 138 13 view .LVU102
+ 381 0016 1C1C     		adds	r4, r3, #0
+ 382 0018 9BB2     		uxth	r3, r3
+ 383 001a B342     		cmp	r3, r6
+ 384 001c 00D9     		bls	.L31
+ 385 001e 341C     		adds	r4, r6, #0
+ 386              	.L31:
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     I2C_EEPROM_PageWrite(pBuffer, WriteAddr, Byte2Wr);
+ 387              		.loc 1 138 13 view .LVU103
+ 388 0020 A4B2     		uxth	r4, r4
+ 389              	.LVL31:
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer += Byte2Wr;
+ 390              		.loc 1 139 5 is_stmt 1 view .LVU104
+ 391 0022 2900     		movs	r1, r5
+ 392 0024 3800     		movs	r0, r7
+ 393 0026 2200     		movs	r2, r4
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToWrite -= Byte2Wr;
+ 394              		.loc 1 141 15 is_stmt 0 view .LVU105
+ 395 0028 2D19     		adds	r5, r5, r4
+ 396              	.LVL32:
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 397              		.loc 1 142 20 view .LVU106
+ 398 002a 361B     		subs	r6, r6, r4
+ 399              	.LVL33:
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     pBuffer += Byte2Wr;
+ 400              		.loc 1 139 5 view .LVU107
+ 401 002c FFF7FEFF 		bl	I2C_EEPROM_PageWrite
+ 402              	.LVL34:
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     WriteAddr = (WriteAddr + Byte2Wr) & I2C_EEPROM_ADDR_MASK;
+ 403              		.loc 1 140 5 is_stmt 1 view .LVU108
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     WriteAddr = (WriteAddr + Byte2Wr) & I2C_EEPROM_ADDR_MASK;
+ 404              		.loc 1 140 13 is_stmt 0 view .LVU109
+ 405 0030 3F19     		adds	r7, r7, r4
+ 406              	.LVL35:
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToWrite -= Byte2Wr;
+ 407              		.loc 1 141 5 is_stmt 1 view .LVU110
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToWrite -= Byte2Wr;
+ 408              		.loc 1 141 15 is_stmt 0 view .LVU111
+ 409 0032 EDB2     		uxtb	r5, r5
+ 410              	.LVL36:
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 411              		.loc 1 142 5 is_stmt 1 view .LVU112
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 412              		.loc 1 142 20 is_stmt 0 view .LVU113
+ 413 0034 B6B2     		uxth	r6, r6
+ 414              	.LVL37:
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 415              		.loc 1 142 20 view .LVU114
+ 416 0036 E7E7     		b	.L30
+ 417              		.cfi_endproc
+ 418              	.LFE48:
+ 420              		.section	.text.I2C_EEPROM_BufferRead,"ax",%progbits
+ 421              		.align	1
+ 422              		.global	I2C_EEPROM_BufferRead
+ 423              		.syntax unified
+ 424              		.code	16
+ 425              		.thumb_func
+ 427              	I2C_EEPROM_BufferRead:
+ 428              	.LVL38:
+ 429              	.LFB49:
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 430              		.loc 1 154 1 is_stmt 1 view -0
+ 431              		.cfi_startproc
+ 432              		@ args = 0, pretend = 0, frame = 0
+ 433              		@ frame_needed = 0, uses_anonymous_args = 0
+ 156:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 434              		.loc 1 156 3 view .LVU116
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 435              		.loc 1 159 3 view .LVU117
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 436              		.loc 1 154 1 is_stmt 0 view .LVU118
+ 437 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 438              	.LCFI5:
+ 439              		.cfi_def_cfa_offset 24
+ 440              		.cfi_offset 3, -24
+ 441              		.cfi_offset 4, -20
+ 442              		.cfi_offset 5, -16
+ 443              		.cfi_offset 6, -12
+ 444              		.cfi_offset 7, -8
+ 445              		.cfi_offset 14, -4
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 446              		.loc 1 162 11 discriminator 1 view .LVU119
+ 447 0002 E827     		movs	r7, #232
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   /* check parameters                                                                              
+ 448              		.loc 1 154 1 view .LVU120
+ 449 0004 0500     		movs	r5, r0
+ 450 0006 0E00     		movs	r6, r1
+ 451 0008 1400     		movs	r4, r2
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 452              		.loc 1 159 3 view .LVU121
+ 453 000a FFF7FEFF 		bl	_I2C_EEPROM_AckPolling
+ 454              	.LVL39:
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 455              		.loc 1 162 3 is_stmt 1 view .LVU122
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 456              		.loc 1 162 11 is_stmt 0 discriminator 1 view .LVU123
+ 457 000e BF03     		lsls	r7, r7, #14
+ 458              	.L34:
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 459              		.loc 1 162 10 is_stmt 1 discriminator 1 view .LVU124
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 460              		.loc 1 162 11 is_stmt 0 discriminator 1 view .LVU125
+ 461 0010 3900     		movs	r1, r7
+ 462 0012 1E48     		ldr	r0, .L51
+ 463 0014 FFF7FEFF 		bl	I2C_CheckStatus
+ 464              	.LVL40:
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   I2C_SendData(EEPROM_I2C, ReadAddr);
+ 465              		.loc 1 162 10 discriminator 1 view .LVU126
+ 466 0018 0028     		cmp	r0, #0
+ 467 001a F9D0     		beq	.L34
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 468              		.loc 1 163 3 is_stmt 1 view .LVU127
+ 469 001c 3100     		movs	r1, r6
+ 470 001e 1B48     		ldr	r0, .L51
+ 471 0020 FFF7FEFF 		bl	I2C_SendData
+ 472              	.LVL41:
+ 166:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_SEND_START));
+ 473              		.loc 1 166 3 view .LVU128
+ 474 0024 8022     		movs	r2, #128
+ 475 0026 5121     		movs	r1, #81
+ 476 0028 1848     		ldr	r0, .L51
+ 477 002a D200     		lsls	r2, r2, #3
+ 478 002c FFF7FEFF 		bl	I2C_TargetAddressConfig
+ 479              	.LVL42:
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RECEIVER_MODE));
+ 480              		.loc 1 167 3 view .LVU129
+ 481              	.L35:
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RECEIVER_MODE));
+ 482              		.loc 1 167 10 discriminator 1 view .LVU130
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RECEIVER_MODE));
+ 483              		.loc 1 167 11 is_stmt 0 discriminator 1 view .LVU131
+ 484 0030 1749     		ldr	r1, .L51+4
+ 485 0032 1648     		ldr	r0, .L51
+ 486 0034 FFF7FEFF 		bl	I2C_CheckStatus
+ 487              	.LVL43:
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   while (!I2C_CheckStatus(EEPROM_I2C, I2C_MASTER_RECEIVER_MODE));
+ 488              		.loc 1 167 10 discriminator 1 view .LVU132
+ 489 0038 0028     		cmp	r0, #0
+ 490 003a F9D0     		beq	.L35
+ 491              	.L36:
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 492              		.loc 1 168 10 is_stmt 1 discriminator 1 view .LVU133
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 493              		.loc 1 168 11 is_stmt 0 discriminator 1 view .LVU134
+ 494 003c 1549     		ldr	r1, .L51+8
+ 495 003e 1348     		ldr	r0, .L51
+ 496 0040 FFF7FEFF 		bl	I2C_CheckStatus
+ 497              	.LVL44:
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 498              		.loc 1 168 10 discriminator 1 view .LVU135
+ 499 0044 0028     		cmp	r0, #0
+ 500 0046 F9D0     		beq	.L36
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 501              		.loc 1 171 3 is_stmt 1 view .LVU136
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 502              		.loc 1 171 6 is_stmt 0 view .LVU137
+ 503 0048 012C     		cmp	r4, #1
+ 504 004a 03D9     		bls	.L37
+ 173:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   }
+ 505              		.loc 1 173 5 is_stmt 1 view .LVU138
+ 506 004c 0121     		movs	r1, #1
+ 507 004e 0F48     		ldr	r0, .L51
+ 508 0050 FFF7FEFF 		bl	I2C_AckCmd
+ 509              	.LVL45:
+ 510              	.L37:
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 511              		.loc 1 179 13 is_stmt 0 discriminator 1 view .LVU139
+ 512 0054 C826     		movs	r6, #200
+ 513              	.LVL46:
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 514              		.loc 1 179 13 discriminator 1 view .LVU140
+ 515 0056 7603     		lsls	r6, r6, #13
+ 516              	.LVL47:
+ 517              	.L38:
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 518              		.loc 1 177 10 is_stmt 1 view .LVU141
+ 519 0058 002C     		cmp	r4, #0
+ 520 005a 03D1     		bne	.L39
+ 192:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 521              		.loc 1 192 3 view .LVU142
+ 193:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**
+ 522              		.loc 1 193 1 is_stmt 0 view .LVU143
+ 523              		@ sp needed
+ 192:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** }
+ 524              		.loc 1 192 3 view .LVU144
+ 525 005c 0B48     		ldr	r0, .L51
+ 526 005e FFF7FEFF 		bl	I2C_GenerateSTOP
+ 527              	.LVL48:
+ 528              	.LVL49:
+ 529              	.LVL50:
+ 193:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** /**
+ 530              		.loc 1 193 1 view .LVU145
+ 531 0062 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 532              	.LVL51:
+ 533              	.L39:
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 534              		.loc 1 179 12 is_stmt 1 discriminator 1 view .LVU146
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 535              		.loc 1 179 13 is_stmt 0 discriminator 1 view .LVU147
+ 536 0064 3100     		movs	r1, r6
+ 537 0066 0948     		ldr	r0, .L51
+ 538 0068 FFF7FEFF 		bl	I2C_CheckStatus
+ 539              	.LVL52:
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     *pBuffer = I2C_ReceiveData(EEPROM_I2C);
+ 540              		.loc 1 179 12 discriminator 1 view .LVU148
+ 541 006c 0028     		cmp	r0, #0
+ 542 006e F9D0     		beq	.L39
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 543              		.loc 1 180 5 is_stmt 1 view .LVU149
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 544              		.loc 1 180 16 is_stmt 0 view .LVU150
+ 545 0070 0648     		ldr	r0, .L51
+ 546 0072 FFF7FEFF 		bl	I2C_ReceiveData
+ 547              	.LVL53:
+ 183:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 548              		.loc 1 183 18 view .LVU151
+ 549 0076 013C     		subs	r4, r4, #1
+ 550 0078 A4B2     		uxth	r4, r4
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 551              		.loc 1 180 14 discriminator 1 view .LVU152
+ 552 007a 2870     		strb	r0, [r5]
+ 182:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToRead--;
+ 553              		.loc 1 182 5 is_stmt 1 view .LVU153
+ 182:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     NumByteToRead--;
+ 554              		.loc 1 182 12 is_stmt 0 view .LVU154
+ 555 007c 0135     		adds	r5, r5, #1
+ 556              	.LVL54:
+ 183:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c **** 
+ 557              		.loc 1 183 5 is_stmt 1 view .LVU155
+ 185:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     {
+ 558              		.loc 1 185 5 view .LVU156
+ 185:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     {
+ 559              		.loc 1 185 8 is_stmt 0 view .LVU157
+ 560 007e 012C     		cmp	r4, #1
+ 561 0080 EAD1     		bne	.L38
+ 187:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****     }
+ 562              		.loc 1 187 7 is_stmt 1 view .LVU158
+ 563 0082 0021     		movs	r1, #0
+ 564 0084 0148     		ldr	r0, .L51
+ 565 0086 FFF7FEFF 		bl	I2C_AckCmd
+ 566              	.LVL55:
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/utilities/common\i2c_eeprom.c ****   {
+ 567              		.loc 1 177 10 view .LVU159
+ 568 008a EBE7     		b	.L39
+ 569              	.L52:
+ 570              		.align	2
+ 571              	.L51:
+ 572 008c 00900440 		.word	1074040832
+ 573 0090 01001800 		.word	1572865
+ 574 0094 04001800 		.word	1572868
+ 575              		.cfi_endproc
+ 576              	.LFE49:
+ 578              		.text
+ 579              	.Letext0:
+ 580              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 581              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 582              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 583              		.file 5 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_ckcu.h"
+ 584              		.file 6 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_gpio.h"
+ 585              		.file 7 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_i2c.h"
+ 586              		.file 8 "<built-in>"
+DEFINED SYMBOLS
+                            *ABS*:00000000 i2c_eeprom.c
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:19     .text.I2C_EEPROM_Init:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:25     .text.I2C_EEPROM_Init:00000000 I2C_EEPROM_Init
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:113    .text.I2C_EEPROM_Init:00000058 $d
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:120    .text._I2C_EEPROM_AckPolling:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:126    .text._I2C_EEPROM_AckPolling:00000000 _I2C_EEPROM_AckPolling
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:200    .text._I2C_EEPROM_AckPolling:0000003c $d
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:205    .text.I2C_EEPROM_PageWrite:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:211    .text.I2C_EEPROM_PageWrite:00000000 I2C_EEPROM_PageWrite
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:322    .text.I2C_EEPROM_PageWrite:00000060 $d
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:327    .text.I2C_EEPROM_BufferWrite:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:333    .text.I2C_EEPROM_BufferWrite:00000000 I2C_EEPROM_BufferWrite
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:421    .text.I2C_EEPROM_BufferRead:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:427    .text.I2C_EEPROM_BufferRead:00000000 I2C_EEPROM_BufferRead
+C:\Users\q3112\AppData\Local\Temp\cccNiGv9.s:572    .text.I2C_EEPROM_BufferRead:0000008c $d
+
+UNDEFINED SYMBOLS
+memset
+CKCU_PeripClockConfig
+AFIO_GPxConfig
+I2C_Init
+I2C_Cmd
+I2C_GetFlagStatus
+I2C_TargetAddressConfig
+I2C_ClearFlag
+I2C_CheckStatus
+I2C_SendData
+I2C_GenerateSTOP
+I2C_AckCmd
+I2C_ReceiveData

@@ -1,0 +1,251 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"ht32_serial.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src/ht32_serial.c"
+  18              		.section	.text.SERIAL_PutChar,"ax",%progbits
+  19              		.align	1
+  20              		.global	SERIAL_PutChar
+  21              		.syntax unified
+  22              		.code	16
+  23              		.thumb_func
+  25              	SERIAL_PutChar:
+  26              	.LVL0:
+  27              	.LFB46:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /**************************************************************************************************
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @file    ht32_serial.c
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @version $Rev:: 248          $
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @date    $Date:: 2024-02-27 #$
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @brief   This file provides all the Low level serial routines for HT32.
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  **************************************************************************************************
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @attention
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * Firmware Disclaimer Information
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * 1. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    code, which is supplied by Holtek Semiconductor Inc., (hereinafter referred to as "HOLTEK") i
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    proprietary and confidential intellectual property of HOLTEK, and is protected by copyright l
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    other intellectual property laws.
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * 2. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    code, is confidential information belonging to HOLTEK, and must not be disclosed to any third
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    other than HOLTEK and the customer.
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * 3. The program technical documentation, including the code, is provided "as is" and for customer
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    only. After delivery by HOLTEK, the customer shall use the program technical documentation, i
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    the code, at their own risk. HOLTEK disclaims any expressed, implied or statutory warranties,
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *    the warranties of merchantability, satisfactory quality and fitness for a particular purpose.
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  *
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * <h2><center>Copyright (C) Holtek Semiconductor Inc. All rights reserved</center></h2>
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  **************************************************************************************************
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /* Includes ---------------------------------------------------------------------------------------
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #include "ht32.h"
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #include "ht32_board.h"
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #if (_RETARGET == 1)
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /** @addtogroup HT32_Peripheral_Driver HT32 Peripheral Driver
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   * @{
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   */
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /** @defgroup SERIAL SERIAL
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   * @brief Serial related functions
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   * @{
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   */
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /* Global functions -------------------------------------------------------------------------------
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /** @defgroup SERIAL_Exported_Functions Serial exported functions
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   * @{
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   */
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #ifdef RETARGET_IS_UART
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #if (RETARGET_INT_MODE == 1)
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** __ALIGN4 static u8 uSerialBuffer[RETARGET_INT_BUFFER_SIZE];
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** static vu32 uReadIndex;
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** static vu32 uWriteIndex;
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #define IS_BUFFER_FULL(LEN)        (((uWriteIndex + LEN) >= RETARGET_INT_BUFFER_SIZE) ? ((uWriteInd
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #define IS_BUFFER_EMPTY()          (uReadIndex == uWriteIndex)
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #define BUFFER_FREE_LEN()          ((uWriteIndex >= uReadIndex) ? (RETARGET_INT_BUFFER_SIZE - uWrit
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /**************************************************************************************************
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @brief UART IRQ handler.
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @retval None
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  **************************************************************************************************
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** void RETARGET_UART_IRQHandler(void)
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** {
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   if (((RETARGET_USART_PORT->SR) & USART_FLAG_TXDE))
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   {
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     if (IS_BUFFER_EMPTY())
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     {
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****       RETARGET_USART_PORT->IER &= ~USART_INT_TXDE;
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     }
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     else
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     {
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****       RETARGET_USART_PORT->DR = uSerialBuffer[uReadIndex++];
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****       if (uReadIndex == RETARGET_INT_BUFFER_SIZE)
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****       {
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****         uReadIndex = 0;
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****       }
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     }
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   }
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** }
+  83:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #endif
+  84:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  85:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /**************************************************************************************************
+  86:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @brief Put char to USART.
+  87:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @param ch: The char put to USART.
+  88:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @retval The char put to USART.
+  89:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  **************************************************************************************************
+  90:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** u32 SERIAL_PutChar(u32 ch)
+  91:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** {
+  28              		.loc 1 91 1 view -0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 0
+  31              		@ frame_needed = 0, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  92:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #if (RETARGET_INT_MODE == 1)
+  93:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  94:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while (IS_BUFFER_FULL(1));
+  95:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   uSerialBuffer[uWriteIndex++] = ch;
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   if (uWriteIndex == RETARGET_INT_BUFFER_SIZE)
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   {
+  99:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****     uWriteIndex = 0;
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   }
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   RETARGET_USART_PORT->IER |= USART_INT_TXDE;
+ 102:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+ 103:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #else
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   RETARGET_USART_PORT->DR = (u8)ch;
+  33              		.loc 1 105 3 view .LVU1
+  34              		.loc 1 105 27 is_stmt 0 view .LVU2
+  35 0000 044B     		ldr	r3, .L5
+  36 0002 C2B2     		uxtb	r2, r0
+  37 0004 1A60     		str	r2, [r3]
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while ((RETARGET_USART_PORT->SR & USART_FLAG_TXC) == RESET)
+  38              		.loc 1 106 3 is_stmt 1 view .LVU3
+  39              		.loc 1 106 35 is_stmt 0 discriminator 1 view .LVU4
+  40 0006 8022     		movs	r2, #128
+  41 0008 5200     		lsls	r2, r2, #1
+  42              	.L2:
+ 107:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   {
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   }
+  43              		.loc 1 108 3 is_stmt 1 view .LVU5
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while ((RETARGET_USART_PORT->SR & USART_FLAG_TXC) == RESET)
+  44              		.loc 1 106 53 discriminator 1 view .LVU6
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while ((RETARGET_USART_PORT->SR & USART_FLAG_TXC) == RESET)
+  45              		.loc 1 106 30 is_stmt 0 discriminator 1 view .LVU7
+  46 000a 1969     		ldr	r1, [r3, #16]
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while ((RETARGET_USART_PORT->SR & USART_FLAG_TXC) == RESET)
+  47              		.loc 1 106 53 discriminator 1 view .LVU8
+  48 000c 1142     		tst	r1, r2
+  49 000e FCD0     		beq	.L2
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** #endif
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   return ch;
+  50              		.loc 1 112 3 is_stmt 1 view .LVU9
+ 113:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** }
+  51              		.loc 1 113 1 is_stmt 0 view .LVU10
+  52              		@ sp needed
+  53 0010 7047     		bx	lr
+  54              	.L6:
+  55 0012 C046     		.align	2
+  56              	.L5:
+  57 0014 00100040 		.word	1073745920
+  58              		.cfi_endproc
+  59              	.LFE46:
+  61              		.section	.text.SERIAL_GetChar,"ax",%progbits
+  62              		.align	1
+  63              		.global	SERIAL_GetChar
+  64              		.syntax unified
+  65              		.code	16
+  66              		.thumb_func
+  68              	SERIAL_GetChar:
+  69              	.LFB47:
+ 114:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** 
+ 115:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** /**************************************************************************************************
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @brief Get char from USART.
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  * @retval The char got from USART.
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****  **************************************************************************************************
+ 119:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** u32 SERIAL_GetChar(void)
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** {
+  70              		.loc 1 120 1 is_stmt 1 view -0
+  71              		.cfi_startproc
+  72              		@ args = 0, pretend = 0, frame = 0
+  73              		@ frame_needed = 0, uses_anonymous_args = 0
+  74 0000 10B5     		push	{r4, lr}
+  75              	.LCFI0:
+  76              		.cfi_def_cfa_offset 8
+  77              		.cfi_offset 4, -8
+  78              		.cfi_offset 14, -4
+  79              	.L8:
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while (USART_GetFlagStatus(RETARGET_USART_PORT, USART_FLAG_RXDR) == RESET)
+ 122:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   {
+ 123:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   }
+  80              		.loc 1 123 3 view .LVU12
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while (USART_GetFlagStatus(RETARGET_USART_PORT, USART_FLAG_RXDR) == RESET)
+  81              		.loc 1 121 68 discriminator 1 view .LVU13
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while (USART_GetFlagStatus(RETARGET_USART_PORT, USART_FLAG_RXDR) == RESET)
+  82              		.loc 1 121 10 is_stmt 0 discriminator 1 view .LVU14
+  83 0002 2021     		movs	r1, #32
+  84 0004 0448     		ldr	r0, .L11
+  85 0006 FFF7FEFF 		bl	USART_GetFlagStatus
+  86              	.LVL1:
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   while (USART_GetFlagStatus(RETARGET_USART_PORT, USART_FLAG_RXDR) == RESET)
+  87              		.loc 1 121 68 discriminator 1 view .LVU15
+  88 000a 0028     		cmp	r0, #0
+  89 000c F9D0     		beq	.L8
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   return USART_ReceiveData(RETARGET_USART_PORT);
+  90              		.loc 1 124 3 is_stmt 1 view .LVU16
+ 125:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c **** }
+  91              		.loc 1 125 1 is_stmt 0 view .LVU17
+  92              		@ sp needed
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32_serial.c ****   return USART_ReceiveData(RETARGET_USART_PORT);
+  93              		.loc 1 124 10 view .LVU18
+  94 000e 0248     		ldr	r0, .L11
+  95 0010 FFF7FEFF 		bl	USART_ReceiveData
+  96              	.LVL2:
+  97              		.loc 1 125 1 view .LVU19
+  98 0014 10BD     		pop	{r4, pc}
+  99              	.L12:
+ 100 0016 C046     		.align	2
+ 101              	.L11:
+ 102 0018 00100040 		.word	1073745920
+ 103              		.cfi_endproc
+ 104              	.LFE47:
+ 106              		.text
+ 107              	.Letext0:
+ 108              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 109              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 110              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 111              		.file 5 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_usart.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 ht32_serial.c
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:19     .text.SERIAL_PutChar:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:25     .text.SERIAL_PutChar:00000000 SERIAL_PutChar
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:57     .text.SERIAL_PutChar:00000014 $d
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:62     .text.SERIAL_GetChar:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:68     .text.SERIAL_GetChar:00000000 SERIAL_GetChar
+C:\Users\q3112\AppData\Local\Temp\cc5PsurT.s:102    .text.SERIAL_GetChar:00000018 $d
+
+UNDEFINED SYMBOLS
+USART_GetFlagStatus
+USART_ReceiveData

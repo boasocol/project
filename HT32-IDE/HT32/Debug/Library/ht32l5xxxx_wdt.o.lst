@@ -1,0 +1,1085 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"ht32l5xxxx_wdt.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src/ht32l5xxxx_wdt
+  18              		.section	.text.WDT_DeInit,"ax",%progbits
+  19              		.align	1
+  20              		.global	WDT_DeInit
+  21              		.syntax unified
+  22              		.code	16
+  23              		.thumb_func
+  25              	WDT_DeInit:
+  26              	.LFB46:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @file    ht32l5xxxx_wdt.c
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @version $Rev:: 433          $
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @date    $Date:: 2024-06-24 #$
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief   This file provides all the WDT firmware functions.
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @attention
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * Firmware Disclaimer Information
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * 1. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    code, which is supplied by Holtek Semiconductor Inc., (hereinafter referred to as "HOLTEK") i
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    proprietary and confidential intellectual property of HOLTEK, and is protected by copyright l
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    other intellectual property laws.
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * 2. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    code, is confidential information belonging to HOLTEK, and must not be disclosed to any third
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    other than HOLTEK and the customer.
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * 3. The program technical documentation, including the code, is provided "as is" and for customer
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    only. After delivery by HOLTEK, the customer shall use the program technical documentation, i
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    the code, at their own risk. HOLTEK disclaims any expressed, implied or statutory warranties,
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *    the warranties of merchantability, satisfactory quality and fitness for a particular purpose.
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * <h2><center>Copyright (C) Holtek Semiconductor Inc. All rights reserved</center></h2>
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* Includes ---------------------------------------------------------------------------------------
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #include "ht32l5xxxx_wdt.h"
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /** @addtogroup HT32L5xxxx_Peripheral_Driver HT32L5xxxx Peripheral Driver
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @{
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   */
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /** @defgroup WDT WDT
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @brief WDT driver modules
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @{
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   */
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* Private constants ------------------------------------------------------------------------------
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /** @defgroup WDT_Private_Define WDT private definitions
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @{
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   */
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* WDT Restart Key                                                                                 
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define RESTART_KEY            ((u32)0x5FA00000)
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* WDT Protect mask                                                                                
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define PRCT_SET               ((u32)0x0000CA35)
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define PRCT_RESET             ((u32)0x000035CA)
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* WDT WDTRSTEN mask                                                                               
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTRETEN_SET     ((u32)0x00002000)
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTRETEN_RESET   ((u32)0xFFFFDFFF)
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* WDT WDTEN mask                                                                                  
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTEN_SET        ((u32)0x00010000)
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTEN_RESET      ((u32)0xFFFEFFFF)
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* WDT WDTLOCK mask                                                                                
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTLOCK_SET      ((u32)0x00000010)
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** #define MODE0_WDTLOCK_RESET    ((u32)0x00000000)
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @}
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   */
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /* Global functions -------------------------------------------------------------------------------
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /** @defgroup WDT_Exported_Functions WDT exported functions
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   * @{
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   */
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Deinitialize the WDT peripheral registers to their default reset values.
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_DeInit(void)
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+  27              		.loc 1 77 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 16
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset_TypeDef RSTCUReset = {{0}};
+  31              		.loc 1 78 3 view .LVU1
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset_TypeDef RSTCUReset = {{0}};
+  32              		.loc 1 77 1 is_stmt 0 view .LVU2
+  33 0000 1FB5     		push	{r0, r1, r2, r3, r4, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 24
+  36              		.cfi_offset 0, -24
+  37              		.cfi_offset 1, -20
+  38              		.cfi_offset 2, -16
+  39              		.cfi_offset 3, -12
+  40              		.cfi_offset 4, -8
+  41              		.cfi_offset 14, -4
+  42              		.loc 1 78 28 view .LVU3
+  43 0002 01AC     		add	r4, sp, #4
+  44 0004 0C22     		movs	r2, #12
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCUReset.Bit.WDT = 1;
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset(RSTCUReset, ENABLE);
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+  45              		.loc 1 82 1 view .LVU4
+  46              		@ sp needed
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  47              		.loc 1 78 28 view .LVU5
+  48 0006 0021     		movs	r1, #0
+  49 0008 2000     		movs	r0, r4
+  50 000a FFF7FEFF 		bl	memset
+  51              	.LVL0:
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset(RSTCUReset, ENABLE);
+  52              		.loc 1 80 3 is_stmt 1 view .LVU6
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset(RSTCUReset, ENABLE);
+  53              		.loc 1 80 22 is_stmt 0 view .LVU7
+  54 000e 1023     		movs	r3, #16
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+  55              		.loc 1 81 3 view .LVU8
+  56 0010 0020     		movs	r0, #0
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   RSTCU_PeripReset(RSTCUReset, ENABLE);
+  57              		.loc 1 80 22 view .LVU9
+  58 0012 2372     		strb	r3, [r4, #8]
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+  59              		.loc 1 81 3 is_stmt 1 view .LVU10
+  60 0014 0100     		movs	r1, r0
+  61 0016 039A     		ldr	r2, [sp, #12]
+  62 0018 0F3B     		subs	r3, r3, #15
+  63 001a FFF7FEFF 		bl	RSTCU_PeripReset
+  64              	.LVL1:
+  65              		.loc 1 82 1 is_stmt 0 view .LVU11
+  66 001e 1FBD     		pop	{r0, r1, r2, r3, r4, pc}
+  67              		.cfi_endproc
+  68              	.LFE46:
+  70              		.section	.text.WDT_Cmd,"ax",%progbits
+  71              		.align	1
+  72              		.global	WDT_Cmd
+  73              		.syntax unified
+  74              		.code	16
+  75              		.thumb_func
+  77              	WDT_Cmd:
+  78              	.LVL2:
+  79              	.LFB47:
+  83:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  84:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+  85:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Enable or Disable the WDT.
+  86:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param NewState: This parameter can be ENABLE or DISABLE.
+  87:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+  88:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+  89:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_Cmd(ControlStatus NewState)
+  90:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+  80              		.loc 1 90 1 is_stmt 1 view -0
+  81              		.cfi_startproc
+  82              		@ args = 0, pretend = 0, frame = 0
+  83              		@ frame_needed = 0, uses_anonymous_args = 0
+  84              		@ link register save eliminated.
+  91:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+  92:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_CONTROL_STATUS(NewState));
+  85              		.loc 1 92 3 view .LVU13
+  93:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+  94:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (NewState != DISABLE)
+  86              		.loc 1 94 3 view .LVU14
+  87 0000 064B     		ldr	r3, .L6
+  88              		.loc 1 94 6 is_stmt 0 view .LVU15
+  89 0002 0028     		cmp	r0, #0
+  90 0004 05D0     		beq	.L3
+  95:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->MR0 |= MODE0_WDTEN_SET;
+  91              		.loc 1 96 5 is_stmt 1 view .LVU16
+  92              		.loc 1 96 17 is_stmt 0 view .LVU17
+  93 0006 8022     		movs	r2, #128
+  94              		.loc 1 96 11 view .LVU18
+  95 0008 5968     		ldr	r1, [r3, #4]
+  96              		.loc 1 96 17 view .LVU19
+  97 000a 5202     		lsls	r2, r2, #9
+  98 000c 0A43     		orrs	r2, r1
+  99              	.L5:
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+  99:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->MR0 &= MODE0_WDTEN_RESET;
+ 100              		.loc 1 100 17 view .LVU20
+ 101 000e 5A60     		str	r2, [r3, #4]
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 102:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 102              		.loc 1 102 1 view .LVU21
+ 103              		@ sp needed
+ 104 0010 7047     		bx	lr
+ 105              	.L3:
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 106              		.loc 1 100 5 is_stmt 1 view .LVU22
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 107              		.loc 1 100 11 is_stmt 0 view .LVU23
+ 108 0012 5A68     		ldr	r2, [r3, #4]
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 109              		.loc 1 100 17 view .LVU24
+ 110 0014 0249     		ldr	r1, .L6+4
+ 111 0016 0A40     		ands	r2, r1
+ 112 0018 F9E7     		b	.L5
+ 113              	.L7:
+ 114 001a C046     		.align	2
+ 115              	.L6:
+ 116 001c 00800640 		.word	1074167808
+ 117 0020 FFFFFEFF 		.word	-65537
+ 118              		.cfi_endproc
+ 119              	.LFE47:
+ 121              		.section	.text.WDT_HaltConfig,"ax",%progbits
+ 122              		.align	1
+ 123              		.global	WDT_HaltConfig
+ 124              		.syntax unified
+ 125              		.code	16
+ 126              		.thumb_func
+ 128              	WDT_HaltConfig:
+ 129              	.LVL3:
+ 130              	.LFB48:
+ 103:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Configure the WDT to run or halt in sleep and deep sleep1~3 mode.
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_Mode:
+ 107:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter can be one of the following values:
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_SLEEP_HALT_NONE      : WDT no halt
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_SLEEP_HALT_DEEPSLEEP : WDT halts in deep sleep1~3 mode
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_SLEEP_HALT_ALL       : WDT halts in sleep and deep sleep1~3 mode
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 113:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_HaltConfig(u32 WDT_Mode)
+ 114:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 131              		.loc 1 114 1 is_stmt 1 view -0
+ 132              		.cfi_startproc
+ 133              		@ args = 0, pretend = 0, frame = 0
+ 134              		@ frame_needed = 0, uses_anonymous_args = 0
+ 135              		@ link register save eliminated.
+ 115:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_WDTSHLT_MODE(WDT_Mode));
+ 136              		.loc 1 116 3 view .LVU26
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->MR0 = ((WDT_Mode) | (HT_WDT->MR0 & 0x00013FFF));
+ 137              		.loc 1 118 3 view .LVU27
+ 138              		.loc 1 118 38 is_stmt 0 view .LVU28
+ 139 0000 034A     		ldr	r2, .L9
+ 140              		.loc 1 118 44 view .LVU29
+ 141 0002 0449     		ldr	r1, .L9+4
+ 142              		.loc 1 118 38 view .LVU30
+ 143 0004 5368     		ldr	r3, [r2, #4]
+ 119:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 144              		.loc 1 119 1 view .LVU31
+ 145              		@ sp needed
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 146              		.loc 1 118 44 view .LVU32
+ 147 0006 0B40     		ands	r3, r1
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 148              		.loc 1 118 29 view .LVU33
+ 149 0008 0343     		orrs	r3, r0
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 150              		.loc 1 118 15 view .LVU34
+ 151 000a 5360     		str	r3, [r2, #4]
+ 152              		.loc 1 119 1 view .LVU35
+ 153 000c 7047     		bx	lr
+ 154              	.L10:
+ 155 000e C046     		.align	2
+ 156              	.L9:
+ 157 0010 00800640 		.word	1074167808
+ 158 0014 FF3F0100 		.word	81919
+ 159              		.cfi_endproc
+ 160              	.LFE48:
+ 162              		.section	.text.WDT_ResetCmd,"ax",%progbits
+ 163              		.align	1
+ 164              		.global	WDT_ResetCmd
+ 165              		.syntax unified
+ 166              		.code	16
+ 167              		.thumb_func
+ 169              	WDT_ResetCmd:
+ 170              	.LVL4:
+ 171              	.LFB49:
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 122:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Enable or Disable the WDT Reset when WDT meets underflow or error.
+ 123:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param NewState: This parameter can be ENABLE or DISABLE.
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 125:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 126:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_ResetCmd(ControlStatus NewState)
+ 127:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 172              		.loc 1 127 1 is_stmt 1 view -0
+ 173              		.cfi_startproc
+ 174              		@ args = 0, pretend = 0, frame = 0
+ 175              		@ frame_needed = 0, uses_anonymous_args = 0
+ 176              		@ link register save eliminated.
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 129:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_CONTROL_STATUS(NewState));
+ 177              		.loc 1 129 3 view .LVU37
+ 130:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (NewState != DISABLE)
+ 178              		.loc 1 131 3 view .LVU38
+ 179 0000 064B     		ldr	r3, .L15
+ 180              		.loc 1 131 6 is_stmt 0 view .LVU39
+ 181 0002 0028     		cmp	r0, #0
+ 182 0004 05D0     		beq	.L12
+ 132:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->MR0 |= MODE0_WDTRETEN_SET;
+ 183              		.loc 1 133 5 is_stmt 1 view .LVU40
+ 184              		.loc 1 133 17 is_stmt 0 view .LVU41
+ 185 0006 8022     		movs	r2, #128
+ 186              		.loc 1 133 11 view .LVU42
+ 187 0008 5968     		ldr	r1, [r3, #4]
+ 188              		.loc 1 133 17 view .LVU43
+ 189 000a 9201     		lsls	r2, r2, #6
+ 190 000c 0A43     		orrs	r2, r1
+ 191              	.L14:
+ 134:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+ 136:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->MR0 &= MODE0_WDTRETEN_RESET;
+ 192              		.loc 1 137 17 view .LVU44
+ 193 000e 5A60     		str	r2, [r3, #4]
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 194              		.loc 1 139 1 view .LVU45
+ 195              		@ sp needed
+ 196 0010 7047     		bx	lr
+ 197              	.L12:
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 198              		.loc 1 137 5 is_stmt 1 view .LVU46
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 199              		.loc 1 137 11 is_stmt 0 view .LVU47
+ 200 0012 5A68     		ldr	r2, [r3, #4]
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 201              		.loc 1 137 17 view .LVU48
+ 202 0014 0249     		ldr	r1, .L15+4
+ 203 0016 0A40     		ands	r2, r1
+ 204 0018 F9E7     		b	.L14
+ 205              	.L16:
+ 206 001a C046     		.align	2
+ 207              	.L15:
+ 208 001c 00800640 		.word	1074167808
+ 209 0020 FFDFFFFF 		.word	-8193
+ 210              		.cfi_endproc
+ 211              	.LFE49:
+ 213              		.section	.text.WDT_ProtectCmd,"ax",%progbits
+ 214              		.align	1
+ 215              		.global	WDT_ProtectCmd
+ 216              		.syntax unified
+ 217              		.code	16
+ 218              		.thumb_func
+ 220              	WDT_ProtectCmd:
+ 221              	.LVL5:
+ 222              	.LFB50:
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Enable or Disable protection mechanism of the WDT.
+ 143:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param NewState: This parameter can be ENABLE or DISABLE.
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 145:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 146:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_ProtectCmd(ControlStatus NewState)
+ 147:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 223              		.loc 1 147 1 is_stmt 1 view -0
+ 224              		.cfi_startproc
+ 225              		@ args = 0, pretend = 0, frame = 0
+ 226              		@ frame_needed = 0, uses_anonymous_args = 0
+ 227              		@ link register save eliminated.
+ 148:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 149:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_CONTROL_STATUS(NewState));
+ 228              		.loc 1 149 3 view .LVU50
+ 150:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 151:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (NewState != DISABLE)
+ 229              		.loc 1 151 3 view .LVU51
+ 230 0000 034B     		ldr	r3, .L21
+ 231              		.loc 1 151 6 is_stmt 0 view .LVU52
+ 232 0002 0028     		cmp	r0, #0
+ 233 0004 02D0     		beq	.L18
+ 152:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 153:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->PR = PRCT_SET;
+ 234              		.loc 1 153 5 is_stmt 1 view .LVU53
+ 235              		.loc 1 153 16 is_stmt 0 view .LVU54
+ 236 0006 034A     		ldr	r2, .L21+4
+ 237              	.L20:
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 155:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+ 156:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->PR = PRCT_RESET;
+ 238              		.loc 1 157 16 view .LVU55
+ 239 0008 1A61     		str	r2, [r3, #16]
+ 158:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 240              		.loc 1 159 1 view .LVU56
+ 241              		@ sp needed
+ 242 000a 7047     		bx	lr
+ 243              	.L18:
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 244              		.loc 1 157 5 is_stmt 1 view .LVU57
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 245              		.loc 1 157 16 is_stmt 0 view .LVU58
+ 246 000c 024A     		ldr	r2, .L21+8
+ 247 000e FBE7     		b	.L20
+ 248              	.L22:
+ 249              		.align	2
+ 250              	.L21:
+ 251 0010 00800640 		.word	1074167808
+ 252 0014 35CA0000 		.word	51765
+ 253 0018 CA350000 		.word	13770
+ 254              		.cfi_endproc
+ 255              	.LFE50:
+ 257              		.section	.text.WDT_SetReloadValue,"ax",%progbits
+ 258              		.align	1
+ 259              		.global	WDT_SetReloadValue
+ 260              		.syntax unified
+ 261              		.code	16
+ 262              		.thumb_func
+ 264              	WDT_SetReloadValue:
+ 265              	.LVL6:
+ 266              	.LFB51:
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Set reload value of the WDT.
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_WDTV : specify the WDT Reload value.
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter must be a number between 0 and 0x0FFF
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 166:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_SetReloadValue(u16 WDT_WDTV)
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 267              		.loc 1 168 1 is_stmt 1 view -0
+ 268              		.cfi_startproc
+ 269              		@ args = 0, pretend = 0, frame = 0
+ 270              		@ frame_needed = 0, uses_anonymous_args = 0
+ 271              		@ link register save eliminated.
+ 169:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 170:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_RELOAD(WDT_WDTV));
+ 272              		.loc 1 170 3 view .LVU60
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->MR0 = WDT_WDTV | (HT_WDT->MR0 & 0x0000F000);
+ 273              		.loc 1 172 3 view .LVU61
+ 274              		.loc 1 172 41 is_stmt 0 view .LVU62
+ 275 0000 F021     		movs	r1, #240
+ 173:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 276              		.loc 1 173 1 view .LVU63
+ 277              		@ sp needed
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 278              		.loc 1 172 35 view .LVU64
+ 279 0002 034A     		ldr	r2, .L24
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 280              		.loc 1 172 41 view .LVU65
+ 281 0004 0902     		lsls	r1, r1, #8
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 282              		.loc 1 172 35 view .LVU66
+ 283 0006 5368     		ldr	r3, [r2, #4]
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 284              		.loc 1 172 41 view .LVU67
+ 285 0008 0B40     		ands	r3, r1
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 286              		.loc 1 172 26 view .LVU68
+ 287 000a 0343     		orrs	r3, r0
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 288              		.loc 1 172 15 view .LVU69
+ 289 000c 5360     		str	r3, [r2, #4]
+ 290              		.loc 1 173 1 view .LVU70
+ 291 000e 7047     		bx	lr
+ 292              	.L25:
+ 293              		.align	2
+ 294              	.L24:
+ 295 0010 00800640 		.word	1074167808
+ 296              		.cfi_endproc
+ 297              	.LFE51:
+ 299              		.section	.text.WDT_GetReloadValue,"ax",%progbits
+ 300              		.align	1
+ 301              		.global	WDT_GetReloadValue
+ 302              		.syntax unified
+ 303              		.code	16
+ 304              		.thumb_func
+ 306              	WDT_GetReloadValue:
+ 307              	.LFB52:
+ 174:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 175:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 176:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Get the current reload value of the WDT.
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval WDT reload value between 0 and 0x0FFF
+ 178:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** u16 WDT_GetReloadValue(void)
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 308              		.loc 1 180 1 is_stmt 1 view -0
+ 309              		.cfi_startproc
+ 310              		@ args = 0, pretend = 0, frame = 0
+ 311              		@ frame_needed = 0, uses_anonymous_args = 0
+ 312              		@ link register save eliminated.
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR0 & 0xFFF));
+ 313              		.loc 1 181 3 view .LVU72
+ 314              		.loc 1 181 23 is_stmt 0 view .LVU73
+ 315 0000 024B     		ldr	r3, .L27
+ 182:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 316              		.loc 1 182 1 view .LVU74
+ 317              		@ sp needed
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR0 & 0xFFF));
+ 318              		.loc 1 181 23 view .LVU75
+ 319 0002 5868     		ldr	r0, [r3, #4]
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR0 & 0xFFF));
+ 320              		.loc 1 181 11 view .LVU76
+ 321 0004 0005     		lsls	r0, r0, #20
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR0 & 0xFFF));
+ 322              		.loc 1 181 11 discriminator 1 view .LVU77
+ 323 0006 000D     		lsrs	r0, r0, #20
+ 324              		.loc 1 182 1 view .LVU78
+ 325 0008 7047     		bx	lr
+ 326              	.L28:
+ 327 000a C046     		.align	2
+ 328              	.L27:
+ 329 000c 00800640 		.word	1074167808
+ 330              		.cfi_endproc
+ 331              	.LFE52:
+ 333              		.section	.text.WDT_SetDeltaValue,"ax",%progbits
+ 334              		.align	1
+ 335              		.global	WDT_SetDeltaValue
+ 336              		.syntax unified
+ 337              		.code	16
+ 338              		.thumb_func
+ 340              	WDT_SetDeltaValue:
+ 341              	.LVL7:
+ 342              	.LFB53:
+ 183:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 184:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 185:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Set delta value of the WDT.
+ 186:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_WDTD : specify the WDT Delta value.
+ 187:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter must be a number between 0 and 0x0FFF
+ 188:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 189:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 190:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_SetDeltaValue(u16 WDT_WDTD)
+ 191:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 343              		.loc 1 191 1 is_stmt 1 view -0
+ 344              		.cfi_startproc
+ 345              		@ args = 0, pretend = 0, frame = 0
+ 346              		@ frame_needed = 0, uses_anonymous_args = 0
+ 347              		@ link register save eliminated.
+ 192:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 193:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_DELTA(WDT_WDTD));
+ 348              		.loc 1 193 3 view .LVU80
+ 194:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->MR1 = (WDT_WDTD | (HT_WDT->MR1 & 0x00007000));
+ 349              		.loc 1 195 3 view .LVU81
+ 350              		.loc 1 195 42 is_stmt 0 view .LVU82
+ 351 0000 E021     		movs	r1, #224
+ 196:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 352              		.loc 1 196 1 view .LVU83
+ 353              		@ sp needed
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 354              		.loc 1 195 36 view .LVU84
+ 355 0002 034A     		ldr	r2, .L30
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 356              		.loc 1 195 42 view .LVU85
+ 357 0004 C901     		lsls	r1, r1, #7
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 358              		.loc 1 195 36 view .LVU86
+ 359 0006 9368     		ldr	r3, [r2, #8]
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 360              		.loc 1 195 42 view .LVU87
+ 361 0008 0B40     		ands	r3, r1
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 362              		.loc 1 195 27 view .LVU88
+ 363 000a 0343     		orrs	r3, r0
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 364              		.loc 1 195 15 view .LVU89
+ 365 000c 9360     		str	r3, [r2, #8]
+ 366              		.loc 1 196 1 view .LVU90
+ 367 000e 7047     		bx	lr
+ 368              	.L31:
+ 369              		.align	2
+ 370              	.L30:
+ 371 0010 00800640 		.word	1074167808
+ 372              		.cfi_endproc
+ 373              	.LFE53:
+ 375              		.section	.text.WDT_GetDeltaValue,"ax",%progbits
+ 376              		.align	1
+ 377              		.global	WDT_GetDeltaValue
+ 378              		.syntax unified
+ 379              		.code	16
+ 380              		.thumb_func
+ 382              	WDT_GetDeltaValue:
+ 383              	.LFB54:
+ 197:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 198:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 199:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Get current delta value of the WDT.
+ 200:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval WDT delta value between 0 and 0x0FFF
+ 201:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 202:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** u16 WDT_GetDeltaValue(void)
+ 203:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 384              		.loc 1 203 1 is_stmt 1 view -0
+ 385              		.cfi_startproc
+ 386              		@ args = 0, pretend = 0, frame = 0
+ 387              		@ frame_needed = 0, uses_anonymous_args = 0
+ 388              		@ link register save eliminated.
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR1 & 0xFFF));
+ 389              		.loc 1 204 3 view .LVU92
+ 390              		.loc 1 204 23 is_stmt 0 view .LVU93
+ 391 0000 024B     		ldr	r3, .L33
+ 205:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 392              		.loc 1 205 1 view .LVU94
+ 393              		@ sp needed
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR1 & 0xFFF));
+ 394              		.loc 1 204 23 view .LVU95
+ 395 0002 9868     		ldr	r0, [r3, #8]
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR1 & 0xFFF));
+ 396              		.loc 1 204 11 view .LVU96
+ 397 0004 0005     		lsls	r0, r0, #20
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u16)(HT_WDT->MR1 & 0xFFF));
+ 398              		.loc 1 204 11 discriminator 1 view .LVU97
+ 399 0006 000D     		lsrs	r0, r0, #20
+ 400              		.loc 1 205 1 view .LVU98
+ 401 0008 7047     		bx	lr
+ 402              	.L34:
+ 403 000a C046     		.align	2
+ 404              	.L33:
+ 405 000c 00800640 		.word	1074167808
+ 406              		.cfi_endproc
+ 407              	.LFE54:
+ 409              		.section	.text.WDT_SetPrescaler,"ax",%progbits
+ 410              		.align	1
+ 411              		.global	WDT_SetPrescaler
+ 412              		.syntax unified
+ 413              		.code	16
+ 414              		.thumb_func
+ 416              	WDT_SetPrescaler:
+ 417              	.LVL8:
+ 418              	.LFB55:
+ 206:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 207:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 208:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Set prescaler value of the WDT.
+ 209:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_PRESCALER: specify the WDT Prescaler value.
+ 210:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter can be one of the following values:
+ 211:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_1   : WDT prescaler set to 1
+ 212:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_2   : WDT prescaler set to 2
+ 213:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_4   : WDT prescaler set to 4
+ 214:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_8   : WDT prescaler set to 8
+ 215:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_16  : WDT prescaler set to 16
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_32  : WDT prescaler set to 32
+ 217:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_64  : WDT prescaler set to 64
+ 218:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_PRESCALER_128 : WDT prescaler set to 128
+ 219:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 220:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 221:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_SetPrescaler(u16 WDT_PRESCALER)
+ 222:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 419              		.loc 1 222 1 is_stmt 1 view -0
+ 420              		.cfi_startproc
+ 421              		@ args = 0, pretend = 0, frame = 0
+ 422              		@ frame_needed = 0, uses_anonymous_args = 0
+ 423              		@ link register save eliminated.
+ 223:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 224:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_PRESCALER(WDT_PRESCALER));
+ 424              		.loc 1 224 3 view .LVU100
+ 225:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->MR1 = (WDT_PRESCALER | (HT_WDT->MR1 & 0x00000FFF));
+ 425              		.loc 1 226 3 view .LVU101
+ 426              		.loc 1 226 41 is_stmt 0 view .LVU102
+ 427 0000 034A     		ldr	r2, .L36
+ 227:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 428              		.loc 1 227 1 view .LVU103
+ 429              		@ sp needed
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 430              		.loc 1 226 41 view .LVU104
+ 431 0002 9368     		ldr	r3, [r2, #8]
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 432              		.loc 1 226 47 view .LVU105
+ 433 0004 1B05     		lsls	r3, r3, #20
+ 434 0006 1B0D     		lsrs	r3, r3, #20
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 435              		.loc 1 226 32 view .LVU106
+ 436 0008 0343     		orrs	r3, r0
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 437              		.loc 1 226 15 view .LVU107
+ 438 000a 9360     		str	r3, [r2, #8]
+ 439              		.loc 1 227 1 view .LVU108
+ 440 000c 7047     		bx	lr
+ 441              	.L37:
+ 442 000e C046     		.align	2
+ 443              	.L36:
+ 444 0010 00800640 		.word	1074167808
+ 445              		.cfi_endproc
+ 446              	.LFE55:
+ 448              		.section	.text.WDT_GetPrescaler,"ax",%progbits
+ 449              		.align	1
+ 450              		.global	WDT_GetPrescaler
+ 451              		.syntax unified
+ 452              		.code	16
+ 453              		.thumb_func
+ 455              	WDT_GetPrescaler:
+ 456              	.LFB56:
+ 228:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 229:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 230:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Get the current prescaler value of the WDT.
+ 231:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval WDT prescaler value
+ 232:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 233:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** u8 WDT_GetPrescaler(void)
+ 234:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 457              		.loc 1 234 1 is_stmt 1 view -0
+ 458              		.cfi_startproc
+ 459              		@ args = 0, pretend = 0, frame = 0
+ 460              		@ frame_needed = 0, uses_anonymous_args = 0
+ 461              		@ link register save eliminated.
+ 235:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   u32 tmp;
+ 462              		.loc 1 235 3 view .LVU110
+ 236:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 237:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   tmp = HT_WDT->MR1 & 0x7000;
+ 463              		.loc 1 237 3 view .LVU111
+ 238:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   tmp >>= 12;
+ 239:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u8)0x1 << tmp);
+ 464              		.loc 1 239 19 is_stmt 0 view .LVU112
+ 465 0000 0120     		movs	r0, #1
+ 240:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 466              		.loc 1 240 1 view .LVU113
+ 467              		@ sp needed
+ 237:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   tmp >>= 12;
+ 468              		.loc 1 237 15 view .LVU114
+ 469 0002 034B     		ldr	r3, .L39
+ 470 0004 9B68     		ldr	r3, [r3, #8]
+ 471              	.LVL9:
+ 238:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   tmp >>= 12;
+ 472              		.loc 1 238 3 is_stmt 1 view .LVU115
+ 239:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 473              		.loc 1 239 3 view .LVU116
+ 238:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u8)0x1 << tmp);
+ 474              		.loc 1 238 7 is_stmt 0 view .LVU117
+ 475 0006 5B04     		lsls	r3, r3, #17
+ 476              	.LVL10:
+ 238:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return ((u8)0x1 << tmp);
+ 477              		.loc 1 238 7 view .LVU118
+ 478 0008 5B0F     		lsrs	r3, r3, #29
+ 239:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 479              		.loc 1 239 19 view .LVU119
+ 480 000a 9840     		lsls	r0, r0, r3
+ 239:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 481              		.loc 1 239 19 discriminator 1 view .LVU120
+ 482 000c C0B2     		uxtb	r0, r0
+ 483              		.loc 1 240 1 view .LVU121
+ 484 000e 7047     		bx	lr
+ 485              	.L40:
+ 486              		.align	2
+ 487              	.L39:
+ 488 0010 00800640 		.word	1074167808
+ 489              		.cfi_endproc
+ 490              	.LFE56:
+ 492              		.section	.text.WDT_Restart,"ax",%progbits
+ 493              		.align	1
+ 494              		.global	WDT_Restart
+ 495              		.syntax unified
+ 496              		.code	16
+ 497              		.thumb_func
+ 499              	WDT_Restart:
+ 500              	.LFB57:
+ 241:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 242:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 243:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief WDT Restart (Reload WDT Counter)
+ 244:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 245:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 246:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_Restart(void)
+ 247:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 501              		.loc 1 247 1 is_stmt 1 view -0
+ 502              		.cfi_startproc
+ 503              		@ args = 0, pretend = 0, frame = 0
+ 504              		@ frame_needed = 0, uses_anonymous_args = 0
+ 505              		@ link register save eliminated.
+ 248:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->CR = RESTART_KEY | 0x1;
+ 506              		.loc 1 248 3 view .LVU123
+ 507              		.loc 1 248 14 is_stmt 0 view .LVU124
+ 508 0000 014B     		ldr	r3, .L42
+ 509 0002 024A     		ldr	r2, .L42+4
+ 249:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 510              		.loc 1 249 1 view .LVU125
+ 511              		@ sp needed
+ 248:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   HT_WDT->CR = RESTART_KEY | 0x1;
+ 512              		.loc 1 248 14 view .LVU126
+ 513 0004 1A60     		str	r2, [r3]
+ 514              		.loc 1 249 1 view .LVU127
+ 515 0006 7047     		bx	lr
+ 516              	.L43:
+ 517              		.align	2
+ 518              	.L42:
+ 519 0008 00800640 		.word	1074167808
+ 520 000c 0100A05F 		.word	1604321281
+ 521              		.cfi_endproc
+ 522              	.LFE57:
+ 524              		.section	.text.WDT_GetFlagStatus,"ax",%progbits
+ 525              		.align	1
+ 526              		.global	WDT_GetFlagStatus
+ 527              		.syntax unified
+ 528              		.code	16
+ 529              		.thumb_func
+ 531              	WDT_GetFlagStatus:
+ 532              	.LVL11:
+ 533              	.LFB58:
+ 250:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 251:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 252:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Check whether the specified WDT flag has been set.
+ 253:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_FLAG: specify the flag to be check.
+ 254:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter can be one of the following values:
+ 255:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_FLAG_UNDERFLOW : WDT underflow active
+ 256:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_FLAG_ERROR     : WDT error active
+ 257:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval SET or RESET
+ 258:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 259:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** FlagStatus WDT_GetFlagStatus(u32 WDT_FLAG)
+ 260:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 534              		.loc 1 260 1 is_stmt 1 view -0
+ 535              		.cfi_startproc
+ 536              		@ args = 0, pretend = 0, frame = 0
+ 537              		@ frame_needed = 0, uses_anonymous_args = 0
+ 538              		@ link register save eliminated.
+ 261:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   u32 statusreg = 0;
+ 539              		.loc 1 261 3 view .LVU129
+ 262:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   FlagStatus bitstatus = RESET;
+ 540              		.loc 1 262 3 view .LVU130
+ 263:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 264:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 265:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_FLAG(WDT_FLAG));
+ 541              		.loc 1 265 3 view .LVU131
+ 266:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 267:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   statusreg = HT_WDT->SR;
+ 542              		.loc 1 267 3 view .LVU132
+ 543              		.loc 1 267 13 is_stmt 0 view .LVU133
+ 544 0000 034B     		ldr	r3, .L45
+ 268:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 269:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (statusreg != WDT_FLAG)
+ 270:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 271:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     bitstatus = RESET;
+ 272:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 273:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+ 274:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 275:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     bitstatus = SET;
+ 276:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 277:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 278:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   return bitstatus;
+ 279:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 545              		.loc 1 279 1 view .LVU134
+ 546              		@ sp needed
+ 267:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 547              		.loc 1 267 13 view .LVU135
+ 548 0002 DB68     		ldr	r3, [r3, #12]
+ 549              	.LVL12:
+ 269:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 550              		.loc 1 269 3 is_stmt 1 view .LVU136
+ 278:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 551              		.loc 1 278 3 view .LVU137
+ 269:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 552              		.loc 1 269 6 is_stmt 0 view .LVU138
+ 553 0004 181A     		subs	r0, r3, r0
+ 554              	.LVL13:
+ 269:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 555              		.loc 1 269 6 view .LVU139
+ 556 0006 4242     		rsbs	r2, r0, #0
+ 557 0008 5041     		adcs	r0, r0, r2
+ 278:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 558              		.loc 1 278 10 discriminator 1 view .LVU140
+ 559 000a C0B2     		uxtb	r0, r0
+ 560              		.loc 1 279 1 view .LVU141
+ 561 000c 7047     		bx	lr
+ 562              	.L46:
+ 563 000e C046     		.align	2
+ 564              	.L45:
+ 565 0010 00800640 		.word	1074167808
+ 566              		.cfi_endproc
+ 567              	.LFE58:
+ 569              		.section	.text.WDT_LockCmd,"ax",%progbits
+ 570              		.align	1
+ 571              		.global	WDT_LockCmd
+ 572              		.syntax unified
+ 573              		.code	16
+ 574              		.thumb_func
+ 576              	WDT_LockCmd:
+ 577              	.LVL14:
+ 578              	.LFB59:
+ 280:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 281:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 282:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief Enable or Disable the WDTLOCK.
+ 283:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param NewState: This parameter can be ENABLE or DISABLE.
+ 284:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 285:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 286:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_LockCmd(ControlStatus NewState)
+ 287:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 579              		.loc 1 287 1 is_stmt 1 view -0
+ 580              		.cfi_startproc
+ 581              		@ args = 0, pretend = 0, frame = 0
+ 582              		@ frame_needed = 0, uses_anonymous_args = 0
+ 583              		@ link register save eliminated.
+ 288:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   u32 uRegVale;
+ 584              		.loc 1 288 3 view .LVU143
+ 289:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 290:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 291:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_CONTROL_STATUS(NewState));
+ 585              		.loc 1 291 3 view .LVU144
+ 292:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 293:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   uRegVale =  HT_WDT->CSR;
+ 586              		.loc 1 293 3 view .LVU145
+ 587              		.loc 1 293 12 is_stmt 0 view .LVU146
+ 588 0000 074A     		ldr	r2, .L51
+ 589 0002 0121     		movs	r1, #1
+ 590 0004 9369     		ldr	r3, [r2, #24]
+ 591              	.LVL15:
+ 294:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (NewState != DISABLE)
+ 592              		.loc 1 294 3 is_stmt 1 view .LVU147
+ 593              		.loc 1 294 6 is_stmt 0 view .LVU148
+ 594 0006 0028     		cmp	r0, #0
+ 595 0008 06D0     		beq	.L48
+ 295:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 296:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->CSR |= (MODE0_WDTLOCK_SET | (uRegVale & 0x00000001));
+ 596              		.loc 1 296 5 is_stmt 1 view .LVU149
+ 597              		.loc 1 296 11 is_stmt 0 view .LVU150
+ 598 000a 9069     		ldr	r0, [r2, #24]
+ 599              	.LVL16:
+ 600              		.loc 1 296 17 view .LVU151
+ 601 000c 0B40     		ands	r3, r1
+ 602              	.LVL17:
+ 603              		.loc 1 296 17 view .LVU152
+ 604 000e 0343     		orrs	r3, r0
+ 605 0010 0F31     		adds	r1, r1, #15
+ 606 0012 0B43     		orrs	r3, r1
+ 607              	.L50:
+ 297:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 298:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+ 299:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->CSR &= (MODE0_WDTLOCK_RESET | (uRegVale & 0x00000001));
+ 608              		.loc 1 300 17 view .LVU153
+ 609 0014 9361     		str	r3, [r2, #24]
+ 301:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 302:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 610              		.loc 1 302 1 view .LVU154
+ 611              		@ sp needed
+ 612 0016 7047     		bx	lr
+ 613              	.LVL18:
+ 614              	.L48:
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 615              		.loc 1 300 5 is_stmt 1 view .LVU155
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 616              		.loc 1 300 11 is_stmt 0 view .LVU156
+ 617 0018 9069     		ldr	r0, [r2, #24]
+ 618              	.LVL19:
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 619              		.loc 1 300 17 view .LVU157
+ 620 001a 0340     		ands	r3, r0
+ 621              	.LVL20:
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 622              		.loc 1 300 17 view .LVU158
+ 623 001c 0B40     		ands	r3, r1
+ 624 001e F9E7     		b	.L50
+ 625              	.L52:
+ 626              		.align	2
+ 627              	.L51:
+ 628 0020 00800640 		.word	1074167808
+ 629              		.cfi_endproc
+ 630              	.LFE59:
+ 632              		.section	.text.WDT_SourceConfig,"ax",%progbits
+ 633              		.align	1
+ 634              		.global	WDT_SourceConfig
+ 635              		.syntax unified
+ 636              		.code	16
+ 637              		.thumb_func
+ 639              	WDT_SourceConfig:
+ 640              	.LVL21:
+ 641              	.LFB60:
+ 303:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 304:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** /**************************************************************************************************
+ 305:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @brief WDT source select.
+ 306:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @param WDT_SOURCE: LSI or LSE of the WDT source.
+ 307:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *   This parameter can be one of the following values:
+ 308:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_SOURCE_LSI :
+ 309:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  *     @arg WDT_SOURCE_LSE :
+ 310:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  * @retval None
+ 311:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****  **************************************************************************************************
+ 312:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** void WDT_SourceConfig(u32 WDT_SOURCE)
+ 313:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** {
+ 642              		.loc 1 313 1 is_stmt 1 view -0
+ 643              		.cfi_startproc
+ 644              		@ args = 0, pretend = 0, frame = 0
+ 645              		@ frame_needed = 0, uses_anonymous_args = 0
+ 646              		@ link register save eliminated.
+ 314:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   /* Check the parameters                                                                          
+ 315:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   Assert_Param(IS_WDT_SOURCE_SELECT(WDT_SOURCE));
+ 647              		.loc 1 315 3 view .LVU160
+ 316:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** 
+ 317:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   if (WDT_SOURCE != WDT_SOURCE_LSE)
+ 648              		.loc 1 317 3 view .LVU161
+ 649 0000 034B     		ldr	r3, .L56
+ 650              		.loc 1 317 6 is_stmt 0 view .LVU162
+ 651 0002 0128     		cmp	r0, #1
+ 652 0004 02D0     		beq	.L54
+ 318:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 319:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->CSR = WDT_SOURCE_LSI;
+ 653              		.loc 1 319 5 is_stmt 1 view .LVU163
+ 654              		.loc 1 319 17 is_stmt 0 view .LVU164
+ 655 0006 0022     		movs	r2, #0
+ 656 0008 9A61     		str	r2, [r3, #24]
+ 657              	.L53:
+ 320:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 321:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   else
+ 322:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   {
+ 323:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****     HT_WDT->CSR = WDT_SOURCE_LSE;
+ 324:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 325:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c **** }
+ 658              		.loc 1 325 1 view .LVU165
+ 659              		@ sp needed
+ 660 000a 7047     		bx	lr
+ 661              	.L54:
+ 323:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 662              		.loc 1 323 5 is_stmt 1 view .LVU166
+ 323:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/library/HT32L5xxxx_Driver/src\ht32l5xxxx_wdt.c ****   }
+ 663              		.loc 1 323 17 is_stmt 0 view .LVU167
+ 664 000c 9861     		str	r0, [r3, #24]
+ 665              		.loc 1 325 1 view .LVU168
+ 666 000e FCE7     		b	.L53
+ 667              	.L57:
+ 668              		.align	2
+ 669              	.L56:
+ 670 0010 00800640 		.word	1074167808
+ 671              		.cfi_endproc
+ 672              	.LFE60:
+ 674              		.text
+ 675              	.Letext0:
+ 676              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 677              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 678              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 679              		.file 5 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_rstcu.h"
+ 680              		.file 6 "<built-in>"
+DEFINED SYMBOLS
+                            *ABS*:00000000 ht32l5xxxx_wdt.c
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:19     .text.WDT_DeInit:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:25     .text.WDT_DeInit:00000000 WDT_DeInit
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:71     .text.WDT_Cmd:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:77     .text.WDT_Cmd:00000000 WDT_Cmd
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:116    .text.WDT_Cmd:0000001c $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:122    .text.WDT_HaltConfig:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:128    .text.WDT_HaltConfig:00000000 WDT_HaltConfig
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:157    .text.WDT_HaltConfig:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:163    .text.WDT_ResetCmd:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:169    .text.WDT_ResetCmd:00000000 WDT_ResetCmd
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:208    .text.WDT_ResetCmd:0000001c $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:214    .text.WDT_ProtectCmd:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:220    .text.WDT_ProtectCmd:00000000 WDT_ProtectCmd
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:251    .text.WDT_ProtectCmd:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:258    .text.WDT_SetReloadValue:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:264    .text.WDT_SetReloadValue:00000000 WDT_SetReloadValue
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:295    .text.WDT_SetReloadValue:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:300    .text.WDT_GetReloadValue:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:306    .text.WDT_GetReloadValue:00000000 WDT_GetReloadValue
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:329    .text.WDT_GetReloadValue:0000000c $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:334    .text.WDT_SetDeltaValue:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:340    .text.WDT_SetDeltaValue:00000000 WDT_SetDeltaValue
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:371    .text.WDT_SetDeltaValue:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:376    .text.WDT_GetDeltaValue:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:382    .text.WDT_GetDeltaValue:00000000 WDT_GetDeltaValue
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:405    .text.WDT_GetDeltaValue:0000000c $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:410    .text.WDT_SetPrescaler:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:416    .text.WDT_SetPrescaler:00000000 WDT_SetPrescaler
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:444    .text.WDT_SetPrescaler:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:449    .text.WDT_GetPrescaler:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:455    .text.WDT_GetPrescaler:00000000 WDT_GetPrescaler
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:488    .text.WDT_GetPrescaler:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:493    .text.WDT_Restart:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:499    .text.WDT_Restart:00000000 WDT_Restart
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:519    .text.WDT_Restart:00000008 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:525    .text.WDT_GetFlagStatus:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:531    .text.WDT_GetFlagStatus:00000000 WDT_GetFlagStatus
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:565    .text.WDT_GetFlagStatus:00000010 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:570    .text.WDT_LockCmd:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:576    .text.WDT_LockCmd:00000000 WDT_LockCmd
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:628    .text.WDT_LockCmd:00000020 $d
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:633    .text.WDT_SourceConfig:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:639    .text.WDT_SourceConfig:00000000 WDT_SourceConfig
+C:\Users\q3112\AppData\Local\Temp\ccMD4usl.s:670    .text.WDT_SourceConfig:00000010 $d
+
+UNDEFINED SYMBOLS
+memset
+RSTCU_PeripReset

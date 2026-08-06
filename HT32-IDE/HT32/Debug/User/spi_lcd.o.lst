@@ -1,0 +1,914 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"spi_lcd.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/spi_lcd.c"
+  18              		.section	.text.SPI_LCD_SPI_SendByte.isra.0,"ax",%progbits
+  19              		.align	1
+  20              		.syntax unified
+  21              		.code	16
+  22              		.thumb_func
+  24              	SPI_LCD_SPI_SendByte.isra.0:
+  25              	.LVL0:
+  26              	.LFB55:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**************************************************************************************************
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @file    spi_lcd.c
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief   LCD 专用 SPI 通信层（与显示驱动分离）
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @note    仅负责通过 SPI 把字节发送到屏幕（3 线 9bit：D8=D/C）。
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  *          所有 ST7789 命令/绘图逻辑都在 Display.c，本文件不依赖它们。
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  **************************************************************************************************
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** #include "spi_lcd.h"
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** #include "BFTM0.h"
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  SPI 发送一个字节（带 D/C 位）
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @note   通过数据最高位(D8)区分命令/数据：D8=0 命令，D8=1 数据。
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  *         SPI 配置为 9 位数据宽度，D8 为 DC 位，D0-D7 为实际数据。
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  data   : 要发送的 8 位数据（低 8 位）
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  dc_bit : D/C 位（0=命令，1=数据）
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 0=成功，1=超时
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** static u8 SPI_LCD_SPI_SendByte(u8 data, u8 dc_bit)
+  27              		.loc 1 19 11 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   u32 timeout = 100000;
+  31              		.loc 1 21 3 view .LVU1
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXBE) == RESET) && (timeout--));
+  32              		.loc 1 22 3 view .LVU2
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+  33              		.loc 1 19 11 is_stmt 0 view .LVU3
+  34 0000 70B5     		push	{r4, r5, r6, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 16
+  37              		.cfi_offset 4, -16
+  38              		.cfi_offset 5, -12
+  39              		.cfi_offset 6, -8
+  40              		.cfi_offset 14, -4
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+  41              		.loc 1 19 11 view .LVU4
+  42 0002 0500     		movs	r5, r0
+  43 0004 0C00     		movs	r4, r1
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXBE) == RESET) && (timeout--));
+  44              		.loc 1 21 7 view .LVU5
+  45 0006 104E     		ldr	r6, .L17
+  46              	.LVL1:
+  47              	.L3:
+  48              		.loc 1 22 67 is_stmt 1 discriminator 2 view .LVU6
+  49              		.loc 1 22 11 is_stmt 0 discriminator 2 view .LVU7
+  50 0008 0121     		movs	r1, #1
+  51 000a 1048     		ldr	r0, .L17+4
+  52 000c FFF7FEFF 		bl	SPI_GetFlagStatus
+  53              	.LVL2:
+  54              		.loc 1 22 67 discriminator 2 view .LVU8
+  55 0010 0028     		cmp	r0, #0
+  56 0012 13D1     		bne	.L2
+  57              	.LVL3:
+  58              		.loc 1 22 67 discriminator 1 view .LVU9
+  59 0014 013E     		subs	r6, r6, #1
+  60 0016 F7D2     		bcs	.L3
+  61              	.LVL4:
+  62              	.L4:
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SendData(SPI_LCD_SPI, (dc_bit << 8) | data);
+  63              		.loc 1 25 3 is_stmt 1 view .LVU10
+  64              		.loc 1 25 43 is_stmt 0 view .LVU11
+  65 0018 2102     		lsls	r1, r4, #8
+  66              		.loc 1 25 3 view .LVU12
+  67 001a 0C48     		ldr	r0, .L17+4
+  68 001c 2943     		orrs	r1, r5
+  69 001e FFF7FEFF 		bl	SPI_SendData
+  70              	.LVL5:
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   timeout = 100000;
+  71              		.loc 1 27 3 is_stmt 1 view .LVU13
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) == RESET) && (timeout--));
+  72              		.loc 1 28 3 view .LVU14
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) == RESET) && (timeout--));
+  73              		.loc 1 27 11 is_stmt 0 view .LVU15
+  74 0022 094C     		ldr	r4, .L17
+  75              	.LVL6:
+  76              	.L7:
+  77              		.loc 1 28 68 is_stmt 1 discriminator 2 view .LVU16
+  78              		.loc 1 28 11 is_stmt 0 discriminator 2 view .LVU17
+  79 0024 0421     		movs	r1, #4
+  80 0026 0948     		ldr	r0, .L17+4
+  81 0028 FFF7FEFF 		bl	SPI_GetFlagStatus
+  82              	.LVL7:
+  83              		.loc 1 28 68 discriminator 2 view .LVU18
+  84 002c 0028     		cmp	r0, #0
+  85 002e 08D1     		bne	.L6
+  86              	.LVL8:
+  87              		.loc 1 28 68 discriminator 1 view .LVU19
+  88 0030 013C     		subs	r4, r4, #1
+  89 0032 F7D2     		bcs	.L7
+  90              	.LVL9:
+  91              	.L8:
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   (void)SPI_ReceiveData(SPI_LCD_SPI);
+  92              		.loc 1 31 3 is_stmt 1 view .LVU20
+  93              		.loc 1 31 9 is_stmt 0 view .LVU21
+  94 0034 0548     		ldr	r0, .L17+4
+  95 0036 FFF7FEFF 		bl	SPI_ReceiveData
+  96              	.LVL10:
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   return 0;
+  97              		.loc 1 32 3 is_stmt 1 view .LVU22
+  98              		.loc 1 32 10 is_stmt 0 view .LVU23
+  99 003a 01E0     		b	.L1
+ 100              	.LVL11:
+ 101              	.L2:
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 102              		.loc 1 23 3 is_stmt 1 view .LVU24
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 103              		.loc 1 23 6 is_stmt 0 view .LVU25
+ 104 003c 002E     		cmp	r6, #0
+ 105 003e EBD1     		bne	.L4
+ 106              	.LVL12:
+ 107              	.L1:
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 108              		.loc 1 33 1 view .LVU26
+ 109              		@ sp needed
+ 110              	.LVL13:
+ 111              		.loc 1 33 1 view .LVU27
+ 112 0040 70BD     		pop	{r4, r5, r6, pc}
+ 113              	.LVL14:
+ 114              	.L6:
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 115              		.loc 1 29 3 is_stmt 1 view .LVU28
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 116              		.loc 1 29 6 is_stmt 0 view .LVU29
+ 117 0042 002C     		cmp	r4, #0
+ 118 0044 FCD0     		beq	.L1
+ 119 0046 F5E7     		b	.L8
+ 120              	.L18:
+ 121              		.align	2
+ 122              	.L17:
+ 123 0048 A0860100 		.word	100000
+ 124 004c 00400040 		.word	1073758208
+ 125              		.cfi_endproc
+ 126              	.LFE55:
+ 128              		.section	.text.SPI_LCD_Select,"ax",%progbits
+ 129              		.align	1
+ 130              		.global	SPI_LCD_Select
+ 131              		.syntax unified
+ 132              		.code	16
+ 133              		.thumb_func
+ 135              	SPI_LCD_Select:
+ 136              	.LFB48:
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  等待 SPI 发送完成（TXE 与 BUSY 标志）
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 0=成功，1=超时
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** static u8 SPI_LCD_SPI_WaitDone(void)
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   u32 timeout = 100000;
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXE) == RESET) && (timeout--));
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   timeout = 100000;
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_BUSY) != RESET) && (timeout--));
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   return 0;
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  拉低片选（软件 SEL），开始一次 SPI 传输会话
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_Select(void)
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 137              		.loc 1 59 1 is_stmt 1 view -0
+ 138              		.cfi_startproc
+ 139              		@ args = 0, pretend = 0, frame = 0
+ 140              		@ frame_needed = 0, uses_anonymous_args = 0
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SoftwareSELCmd(SPI_LCD_SPI, SPI_SEL_ACTIVE);
+ 141              		.loc 1 60 3 view .LVU31
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SoftwareSELCmd(SPI_LCD_SPI, SPI_SEL_ACTIVE);
+ 142              		.loc 1 59 1 is_stmt 0 view .LVU32
+ 143 0000 10B5     		push	{r4, lr}
+ 144              	.LCFI1:
+ 145              		.cfi_def_cfa_offset 8
+ 146              		.cfi_offset 4, -8
+ 147              		.cfi_offset 14, -4
+ 148              		.loc 1 60 3 view .LVU33
+ 149 0002 1021     		movs	r1, #16
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 150              		.loc 1 61 1 view .LVU34
+ 151              		@ sp needed
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SoftwareSELCmd(SPI_LCD_SPI, SPI_SEL_ACTIVE);
+ 152              		.loc 1 60 3 view .LVU35
+ 153 0004 0148     		ldr	r0, .L20
+ 154 0006 FFF7FEFF 		bl	SPI_SoftwareSELCmd
+ 155              	.LVL15:
+ 156              		.loc 1 61 1 view .LVU36
+ 157 000a 10BD     		pop	{r4, pc}
+ 158              	.L21:
+ 159              		.align	2
+ 160              	.L20:
+ 161 000c 00400040 		.word	1073758208
+ 162              		.cfi_endproc
+ 163              	.LFE48:
+ 165              		.section	.text.SPI_LCD_Deselect,"ax",%progbits
+ 166              		.align	1
+ 167              		.global	SPI_LCD_Deselect
+ 168              		.syntax unified
+ 169              		.code	16
+ 170              		.thumb_func
+ 172              	SPI_LCD_Deselect:
+ 173              	.LFB49:
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  等待发送完毕后释放片选，结束本次 SPI 传输会话
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_Deselect(void)
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 174              		.loc 1 69 1 is_stmt 1 view -0
+ 175              		.cfi_startproc
+ 176              		@ args = 0, pretend = 0, frame = 0
+ 177              		@ frame_needed = 0, uses_anonymous_args = 0
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_WaitDone();
+ 178              		.loc 1 70 3 view .LVU38
+ 179              	.LBB4:
+ 180              	.LBI4:
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 181              		.loc 1 40 11 view .LVU39
+ 182              	.LBB5:
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXE) == RESET) && (timeout--));
+ 183              		.loc 1 42 3 view .LVU40
+ 184              	.LVL16:
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 185              		.loc 1 43 3 view .LVU41
+ 186              	.LBE5:
+ 187              	.LBE4:
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_WaitDone();
+ 188              		.loc 1 69 1 is_stmt 0 view .LVU42
+ 189 0000 70B5     		push	{r4, r5, r6, lr}
+ 190              	.LCFI2:
+ 191              		.cfi_def_cfa_offset 16
+ 192              		.cfi_offset 4, -16
+ 193              		.cfi_offset 5, -12
+ 194              		.cfi_offset 6, -8
+ 195              		.cfi_offset 14, -4
+ 196              	.LBB7:
+ 197              	.LBB6:
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXE) == RESET) && (timeout--));
+ 198              		.loc 1 42 7 view .LVU43
+ 199 0002 0F4C     		ldr	r4, .L38
+ 200              	.LVL17:
+ 201              	.L24:
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 202              		.loc 1 43 66 is_stmt 1 discriminator 2 view .LVU44
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 203              		.loc 1 43 11 is_stmt 0 discriminator 2 view .LVU45
+ 204 0004 0221     		movs	r1, #2
+ 205 0006 0F48     		ldr	r0, .L38+4
+ 206 0008 FFF7FEFF 		bl	SPI_GetFlagStatus
+ 207              	.LVL18:
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 208              		.loc 1 43 66 discriminator 2 view .LVU46
+ 209 000c 0028     		cmp	r0, #0
+ 210 000e 0ED1     		bne	.L23
+ 211              	.LVL19:
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 212              		.loc 1 43 66 discriminator 1 view .LVU47
+ 213 0010 013C     		subs	r4, r4, #1
+ 214 0012 F7D2     		bcs	.L24
+ 215              	.LVL20:
+ 216              	.L37:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 217              		.loc 1 47 11 discriminator 2 view .LVU48
+ 218 0014 8025     		movs	r5, #128
+ 219 0016 0C4C     		ldr	r4, .L38+8
+ 220              	.LVL21:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 221              		.loc 1 47 11 discriminator 2 view .LVU49
+ 222 0018 6D00     		lsls	r5, r5, #1
+ 223              	.LVL22:
+ 224              	.L27:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 225              		.loc 1 47 67 is_stmt 1 discriminator 2 view .LVU50
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 226              		.loc 1 47 11 is_stmt 0 discriminator 2 view .LVU51
+ 227 001a 2900     		movs	r1, r5
+ 228 001c 0948     		ldr	r0, .L38+4
+ 229 001e FFF7FEFF 		bl	SPI_GetFlagStatus
+ 230              	.LVL23:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 231              		.loc 1 47 67 discriminator 2 view .LVU52
+ 232 0022 0028     		cmp	r0, #0
+ 233 0024 05D0     		beq	.L26
+ 234              	.LVL24:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 235              		.loc 1 47 67 discriminator 1 view .LVU53
+ 236 0026 013C     		subs	r4, r4, #1
+ 237              	.LVL25:
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   if (timeout == 0) { return 1; }
+ 238              		.loc 1 47 67 discriminator 1 view .LVU54
+ 239 0028 002C     		cmp	r4, #0
+ 240 002a F6D1     		bne	.L27
+ 241 002c 01E0     		b	.L26
+ 242              	.LVL26:
+ 243              	.L23:
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 244              		.loc 1 44 3 is_stmt 1 view .LVU55
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 245              		.loc 1 44 6 is_stmt 0 view .LVU56
+ 246 002e 002C     		cmp	r4, #0
+ 247 0030 F0D1     		bne	.L37
+ 248              	.LVL27:
+ 249              	.L26:
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 250              		.loc 1 44 6 view .LVU57
+ 251              	.LBE6:
+ 252              	.LBE7:
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SoftwareSELCmd(SPI_LCD_SPI, SPI_SEL_INACTIVE);
+ 253              		.loc 1 71 3 is_stmt 1 view .LVU58
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 254              		.loc 1 72 1 is_stmt 0 view .LVU59
+ 255              		@ sp needed
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SoftwareSELCmd(SPI_LCD_SPI, SPI_SEL_INACTIVE);
+ 256              		.loc 1 71 3 view .LVU60
+ 257 0032 1121     		movs	r1, #17
+ 258 0034 0348     		ldr	r0, .L38+4
+ 259 0036 4942     		rsbs	r1, r1, #0
+ 260 0038 FFF7FEFF 		bl	SPI_SoftwareSELCmd
+ 261              	.LVL28:
+ 262              		.loc 1 72 1 view .LVU61
+ 263 003c 70BD     		pop	{r4, r5, r6, pc}
+ 264              	.L39:
+ 265 003e C046     		.align	2
+ 266              	.L38:
+ 267 0040 A0860100 		.word	100000
+ 268 0044 00400040 		.word	1073758208
+ 269 0048 A1860100 		.word	100001
+ 270              		.cfi_endproc
+ 271              	.LFE49:
+ 273              		.section	.text.SPI_LCD_WriteCmd,"ax",%progbits
+ 274              		.align	1
+ 275              		.global	SPI_LCD_WriteCmd
+ 276              		.syntax unified
+ 277              		.code	16
+ 278              		.thumb_func
+ 280              	SPI_LCD_WriteCmd:
+ 281              	.LVL29:
+ 282              	.LFB50:
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  发送一个 ST7789 命令字节（D/C 位=0）
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  cmd : 命令码（如 0x2A CASET）
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_WriteCmd(u8 cmd)
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 283              		.loc 1 81 1 is_stmt 1 view -0
+ 284              		.cfi_startproc
+ 285              		@ args = 0, pretend = 0, frame = 0
+ 286              		@ frame_needed = 0, uses_anonymous_args = 0
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(cmd, 0);
+ 287              		.loc 1 82 3 view .LVU63
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(cmd, 0);
+ 288              		.loc 1 81 1 is_stmt 0 view .LVU64
+ 289 0000 10B5     		push	{r4, lr}
+ 290              	.LCFI3:
+ 291              		.cfi_def_cfa_offset 8
+ 292              		.cfi_offset 4, -8
+ 293              		.cfi_offset 14, -4
+ 294              		.loc 1 82 3 view .LVU65
+ 295 0002 0021     		movs	r1, #0
+  83:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 296              		.loc 1 83 1 view .LVU66
+ 297              		@ sp needed
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(cmd, 0);
+ 298              		.loc 1 82 3 view .LVU67
+ 299 0004 FFF7FEFF 		bl	SPI_LCD_SPI_SendByte.isra.0
+ 300              	.LVL30:
+ 301              		.loc 1 83 1 view .LVU68
+ 302 0008 10BD     		pop	{r4, pc}
+ 303              		.cfi_endproc
+ 304              	.LFE50:
+ 306              		.section	.text.SPI_LCD_WriteData,"ax",%progbits
+ 307              		.align	1
+ 308              		.global	SPI_LCD_WriteData
+ 309              		.syntax unified
+ 310              		.code	16
+ 311              		.thumb_func
+ 313              	SPI_LCD_WriteData:
+ 314              	.LVL31:
+ 315              	.LFB51:
+  84:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+  85:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+  86:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+  87:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  连续发送多个数据字节（D/C 位=1）
+  88:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  buf : [输入] 数据缓冲区指针
+  89:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  len : 字节数
+  90:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+  91:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+  92:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_WriteData(const u8 *buf, u32 len)
+  93:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 316              		.loc 1 93 1 is_stmt 1 view -0
+ 317              		.cfi_startproc
+ 318              		@ args = 0, pretend = 0, frame = 0
+ 319              		@ frame_needed = 0, uses_anonymous_args = 0
+ 320              		.loc 1 93 1 is_stmt 0 view .LVU70
+ 321 0000 70B5     		push	{r4, r5, r6, lr}
+ 322              	.LCFI4:
+ 323              		.cfi_def_cfa_offset 16
+ 324              		.cfi_offset 4, -16
+ 325              		.cfi_offset 5, -12
+ 326              		.cfi_offset 6, -8
+ 327              		.cfi_offset 14, -4
+ 328              		.loc 1 93 1 view .LVU71
+ 329 0002 0400     		movs	r4, r0
+  94:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while (len > 0)
+ 330              		.loc 1 94 3 is_stmt 1 view .LVU72
+ 331 0004 4518     		adds	r5, r0, r1
+ 332              	.LVL32:
+ 333              	.L42:
+ 334              		.loc 1 94 14 view .LVU73
+ 335 0006 AC42     		cmp	r4, r5
+ 336 0008 00D1     		bne	.L43
+  95:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   {
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     SPI_LCD_SPI_SendByte(*buf, 1);
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     buf++;
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     len--;
+  99:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   }
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 337              		.loc 1 100 1 is_stmt 0 view .LVU74
+ 338              		@ sp needed
+ 339              	.LVL33:
+ 340              		.loc 1 100 1 view .LVU75
+ 341 000a 70BD     		pop	{r4, r5, r6, pc}
+ 342              	.LVL34:
+ 343              	.L43:
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     buf++;
+ 344              		.loc 1 96 5 is_stmt 1 view .LVU76
+ 345 000c 2078     		ldrb	r0, [r4]
+ 346 000e 0121     		movs	r1, #1
+ 347 0010 FFF7FEFF 		bl	SPI_LCD_SPI_SendByte.isra.0
+ 348              	.LVL35:
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     len--;
+ 349              		.loc 1 97 5 view .LVU77
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****     len--;
+ 350              		.loc 1 97 8 is_stmt 0 view .LVU78
+ 351 0014 0134     		adds	r4, r4, #1
+ 352              	.LVL36:
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   }
+ 353              		.loc 1 98 5 is_stmt 1 view .LVU79
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   }
+ 354              		.loc 1 98 5 is_stmt 0 view .LVU80
+ 355 0016 F6E7     		b	.L42
+ 356              		.cfi_endproc
+ 357              	.LFE51:
+ 359              		.section	.text.SPI_LCD_WriteDataByte,"ax",%progbits
+ 360              		.align	1
+ 361              		.global	SPI_LCD_WriteDataByte
+ 362              		.syntax unified
+ 363              		.code	16
+ 364              		.thumb_func
+ 366              	SPI_LCD_WriteDataByte:
+ 367              	.LVL37:
+ 368              	.LFB52:
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 102:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+ 103:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  发送单个数据字节（D/C 位=1）
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  data : 数据字节（像素色高/低字节、命令参数等）
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+ 107:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_WriteDataByte(u8 data)
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 369              		.loc 1 109 1 is_stmt 1 view -0
+ 370              		.cfi_startproc
+ 371              		@ args = 0, pretend = 0, frame = 0
+ 372              		@ frame_needed = 0, uses_anonymous_args = 0
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(data, 1);
+ 373              		.loc 1 110 3 view .LVU82
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(data, 1);
+ 374              		.loc 1 109 1 is_stmt 0 view .LVU83
+ 375 0000 10B5     		push	{r4, lr}
+ 376              	.LCFI5:
+ 377              		.cfi_def_cfa_offset 8
+ 378              		.cfi_offset 4, -8
+ 379              		.cfi_offset 14, -4
+ 380              		.loc 1 110 3 view .LVU84
+ 381 0002 0121     		movs	r1, #1
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 382              		.loc 1 111 1 view .LVU85
+ 383              		@ sp needed
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_LCD_SPI_SendByte(data, 1);
+ 384              		.loc 1 110 3 view .LVU86
+ 385 0004 FFF7FEFF 		bl	SPI_LCD_SPI_SendByte.isra.0
+ 386              	.LVL38:
+ 387              		.loc 1 111 1 view .LVU87
+ 388 0008 10BD     		pop	{r4, pc}
+ 389              		.cfi_endproc
+ 390              	.LFE52:
+ 392              		.section	.text.Delay,"ax",%progbits
+ 393              		.align	1
+ 394              		.global	Delay
+ 395              		.syntax unified
+ 396              		.code	16
+ 397              		.thumb_func
+ 399              	Delay:
+ 400              	.LVL39:
+ 401              	.LFB53:
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 113:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+ 114:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+ 115:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  毫秒级阻塞延时（基于 BFTM0 的 1ms 节拍计数器 bftm0_ct）
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @param  ms : 延时毫秒数
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @retval 无
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+ 119:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void Delay(u32 ms)
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 402              		.loc 1 120 1 is_stmt 1 view -0
+ 403              		.cfi_startproc
+ 404              		@ args = 0, pretend = 0, frame = 8
+ 405              		@ frame_needed = 0, uses_anonymous_args = 0
+ 406              		@ link register save eliminated.
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   vu32 target = bftm0_ct + ms;
+ 407              		.loc 1 121 3 view .LVU89
+ 408              		.loc 1 121 26 is_stmt 0 view .LVU90
+ 409 0000 054A     		ldr	r2, .L48
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   vu32 target = bftm0_ct + ms;
+ 410              		.loc 1 120 1 view .LVU91
+ 411 0002 82B0     		sub	sp, sp, #8
+ 412              	.LCFI6:
+ 413              		.cfi_def_cfa_offset 8
+ 414              		.loc 1 121 26 view .LVU92
+ 415 0004 1368     		ldr	r3, [r2]
+ 416 0006 1B18     		adds	r3, r3, r0
+ 417              		.loc 1 121 8 view .LVU93
+ 418 0008 0193     		str	r3, [sp, #4]
+ 122:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   while (bftm0_ct < target);
+ 419              		.loc 1 122 3 is_stmt 1 view .LVU94
+ 420              	.L46:
+ 421              		.loc 1 122 19 discriminator 1 view .LVU95
+ 422 000a 1168     		ldr	r1, [r2]
+ 423 000c 019B     		ldr	r3, [sp, #4]
+ 424 000e 9942     		cmp	r1, r3
+ 425 0010 FBD3     		bcc	.L46
+ 123:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 426              		.loc 1 123 1 is_stmt 0 view .LVU96
+ 427 0012 02B0     		add	sp, sp, #8
+ 428              		@ sp needed
+ 429 0014 7047     		bx	lr
+ 430              	.L49:
+ 431 0016 C046     		.align	2
+ 432              	.L48:
+ 433 0018 00000000 		.word	bftm0_ct
+ 434              		.cfi_endproc
+ 435              	.LFE53:
+ 437              		.global	__aeabi_uidiv
+ 438              		.section	.text.SPI_LCD_Init,"ax",%progbits
+ 439              		.align	1
+ 440              		.global	SPI_LCD_Init
+ 441              		.syntax unified
+ 442              		.code	16
+ 443              		.thumb_func
+ 445              	SPI_LCD_Init:
+ 446              	.LFB54:
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 125:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** //-----------------------------------------------------------------------------
+ 126:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** /**
+ 127:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @brief  SPI 通信层初始化：时钟、引脚、SPI 外设、硬件复位
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  * @note   仅建立“能通信”的硬件环境；ST7789 寄存器配置由 Display_Init() 完�
+ 129:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****  */
+ 130:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** void SPI_LCD_Init(void)
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** {
+ 447              		.loc 1 131 1 is_stmt 1 view -0
+ 448              		.cfi_startproc
+ 449              		@ args = 0, pretend = 0, frame = 56
+ 450              		@ frame_needed = 0, uses_anonymous_args = 0
+ 132:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 1. 使能外设时钟 */
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCU_PeripClockConfig_TypeDef CKCUClock = {{0}};
+ 451              		.loc 1 133 3 view .LVU98
+ 134:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.SPI0 = 1;
+ 452              		.loc 1 134 3 view .LVU99
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.AFIO = 1;
+ 453              		.loc 1 135 3 view .LVU100
+ 136:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.PA   = 1;
+ 454              		.loc 1 136 3 view .LVU101
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.PB   = 1;
+ 455              		.loc 1 137 3 view .LVU102
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 1. 使能外设时钟 */
+ 456              		.loc 1 131 1 is_stmt 0 view .LVU103
+ 457 0000 70B5     		push	{r4, r5, r6, lr}
+ 458              	.LCFI7:
+ 459              		.cfi_def_cfa_offset 16
+ 460              		.cfi_offset 4, -16
+ 461              		.cfi_offset 5, -12
+ 462              		.cfi_offset 6, -8
+ 463              		.cfi_offset 14, -4
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.SPI0 = 1;
+ 464              		.loc 1 133 33 view .LVU104
+ 465 0002 C020     		movs	r0, #192
+ 466 0004 0024     		movs	r4, #0
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCU_PeripClockConfig(CKCUClock, ENABLE);
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 2. 配置 SPI 引脚为 AFIO 复用 */
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* PA4: SPI0_SCK，PA5: SPI0_MOSI，PB2: SPI0_SEL（软件控制） */
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_PullResistorConfig(SPI_LCD_BL_GPIO, AFIO_PIN_2, GPIO_PR_UP);  /* CS 上拉 */
+ 467              		.loc 1 142 3 view .LVU105
+ 468 0006 354D     		ldr	r5, .L51
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.SPI0 = 1;
+ 469              		.loc 1 133 33 view .LVU106
+ 470 0008 3549     		ldr	r1, .L51+4
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 1. 使能外设时钟 */
+ 471              		.loc 1 131 1 view .LVU107
+ 472 000a 8EB0     		sub	sp, sp, #56
+ 473              	.LCFI8:
+ 474              		.cfi_def_cfa_offset 72
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCU_PeripClockConfig(CKCUClock, ENABLE);
+ 475              		.loc 1 138 3 view .LVU108
+ 476 000c 0123     		movs	r3, #1
+ 477 000e 2200     		movs	r2, r4
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCUClock.Bit.SPI0 = 1;
+ 478              		.loc 1 133 33 view .LVU109
+ 479 0010 8002     		lsls	r0, r0, #10
+ 480 0012 0090     		str	r0, [sp]
+ 481 0014 0191     		str	r1, [sp, #4]
+ 482 0016 0294     		str	r4, [sp, #8]
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   CKCU_PeripClockConfig(CKCUClock, ENABLE);
+ 483              		.loc 1 138 3 is_stmt 1 view .LVU110
+ 484 0018 FFF7FEFF 		bl	CKCU_PeripClockConfig
+ 485              	.LVL40:
+ 486              		.loc 1 142 3 view .LVU111
+ 487 001c 2200     		movs	r2, r4
+ 488 001e 2800     		movs	r0, r5
+ 489 0020 0421     		movs	r1, #4
+ 490 0022 FFF7FEFF 		bl	GPIO_PullResistorConfig
+ 491              	.LVL41:
+ 143:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   AFIO_GPxConfig(GPIO_PA, AFIO_PIN_4, AFIO_FUN_SPI);
+ 492              		.loc 1 143 3 view .LVU112
+ 493 0026 2000     		movs	r0, r4
+ 494 0028 0522     		movs	r2, #5
+ 495 002a 1021     		movs	r1, #16
+ 496 002c FFF7FEFF 		bl	AFIO_GPxConfig
+ 497              	.LVL42:
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   AFIO_GPxConfig(GPIO_PA, AFIO_PIN_5, AFIO_FUN_SPI);
+ 498              		.loc 1 144 3 view .LVU113
+ 499 0030 2000     		movs	r0, r4
+ 500 0032 0522     		movs	r2, #5
+ 501 0034 2021     		movs	r1, #32
+ 502 0036 FFF7FEFF 		bl	AFIO_GPxConfig
+ 503              	.LVL43:
+ 145:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   AFIO_GPxConfig(GPIO_PB, AFIO_PIN_2, AFIO_FUN_SPI);
+ 504              		.loc 1 145 3 view .LVU114
+ 505 003a 0522     		movs	r2, #5
+ 506 003c 0421     		movs	r1, #4
+ 507 003e 0120     		movs	r0, #1
+ 508 0040 FFF7FEFF 		bl	AFIO_GPxConfig
+ 509              	.LVL44:
+ 146:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 147:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 3. 配置控制引脚 RST / BL */
+ 148:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_DirectionConfig(SPI_LCD_RST_GPIO, SPI_LCD_RST_PIN, GPIO_DIR_OUT);
+ 510              		.loc 1 148 3 view .LVU115
+ 511 0044 2800     		movs	r0, r5
+ 512 0046 0122     		movs	r2, #1
+ 513 0048 2021     		movs	r1, #32
+ 514 004a FFF7FEFF 		bl	GPIO_DirectionConfig
+ 515              	.LVL45:
+ 149:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_DirectionConfig(SPI_LCD_BL_GPIO, SPI_LCD_BL_PIN, GPIO_DIR_OUT);
+ 516              		.loc 1 149 3 view .LVU116
+ 517 004e 2800     		movs	r0, r5
+ 518 0050 0122     		movs	r2, #1
+ 519 0052 1021     		movs	r1, #16
+ 520 0054 FFF7FEFF 		bl	GPIO_DirectionConfig
+ 521              	.LVL46:
+ 150:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_DriveConfig(SPI_LCD_BL_GPIO, SPI_LCD_BL_PIN, GPIO_DV_16MA);
+ 522              		.loc 1 150 3 view .LVU117
+ 523 0058 2800     		movs	r0, r5
+ 524 005a 0322     		movs	r2, #3
+ 525 005c 1021     		movs	r1, #16
+ 526 005e FFF7FEFF 		bl	GPIO_DriveConfig
+ 527              	.LVL47:
+ 151:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_WriteOutBits(SPI_LCD_BL_GPIO, SPI_LCD_BL_PIN, RESET);  /* 低电平导通背光 */
+ 528              		.loc 1 151 3 view .LVU118
+ 529 0062 2200     		movs	r2, r4
+ 530 0064 2800     		movs	r0, r5
+ 531 0066 1021     		movs	r1, #16
+ 532 0068 FFF7FEFF 		bl	GPIO_WriteOutBits
+ 533              	.LVL48:
+ 152:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_WriteOutBits(SPI_LCD_RST_GPIO, SPI_LCD_RST_PIN, SET);  /* RST 初始高 */
+ 534              		.loc 1 152 3 view .LVU119
+ 535 006c 0122     		movs	r2, #1
+ 536 006e 2800     		movs	r0, r5
+ 537 0070 2021     		movs	r1, #32
+ 538 0072 FFF7FEFF 		bl	GPIO_WriteOutBits
+ 539              	.LVL49:
+ 153:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 4. SPI 初始化配置（主模式、9 位、软件 CS、CPOL=0、CPHA=0） */
+ 155:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitTypeDef SPI_InitStructure;
+ 540              		.loc 1 155 3 view .LVU120
+ 156:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_Mode = SPI_MASTER;
+ 541              		.loc 1 156 3 view .LVU121
+ 542              		.loc 1 156 30 is_stmt 0 view .LVU122
+ 543 0076 8023     		movs	r3, #128
+ 544 0078 DB01     		lsls	r3, r3, #7
+ 545 007a 0393     		str	r3, [sp, #12]
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_FIFO = SPI_FIFO_DISABLE;
+ 546              		.loc 1 157 3 is_stmt 1 view .LVU123
+ 158:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_DataLength = SPI_DATALENGTH_9;
+ 547              		.loc 1 158 36 is_stmt 0 view .LVU124
+ 548 007c 0923     		movs	r3, #9
+ 549 007e 0593     		str	r3, [sp, #20]
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_SELMode = SPI_SEL_SOFTWARE;
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_SELPolarity = SPI_SELPOLARITY_LOW;
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPOL = SPI_CPOL_LOW;
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPHA = SPI_CPHA_FIRST;
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_FirstBit = SPI_FIRSTBIT_MSB;
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_RxFIFOTriggerLevel = 0;
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_TxFIFOTriggerLevel = 0;
+ 166:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 分频系数：fSCK = fPCLK / prescaler（库内 CPR=(prescaler/2)-1，硬件 fSCK=fPCLK/((CPR
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****    * 48MHz / 12MHz = 4，即 fPCLK/4；硬件最高速为 fPCLK/2(=24MHz)。
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****    * 注意：不要再乘 2，否则实际速率减半（旧代码曾因此只跑到目标的一�
+ 169:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_ClockPrescaler = SystemCoreClock / SPI_LCD_SPI_BAUD;
+ 550              		.loc 1 169 58 view .LVU125
+ 551 0080 184B     		ldr	r3, .L51+8
+ 552 0082 1949     		ldr	r1, .L51+12
+ 553 0084 1868     		ldr	r0, [r3]
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_DataLength = SPI_DATALENGTH_9;
+ 554              		.loc 1 157 30 view .LVU126
+ 555 0086 0494     		str	r4, [sp, #16]
+ 158:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_DataLength = SPI_DATALENGTH_9;
+ 556              		.loc 1 158 3 is_stmt 1 view .LVU127
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_SELMode = SPI_SEL_SOFTWARE;
+ 557              		.loc 1 159 3 view .LVU128
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_SELMode = SPI_SEL_SOFTWARE;
+ 558              		.loc 1 159 33 is_stmt 0 view .LVU129
+ 559 0088 0694     		str	r4, [sp, #24]
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPOL = SPI_CPOL_LOW;
+ 560              		.loc 1 160 3 is_stmt 1 view .LVU130
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPOL = SPI_CPOL_LOW;
+ 561              		.loc 1 160 37 is_stmt 0 view .LVU131
+ 562 008a 0794     		str	r4, [sp, #28]
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPHA = SPI_CPHA_FIRST;
+ 563              		.loc 1 161 3 is_stmt 1 view .LVU132
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_CPHA = SPI_CPHA_FIRST;
+ 564              		.loc 1 161 30 is_stmt 0 view .LVU133
+ 565 008c 0894     		str	r4, [sp, #32]
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_FirstBit = SPI_FIRSTBIT_MSB;
+ 566              		.loc 1 162 3 is_stmt 1 view .LVU134
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_FirstBit = SPI_FIRSTBIT_MSB;
+ 567              		.loc 1 162 30 is_stmt 0 view .LVU135
+ 568 008e 0994     		str	r4, [sp, #36]
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_RxFIFOTriggerLevel = 0;
+ 569              		.loc 1 163 3 is_stmt 1 view .LVU136
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_RxFIFOTriggerLevel = 0;
+ 570              		.loc 1 163 34 is_stmt 0 view .LVU137
+ 571 0090 0A94     		str	r4, [sp, #40]
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_TxFIFOTriggerLevel = 0;
+ 572              		.loc 1 164 3 is_stmt 1 view .LVU138
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_InitStructure.SPI_TxFIFOTriggerLevel = 0;
+ 573              		.loc 1 164 44 is_stmt 0 view .LVU139
+ 574 0092 0B94     		str	r4, [sp, #44]
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 分频系数：fSCK = fPCLK / prescaler（库内 CPR=(prescaler/2)-1，硬件 fSCK=fPCLK/((CPR
+ 575              		.loc 1 165 3 is_stmt 1 view .LVU140
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 分频系数：fSCK = fPCLK / prescaler（库内 CPR=(prescaler/2)-1，硬件 fSCK=fPCLK/((CPR
+ 576              		.loc 1 165 44 is_stmt 0 view .LVU141
+ 577 0094 0C94     		str	r4, [sp, #48]
+ 578              		.loc 1 169 3 is_stmt 1 view .LVU142
+ 579              		.loc 1 169 58 is_stmt 0 view .LVU143
+ 580 0096 FFF7FEFF 		bl	__aeabi_uidiv
+ 581              	.LVL50:
+ 170:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_Init(SPI_LCD_SPI, &SPI_InitStructure);
+ 582              		.loc 1 171 3 view .LVU144
+ 583 009a 144E     		ldr	r6, .L51+16
+ 169:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 584              		.loc 1 169 40 view .LVU145
+ 585 009c 0D90     		str	r0, [sp, #52]
+ 586              		.loc 1 171 3 is_stmt 1 view .LVU146
+ 587 009e 03A9     		add	r1, sp, #12
+ 588 00a0 3000     		movs	r0, r6
+ 589 00a2 FFF7FEFF 		bl	SPI_Init
+ 590              	.LVL51:
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_SELOutputCmd(SPI_LCD_SPI, ENABLE);
+ 591              		.loc 1 172 3 view .LVU147
+ 592 00a6 3000     		movs	r0, r6
+ 593 00a8 0121     		movs	r1, #1
+ 594 00aa FFF7FEFF 		bl	SPI_SELOutputCmd
+ 595              	.LVL52:
+ 173:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   SPI_Cmd(SPI_LCD_SPI, ENABLE);
+ 596              		.loc 1 173 3 view .LVU148
+ 597 00ae 3000     		movs	r0, r6
+ 598 00b0 0121     		movs	r1, #1
+ 599 00b2 FFF7FEFF 		bl	SPI_Cmd
+ 600              	.LVL53:
+ 174:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** 
+ 175:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   /* 5. 硬件复位 */
+ 176:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_WriteOutBits(SPI_LCD_RST_GPIO, SPI_LCD_RST_PIN, RESET);
+ 601              		.loc 1 176 3 view .LVU149
+ 602 00b6 2200     		movs	r2, r4
+ 603 00b8 2021     		movs	r1, #32
+ 604 00ba 2800     		movs	r0, r5
+ 605 00bc FFF7FEFF 		bl	GPIO_WriteOutBits
+ 606              	.LVL54:
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   Delay(5);
+ 607              		.loc 1 177 3 view .LVU150
+ 608 00c0 0520     		movs	r0, #5
+ 609 00c2 FFF7FEFF 		bl	Delay
+ 610              	.LVL55:
+ 178:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   GPIO_WriteOutBits(SPI_LCD_RST_GPIO, SPI_LCD_RST_PIN, SET);
+ 611              		.loc 1 178 3 view .LVU151
+ 612 00c6 0122     		movs	r2, #1
+ 613 00c8 2021     		movs	r1, #32
+ 614 00ca 2800     		movs	r0, r5
+ 615 00cc FFF7FEFF 		bl	GPIO_WriteOutBits
+ 616              	.LVL56:
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c ****   Delay(10);
+ 617              		.loc 1 179 3 view .LVU152
+ 618 00d0 0A20     		movs	r0, #10
+ 619 00d2 FFF7FEFF 		bl	Delay
+ 620              	.LVL57:
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\spi_lcd.c **** }
+ 621              		.loc 1 180 1 is_stmt 0 view .LVU153
+ 622 00d6 0EB0     		add	sp, sp, #56
+ 623              		@ sp needed
+ 624 00d8 70BD     		pop	{r4, r5, r6, pc}
+ 625              	.L52:
+ 626 00da C046     		.align	2
+ 627              	.L51:
+ 628 00dc 00200B40 		.word	1074470912
+ 629 00e0 10400000 		.word	16400
+ 630 00e4 00000000 		.word	SystemCoreClock
+ 631 00e8 001BB700 		.word	12000000
+ 632 00ec 00400040 		.word	1073758208
+ 633              		.cfi_endproc
+ 634              	.LFE54:
+ 636              		.text
+ 637              	.Letext0:
+ 638              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 639              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 640              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 641              		.file 5 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_ckcu.h"
+ 642              		.file 6 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_gpio.h"
+ 643              		.file 7 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_spi.h"
+ 644              		.file 8 "../../../../library/Device/Holtek/HT32L5xxxx/Include/system_ht32l5xxxx_01.h"
+ 645              		.file 9 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/BFTM0.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 spi_lcd.c
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:19     .text.SPI_LCD_SPI_SendByte.isra.0:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:24     .text.SPI_LCD_SPI_SendByte.isra.0:00000000 SPI_LCD_SPI_SendByte.isra.0
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:123    .text.SPI_LCD_SPI_SendByte.isra.0:00000048 $d
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:129    .text.SPI_LCD_Select:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:135    .text.SPI_LCD_Select:00000000 SPI_LCD_Select
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:161    .text.SPI_LCD_Select:0000000c $d
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:166    .text.SPI_LCD_Deselect:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:172    .text.SPI_LCD_Deselect:00000000 SPI_LCD_Deselect
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:267    .text.SPI_LCD_Deselect:00000040 $d
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:274    .text.SPI_LCD_WriteCmd:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:280    .text.SPI_LCD_WriteCmd:00000000 SPI_LCD_WriteCmd
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:307    .text.SPI_LCD_WriteData:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:313    .text.SPI_LCD_WriteData:00000000 SPI_LCD_WriteData
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:360    .text.SPI_LCD_WriteDataByte:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:366    .text.SPI_LCD_WriteDataByte:00000000 SPI_LCD_WriteDataByte
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:393    .text.Delay:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:399    .text.Delay:00000000 Delay
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:433    .text.Delay:00000018 $d
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:439    .text.SPI_LCD_Init:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:445    .text.SPI_LCD_Init:00000000 SPI_LCD_Init
+C:\Users\q3112\AppData\Local\Temp\ccyPYlk7.s:628    .text.SPI_LCD_Init:000000dc $d
+
+UNDEFINED SYMBOLS
+SPI_GetFlagStatus
+SPI_SendData
+SPI_ReceiveData
+SPI_SoftwareSELCmd
+bftm0_ct
+__aeabi_uidiv
+CKCU_PeripClockConfig
+GPIO_PullResistorConfig
+AFIO_GPxConfig
+GPIO_DirectionConfig
+GPIO_DriveConfig
+GPIO_WriteOutBits
+SPI_Init
+SPI_SELOutputCmd
+SPI_Cmd
+SystemCoreClock

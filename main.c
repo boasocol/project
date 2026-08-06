@@ -91,6 +91,9 @@ int main(void)
     }
 #endif /* HD9803_ENABLE */
 
+    /* 翻页动画帧推进（每 7-8ms 一帧，BFTM0 1ms 计数作为时间基准） */
+    Calendar_FlipTick((u32)bftm0_ct);
+
     if (g_time_update_flag)
     {
       g_time_update_flag = 0;

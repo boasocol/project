@@ -1,0 +1,248 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"LED.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/LED.c"
+  18              		.section	.text.LED_Configuration,"ax",%progbits
+  19              		.align	1
+  20              		.global	LED_Configuration
+  21              		.syntax unified
+  22              		.code	16
+  23              		.thumb_func
+  25              	LED_Configuration:
+  26              	.LFB46:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** /**************************************************************************************************
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * @attention
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * Firmware Disclaimer Information
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * 1. The customer hereby acknowledges and agrees that the program technical documentation, includi
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    code, which is supplied by Holtek Semiconductor Inc., (hereinafter referred to as "HOLTEK") i
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    proprietary and confidential intellectual property of HOLTEK, and is protected by copyright l
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    other intellectual property laws.
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * 2. The customer hereby acknowledges and agrees that the program technical documentation, includi
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    code, is confidential information belonging to HOLTEK, and must not be disclosed to any third
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    other than HOLTEK and the customer.
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * 3. The program technical documentation, including the code, is provided "as is" and for customer
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    only. After delivery by HOLTEK, the customer shall use the program technical documentation, i
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    the code, at their own risk. HOLTEK disclaims any expressed, implied or statutory warranties,
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *    the warranties of merchantability, satisfactory quality and fitness for a particular purpose.
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  *
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  * <h2><center>Copyright (C) Holtek Semiconductor Inc. All rights reserved</center></h2>
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****  **************************************************************************************************
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** //-----------------------------------------------------------------------------
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** #include "LED.h"
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** 
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** //-----------------------------------------------------------------------------
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** /**
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @brief  LED模块初始化函数
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @note   执行以下操作：
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   *         1. 使能GPIOA外设时钟
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   *         2. 配置PA0引脚为推挽输出模式
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   *         3. 设置PA0引脚输出高电平（LED熄灭，假设LED为低电平有效）
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @retval None
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   */
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** void LED_Configuration(void)
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** {
+  27              		.loc 1 35 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 16
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 定义时钟配置结构体 */
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 用于指定要使能的外设时钟 */
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   CKCU_PeripClockConfig_TypeDef CKCUClock = {{ 0 }};
+  31              		.loc 1 38 3 view .LVU1
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 定义时钟配置结构体 */
+  32              		.loc 1 35 1 is_stmt 0 view .LVU2
+  33 0000 30B5     		push	{r4, r5, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 12
+  36              		.cfi_offset 4, -12
+  37              		.cfi_offset 5, -8
+  38              		.cfi_offset 14, -4
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 设置PA位为1，使能GPIOA外设时钟 */
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 每个GPIO端口都需要独立使能时钟才能使用 */
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   CKCUClock.Bit.PA = 1;
+  39              		.loc 1 42 20 view .LVU3
+  40 0002 0124     		movs	r4, #1
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 定义时钟配置结构体 */
+  41              		.loc 1 35 1 view .LVU4
+  42 0004 85B0     		sub	sp, sp, #20
+  43              	.LCFI1:
+  44              		.cfi_def_cfa_offset 32
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  45              		.loc 1 38 33 view .LVU5
+  46 0006 01AD     		add	r5, sp, #4
+  47 0008 0C22     		movs	r2, #12
+  48 000a 0021     		movs	r1, #0
+  49 000c 2800     		movs	r0, r5
+  50 000e FFF7FEFF 		bl	memset
+  51              	.LVL0:
+  52              		.loc 1 42 3 is_stmt 1 view .LVU6
+  53              		.loc 1 42 20 is_stmt 0 view .LVU7
+  54 0012 AC70     		strb	r4, [r5, #2]
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 使能GPIOA外设时钟 */
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* CKCU（Clock Control Unit）负责管理所有外设的时钟开关 */
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   CKCU_PeripClockConfig(CKCUClock, ENABLE);
+  55              		.loc 1 46 3 is_stmt 1 view .LVU8
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 配置PA0引脚为输出方向 */
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* GPIO_DIR_OUT: 输出模式 */
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* GPIO_DIR_IN: 输入模式 */
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   GPIO_DirectionConfig(HT_GPIOA, GPIO_PIN_0, GPIO_DIR_OUT);
+  56              		.loc 1 51 3 is_stmt 0 view .LVU9
+  57 0014 084D     		ldr	r5, .L2
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  58              		.loc 1 46 3 view .LVU10
+  59 0016 2300     		movs	r3, r4
+  60 0018 0198     		ldr	r0, [sp, #4]
+  61 001a 0299     		ldr	r1, [sp, #8]
+  62 001c 039A     		ldr	r2, [sp, #12]
+  63 001e FFF7FEFF 		bl	CKCU_PeripClockConfig
+  64              	.LVL1:
+  65              		.loc 1 51 3 is_stmt 1 view .LVU11
+  66 0022 2200     		movs	r2, r4
+  67 0024 2100     		movs	r1, r4
+  68 0026 2800     		movs	r0, r5
+  69 0028 FFF7FEFF 		bl	GPIO_DirectionConfig
+  70              	.LVL2:
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 设置PA0引脚输出高电平 */
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 如果LED是低电平点亮（共阴极），则此时LED熄灭 */
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   GPIO_SetOutBits(HT_GPIOA, GPIO_PIN_0);
+  71              		.loc 1 55 3 view .LVU12
+  72 002c 2100     		movs	r1, r4
+  73 002e 2800     		movs	r0, r5
+  74 0030 FFF7FEFF 		bl	GPIO_SetOutBits
+  75              	.LVL3:
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** }
+  76              		.loc 1 56 1 is_stmt 0 view .LVU13
+  77 0034 05B0     		add	sp, sp, #20
+  78              		@ sp needed
+  79 0036 30BD     		pop	{r4, r5, pc}
+  80              	.L3:
+  81              		.align	2
+  82              	.L2:
+  83 0038 00000B40 		.word	1074462720
+  84              		.cfi_endproc
+  85              	.LFE46:
+  87              		.section	.text.LED_Toggle,"ax",%progbits
+  88              		.align	1
+  89              		.global	LED_Toggle
+  90              		.syntax unified
+  91              		.code	16
+  92              		.thumb_func
+  94              	LED_Toggle:
+  95              	.LFB47:
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** 
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** //-----------------------------------------------------------------------------
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** /**
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @brief  LED状态翻转函数
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @note   读取PA0当前输出状态，然后取反
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   *         - 如果当前是高电平，则变为低电平（点亮LED）
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   *         - 如果当前是低电平，则变为高电平（熄灭LED）
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   * @retval None
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   */
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** void LED_Toggle(void)
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** {
+  96              		.loc 1 67 1 is_stmt 1 view -0
+  97              		.cfi_startproc
+  98              		@ args = 0, pretend = 0, frame = 0
+  99              		@ frame_needed = 0, uses_anonymous_args = 0
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 读取PA0引脚当前输出状态 */
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 返回SET（高电平）或RESET（低电平） */
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   if(GPIO_ReadOutBit(HT_GPIOA, GPIO_PIN_0))
+ 100              		.loc 1 70 3 view .LVU15
+ 101              		.loc 1 70 6 is_stmt 0 view .LVU16
+ 102 0000 0121     		movs	r1, #1
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   /* 读取PA0引脚当前输出状态 */
+ 103              		.loc 1 67 1 view .LVU17
+ 104 0002 10B5     		push	{r4, lr}
+ 105              	.LCFI2:
+ 106              		.cfi_def_cfa_offset 8
+ 107              		.cfi_offset 4, -8
+ 108              		.cfi_offset 14, -4
+ 109              		.loc 1 70 6 view .LVU18
+ 110 0004 0648     		ldr	r0, .L7
+ 111 0006 FFF7FEFF 		bl	GPIO_ReadOutBit
+ 112              	.LVL4:
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   {
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     /* 当前是高电平，设置为低电平 */
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     /* 假设LED为低电平有效，此时LED点亮 */
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     GPIO_ClearOutBits(HT_GPIOA, GPIO_PIN_0);
+ 113              		.loc 1 74 5 view .LVU19
+ 114 000a 0121     		movs	r1, #1
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   {
+ 115              		.loc 1 70 5 discriminator 1 view .LVU20
+ 116 000c 0028     		cmp	r0, #0
+ 117 000e 03D0     		beq	.L5
+ 118              		.loc 1 74 5 is_stmt 1 view .LVU21
+ 119 0010 0348     		ldr	r0, .L7
+ 120 0012 FFF7FEFF 		bl	GPIO_ClearOutBits
+ 121              	.LVL5:
+ 122              	.L4:
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   }
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   else
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   {
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     /* 当前是低电平，设置为高电平 */
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     /* 假设LED为低电平有效，此时LED熄灭 */
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****     GPIO_SetOutBits(HT_GPIOA, GPIO_PIN_0);
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   }
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c **** }
+ 123              		.loc 1 82 1 is_stmt 0 view .LVU22
+ 124              		@ sp needed
+ 125 0016 10BD     		pop	{r4, pc}
+ 126              	.L5:
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\LED.c ****   }
+ 127              		.loc 1 80 5 is_stmt 1 view .LVU23
+ 128 0018 0148     		ldr	r0, .L7
+ 129 001a FFF7FEFF 		bl	GPIO_SetOutBits
+ 130              	.LVL6:
+ 131              		.loc 1 82 1 is_stmt 0 view .LVU24
+ 132 001e FAE7     		b	.L4
+ 133              	.L8:
+ 134              		.align	2
+ 135              	.L7:
+ 136 0020 00000B40 		.word	1074462720
+ 137              		.cfi_endproc
+ 138              	.LFE47:
+ 140              		.text
+ 141              	.Letext0:
+ 142              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 143              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 144              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 145              		.file 5 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_ckcu.h"
+ 146              		.file 6 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_gpio.h"
+ 147              		.file 7 "<built-in>"
+DEFINED SYMBOLS
+                            *ABS*:00000000 LED.c
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:19     .text.LED_Configuration:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:25     .text.LED_Configuration:00000000 LED_Configuration
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:83     .text.LED_Configuration:00000038 $d
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:88     .text.LED_Toggle:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:94     .text.LED_Toggle:00000000 LED_Toggle
+C:\Users\q3112\AppData\Local\Temp\ccyZdOP2.s:136    .text.LED_Toggle:00000020 $d
+
+UNDEFINED SYMBOLS
+memset
+CKCU_PeripClockConfig
+GPIO_DirectionConfig
+GPIO_SetOutBits
+GPIO_ReadOutBit
+GPIO_ClearOutBits

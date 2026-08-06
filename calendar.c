@@ -59,6 +59,115 @@ static void draw_colon(int x, int on)
   UI_DrawGlyphRect(x, YF(14, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
 
+/* ============ 翻页动画状态（6 张卡片对应 6 个时/分/秒位） ============
+   卡片 x 顺序（与 clock_xs 一致）：H1=13, H2=59, M1=117, M2=163, S1=221, S2=267
+
+   ANI2 双位面模型：
+     阶段 A(state=1)：旧数字的【物理上半】绕中缝向下倒，背景露出新数字上半
+     阶段 B(state=2)：新数字的【物理下半】从中缝向下展开，背景是旧数字下半
+     两半各由数据头决定帧数（UI_Anim_GetFrames），整段翻页约 2*N*间隔 后 IDLE。
+   half_idx 语义（与 ui.c 一致）：0=物理下半，1=物理上半。 */
+/* 每半翻页帧数由动画数据头决定（UI_Anim_GetFrames），不再硬编码 */
+typedef struct { u8 state; u8 new_digit; u8 old_digit; u8 frame; } FlipState;
+static FlipState g_flip[6];
+static const int g_card_x[6] = {13, 59, 117, 163, 221, 267};
+/* 卡片上下半的 y：整卡已验证 GRAM 起始 = YF(14,84)=141（141=数字顶部）。
+   上半 = 141 起始，下半 = 141+42 = 183 起始。 */
+#define FLIP_CARD_Y0     (YF(14, 84))     /* 整卡 GRAM 起始列（=141） */
+#define FLIP_HALF_H      42
+
+/* 串行翻页：同一时刻只翻一位，按 秒个位→秒十位→分个位→分十位→时个位→时十位 顺序 */
+static int g_active = -1;                 /* 当前正在翻页的槽，-1 表示无 */
+static u8  g_pending[6];                  /* 待翻页队列标记 */
+static u8  g_pend_old[6], g_pend_new[6];  /* 队列中的 old/new 目标数字 */
+static u8  g_disp[6];                     /* 各槽当前已显示数字（翻完或静态绘制时更新） */
+
+static void flip_start(int slot, u8 old_digit, u8 new_digit)
+{
+  if (old_digit > 9) old_digit = new_digit;   /* 首次无旧值：退化为静态刷新 */
+  /* 一律记录目标并排队。即使该位正在翻页/已排队，也更新目标，
+     避免“翻到一半来了新变化”时把这次翻转弄丢（旧逻辑不置 g_pending 导致跳数字）。 */
+  g_pend_old[slot] = old_digit;
+  g_pend_new[slot] = new_digit;
+  g_pending[slot]  = 1;
+}
+
+/* 翻页动画是否可用（Calendar_Init 时记录 UI_Anim_Ready() 结果） */
+static u8 g_anim_ok = 0;
+
+/* 每 6ms 推进一帧（main 主循环按 BFTM0 1ms 计数调用）。
+   翻页期间会调用 UI_Anim_DrawFrame 画当前帧；翻完恢复 IDLE（下次 Refresh 画静态）。 */
+void Calendar_FlipTick(u32 now_ms)
+{
+  static u32 last_ms = 0;
+  if (!g_anim_ok) return;              /* 动画区不可用：纯静态显示 */
+  if (now_ms - last_ms < 6u) return;   /* 6ms 间隔（原 8ms，提速）；BFTM 1ms 节拍做容差 */
+  last_ms = now_ms;
+
+  /* 无活动槽时，按 低->高 顺序（秒个位…时十位）取下一个待翻页 */
+  if (g_active < 0)
+  {
+    static const int order[6] = {5, 4, 3, 2, 1, 0};  /* 秒个位,秒十位,分个位,分十位,时个位,时十位 */
+    for (int k = 0; k < 6; k++)
+    {
+      int s = order[k];
+      if (g_pending[s])
+      {
+        u8 new_d = g_pend_new[s];
+        u8 old_d = (g_disp[s] <= 9) ? g_disp[s] : g_pend_old[s];
+        if (old_d == new_d) { g_pending[s] = 0; continue; }   /* 已是目标：无需翻 */
+        g_flip[s].old_digit = old_d;
+        g_flip[s].new_digit = new_d;
+        g_flip[s].state     = 1;
+        g_flip[s].frame     = 0;
+        g_pending[s]        = 0;
+        g_active            = s;
+        break;
+      }
+    }
+  }
+
+  if (g_active < 0) return;            /* 没有待翻页 */
+
+  int i   = g_active;
+  u8  st  = g_flip[i].state;
+  if (st == 0) { g_active = -1; return; }
+
+  int hy;
+  int digit, bg_digit, half_idx;
+  if (st == 1)
+  {   /* 阶段 A：屏幕上半(half_idx=1, GRAM183-224)折叠旧数字，背景是新数字上半 */
+      half_idx = 1;
+      digit    = g_flip[i].old_digit;
+      bg_digit = g_flip[i].new_digit;
+      hy       = FLIP_CARD_Y0 + FLIP_HALF_H;   /* GRAM 起始 = 183 */
+  }
+  else
+  {   /* 阶段 B：屏幕下半(half_idx=0, GRAM141-182)展开新数字，背景是旧数字下半 */
+      half_idx = 0;
+      digit    = g_flip[i].new_digit;
+      bg_digit = g_flip[i].old_digit;
+      hy       = FLIP_CARD_Y0;                 /* GRAM 起始 = 141 */
+  }
+
+  UI_Anim_DrawFrame(g_card_x[i], hy, digit, half_idx, g_flip[i].frame,
+                    bg_digit, UI_C_DIGIT);
+
+  g_flip[i].frame++;
+  if (g_flip[i].frame >= (u8)UI_Anim_GetFrames())
+  {
+    g_flip[i].frame = 0;
+    if (st == 1)
+      g_flip[i].state = 2;         /* 上半翻完，切阶段 B（仍为本槽） */
+    else
+    {   /* 下半翻完：整卡 = 新数字，更新已显示值并释放活动槽 */
+        g_flip[i].state = 0;
+        g_disp[i]       = g_flip[i].new_digit;
+        g_active        = -1;
+    }
+  }
+}
+
 /* ============ 蓝牙状态动态绘制 ============
    背景图药丸：(x=196, y=156, w=108, h=24)；图标已占左侧，右缘 x=217。
    状态文字"已连接/未连接"共 3 个 18x22 汉字，在图标右缘与药丸右缘(303)
@@ -92,6 +201,11 @@ void Calendar_Init(void)
   }
   UI_UploadBackground();          /* 整屏上传 Flash 中的新 UI 背景图 */
   UI_CacheFont();                 /* 缓存字库索引表 */
+  g_anim_ok = (UI_Anim_Init() == 0 && UI_Anim_Ready()) ? 1 : 0;
+
+  /* 翻页状态清零（首次 Refresh 若动画可用则按串行队列启动翻页） */
+  for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; g_disp[i] = 0; }
+  g_active = -1;
 
   /* 初始冒号（之后由 BFTM1 半秒中断驱动 Calendar_ColonBlink 闪烁） */
   draw_colon(101, 1);
@@ -112,25 +226,44 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
 {
   int wd = CalcWeekday(t->year, t->month, t->day);
 
-  /* ---- 时钟数字（4 位，分/时/秒各自变化检测） ---- */
-  if (t->hour != c_hh)
+  /* ---- 时钟数字（6 位独立变化检测，只翻真正变化的那一位） ----
+     动画可用：变化位启动翻页（Calendar_FlipTick 推进帧）；
+     动画不可用（如 Flash 未烧新 ANIM 区）：直接画静态字模，保证数字必现。 */
+  if ((t->hour / 10) != (c_hh / 10))
   {
-    draw_clock_digit(13, t->hour / 10);
-    draw_clock_digit(59, t->hour % 10);
-    c_hh = t->hour;
+    if (g_anim_ok) flip_start(0, c_hh / 10, t->hour / 10);
+    else           draw_clock_digit(13, t->hour / 10);
   }
-  if (t->minute != c_mm)
+  if ((t->hour % 10) != (c_hh % 10))
   {
-    draw_clock_digit(117, t->minute / 10);
-    draw_clock_digit(163, t->minute % 10);
-    c_mm = t->minute;
+    if (g_anim_ok) flip_start(1, c_hh % 10, t->hour % 10);
+    else           draw_clock_digit(59, t->hour % 10);
   }
-  if (t->second != c_ss)
+  c_hh = t->hour;
+
+  if ((t->minute / 10) != (c_mm / 10))
   {
-    draw_clock_digit(221, t->second / 10);
-    draw_clock_digit(267, t->second % 10);
-    c_ss = t->second;
+    if (g_anim_ok) flip_start(2, c_mm / 10, t->minute / 10);
+    else           draw_clock_digit(117, t->minute / 10);
   }
+  if ((t->minute % 10) != (c_mm % 10))
+  {
+    if (g_anim_ok) flip_start(3, c_mm % 10, t->minute % 10);
+    else           draw_clock_digit(163, t->minute % 10);
+  }
+  c_mm = t->minute;
+
+  if ((t->second / 10) != (c_ss / 10))
+  {
+    if (g_anim_ok) flip_start(4, c_ss / 10, t->second / 10);
+    else           draw_clock_digit(221, t->second / 10);
+  }
+  if ((t->second % 10) != (c_ss % 10))
+  {
+    if (g_anim_ok) flip_start(5, c_ss % 10, t->second % 10);
+    else           draw_clock_digit(267, t->second % 10);
+  }
+  c_ss = t->second;
 
   /* ---- 日期徽章（y=82, h=22，字高 12，整串在徽章内居中） ---- */
   if (t->year != c_yy || t->month != c_mo || t->day != c_dd || wd != c_wd)

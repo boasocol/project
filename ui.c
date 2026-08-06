@@ -10,6 +10,7 @@
 #include "flash_read.h"
 #include "spi_lcd.h"
 #include <string.h>
+#include <stdio.h>
 
 /* ============ 全局状态 ============ */
 static u32 g_ui_base   = 0;     /* UI 背景图在 Flash 中的偏移（来自分区头） */
@@ -18,7 +19,9 @@ static u8  g_line[320 * 2];     /* 一行像素临时缓冲（640B，含字节�
 
 /* 字库索引缓存：build_flash.py 生成 {u32 code, u32 off, u16 w, u16 h} 表，按 code 升序 */
 typedef struct { u32 code; u32 off; u16 w; u16 h; } font_idx_t;
-static font_idx_t g_idx[200];
+/* build_flash.py 实际仅生成 50 个字模，缓存 64 个已留足余量（原 200 浪费 1800B RAM） */
+#define MAX_FONT_IDX 64
+static font_idx_t g_idx[MAX_FONT_IDX];
 static u32 g_font_count = 0;
 static u8  g_glyph[640];        /* 单个字形位图（最大 44x84 1bpp = 504B） */
 static const u8 g_blank[640] = {0};
@@ -67,7 +70,7 @@ int UI_CacheFont(void)
   if (crc != stored)
     return -2;
   g_font_count = (u32)h[11] | ((u32)h[12] << 8) | ((u32)h[13] << 16) | ((u32)h[14] << 24);
-  if (g_font_count > 200) g_font_count = 200;
+  if (g_font_count > MAX_FONT_IDX) g_font_count = MAX_FONT_IDX;
   u32 index_off = (u32)h[15] | ((u32)h[16] << 8) | ((u32)h[17] << 16) | ((u32)h[18] << 24);
   for (u32 i = 0; i < g_font_count; i++)
   {
@@ -217,4 +220,176 @@ void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base)
     UI_DrawGlyphRect(cx, y, w, h, code, color);
     cx += w;
   }
+}
+
+/* ===========================================================================================================
+ * 翻页动画（ANI2 区 @ Flash 0x110000）
+ *
+ * 数据布局（与 build_flash.py build_anim 对齐）：
+ *   +0   magic[4]  "ANI2"
+ *   +4   version   u32 (=2)
+ *   +8   num       u8  (10)
+ *   +9   halves    u8  (2)
+ *   +10  frames    u16 (20)
+ *   +12  w         u16 (40)
+ *   +14  h         u16 (42)
+ *   +16  crc32     u32（覆盖 [0..16)）
+ *   +20  planes    u8  (2：ink + mask)
+ *   +24..63  shade[2][20]  u8：阶段 A/B 的每帧明暗系数(0..255)
+ *   +64..255 reserved(0)
+ *   +256.. 帧数据：digits(10) x halves(2) x frames(20) x (ink 210B + mask 210B)
+ *
+ * 双位面模型：
+ *   mask=1 区域被折叠/展开的卡片纸覆盖：ink=1 画数字色，ink=0 画背景色变暗(shade)
+ *   mask=0 区域是卡片纸后面的背景数字：bg_digit 该半幅 + 原 UI 背景
+ * =========================================================================================================== */
+
+static u32 g_anim_frames = 0;
+static u32 g_anim_w      = 0;
+static u32 g_anim_h      = 0;
+static u32 g_anim_num    = 0;
+static u32 g_anim_half   = 0;
+static u32 g_anim_planes = 0;
+static u8  g_anim_shade[2][20];       /* [half_idx][frame] */
+
+static u32 anim_frame_off(int digit, int half_idx, int frame_idx)
+{
+  u32 row = (g_anim_w + 7u) / 8u;
+  u32 per = g_anim_h * row * g_anim_planes;   /* 双位面：ink + mask */
+  return ((u32)digit * g_anim_half * g_anim_frames +
+          (u32)half_idx * g_anim_frames +
+          (u32)frame_idx) * per;
+}
+
+int UI_Anim_Init(void)
+{
+  u8 hdr[256];
+  Flash_Read(UI_ANIM_OFF, hdr, 256);
+  printf("[ANIM] flash@%X: %c%c%c%c\n", UI_ANIM_OFF,
+         hdr[0], hdr[1], hdr[2], hdr[3]);
+  if (!(hdr[0]=='A' && hdr[1]=='N' && hdr[2]=='I' && hdr[3]=='2'))
+  {
+    printf("[ANIM] bad magic -> static\n");
+    return -1;
+  }
+  u32 crc      = (u32)hdr[16] | ((u32)hdr[17] << 8) | ((u32)hdr[18] << 16) | ((u32)hdr[19] << 24);
+  u32 crc_calc = ui_crc32(hdr, 16);
+  if (crc != crc_calc)
+  {
+    printf("[ANIM] crc fail: stored=%08X calc=%08X -> static\n", crc, crc_calc);
+    return -2;
+  }
+  g_anim_num    = hdr[8];
+  g_anim_half   = hdr[9];
+  g_anim_frames = (u32)hdr[10] | ((u32)hdr[11] << 8);
+  g_anim_w      = (u32)hdr[12] | ((u32)hdr[13] << 8);
+  g_anim_h      = (u32)hdr[14] | ((u32)hdr[15] << 8);
+  g_anim_planes = hdr[20];                       /* 应为 2 */
+  if (g_anim_planes == 0) g_anim_planes = 2;
+  memcpy(g_anim_shade[0], hdr + 24, 20);
+  memcpy(g_anim_shade[1], hdr + 44, 20);
+  printf("[ANIM] ok: digits=%u halves=%u frames=%u w=%u h=%u planes=%u -> flip\n",
+         g_anim_num, g_anim_half, g_anim_frames, g_anim_w, g_anim_h, g_anim_planes);
+  return 0;
+}
+
+int  UI_Anim_GetFrames(void) { return (int)g_anim_frames; }
+int  UI_Anim_GetHalfW(void)   { return (int)g_anim_w; }
+int  UI_Anim_GetHalfH(void)   { return (int)g_anim_h; }
+int  UI_Anim_Ready(void)      { return (g_anim_w > 0u && g_anim_h > 0u && g_anim_frames > 0u) ? 1 : 0; }
+
+/* 帧数据缓冲：ink 210B + mask 210B = 420B（一次性读两个平面） */
+static u8  g_anim_buf[520];
+/* 整 half 合成缓冲（40x42 RGB565 = 3360B），整块一次 RAMWR 写屏，
+   取代原来逐行 42 次 SPI 事务 + 逐像素 Flash_Read，翻页阻塞大幅降低。 */
+static u8 g_blit[40 * 42 * 2];
+
+/* 把 565 颜色按 shade(0..256) 缩放（shade=256 时不变）。shade 以 0..256 传入以用 >>8 代替 /255 */
+static u16 ui_shade_color(u16 c, u16 shade)
+{
+  u32 r = ((c >> 11) & 0x1F) * shade >> 8;
+  u32 g = ((c >> 5)  & 0x3F) * shade >> 8;
+  u32 b = (c        & 0x1F) * shade >> 8;
+  return (u16)((r << 11) | (g << 5) | b);
+}
+
+void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int frame_idx,
+                       int bg_digit, u16 color)
+{
+  if (digit < 0 || digit >= (int)g_anim_num) return;
+  if (bg_digit < 0 || bg_digit >= (int)g_anim_num) bg_digit = digit;
+  if (half_idx < 0 || half_idx >= (int)g_anim_half) return;
+  if (frame_idx < 0 || frame_idx >= (int)g_anim_frames) return;
+  if (g_anim_w == 0 || g_anim_h == 0) return;
+
+  u32 w = g_anim_w, h = g_anim_h;
+  u32 row_bytes = (w + 7u) / 8u;
+  u32 per       = h * row_bytes;                 /* 单平面大小 */
+  u32 off       = UI_ANIM_OFF + 256u + anim_frame_off(digit, half_idx, frame_idx);
+
+  /* 一次性读 ink + mask 两个平面（420B），取代原来逐像素 1680 次 Flash_Read */
+  Flash_Read(off, g_anim_buf, per * g_anim_planes);
+  const u8 *ink  = g_anim_buf;
+  const u8 *mask = g_anim_buf + per;
+
+  /* 读背景数字该 half 的 1bpp 位图（40x42）一次读出 */
+  const u8 *bg = ui_get_glyph((u32)'0' + (u32)bg_digit);
+  if (!bg) bg = g_blank;
+  u32 bg_rb = (g_cur_w + 7u) / 8u;
+  u32 bg_y0 = (half_idx == 1) ? 42u : 0u;        /* half1(屏幕上半)取 42..83 行，half0(屏幕下半)取 0..41 行 */
+
+  u16 shade = 256u;
+  if (half_idx < 2 && frame_idx < 20)
+    shade = (u16)g_anim_shade[half_idx][frame_idx] + 1u;   /* 0..255 -> 1..256 */
+
+  /* 逐行读 UI 背景（小端->高字节先），直接合成进 g_blit。
+     GRAM 自动递增顺序：行(逻辑x)外、列(逻辑y)内 -> 像素索引 = x*h + yy */
+  for (u32 yy = 0; yy < h; yy++)
+  {
+    u32 ly = (u32)(half_y0 + (int)yy);
+    Flash_Read(g_ui_base + ly * 320u * 2u + (u32)card_x * 2u, g_line, w * 2u);
+    for (u32 i = 0; i < w * 2u; i += 2)
+    { u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t; }
+
+    u32 src_row = yy * row_bytes;
+    u32 bg_row  = (bg_y0 + yy) * bg_rb;
+    for (u32 x = 0; x < w; x++)
+    {
+      u32 idx = src_row + (x >> 3);
+      u8  mb  = (mask[idx] >> (7 - (x & 7))) & 1;
+      u16 pix;
+      if (mb)
+      {
+        u8 ib = (ink[idx] >> (7 - (x & 7))) & 1;
+        if (ib)
+          pix = (shade == 256u) ? color : ui_shade_color(color, shade);
+        else
+        {
+          u16 bg565 = (u16)((u16)g_line[x * 2] << 8) | g_line[x * 2 + 1];
+          pix = (shade == 256u) ? bg565 : ui_shade_color(bg565, shade);
+        }
+      }
+      else
+      {
+        u8 bb = (bg[bg_row + (x >> 3)] >> (7 - (x & 7))) & 1;
+        u16 bg565 = (u16)((u16)g_line[x * 2] << 8) | g_line[x * 2 + 1];
+        pix = bb ? color : bg565;
+      }
+      u32 pos = (x * h + yy) * 2u;
+      g_blit[pos]     = HI8(pix);
+      g_blit[pos + 1] = LO8(pix);
+    }
+  }
+
+  /* 整 half 一次 RAMWR：窗口与 UI_DrawGlyphRect 同构（CASET=逻辑y, RASET=逻辑x） */
+  SPI_LCD_Select();
+  SPI_LCD_WriteCmd(ST7789_CASET);
+  { u8 d[4] = {0, (u8)half_y0, 0, (u8)(half_y0 + (int)h - 1)}; SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RASET);
+  { u8 d[4] = {HI8((u16)card_x), LO8((u16)card_x),
+               HI8((u16)(card_x + (int)w - 1)), LO8((u16)(card_x + (int)w - 1))};
+    SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RAMWR);
+  SPI_LCD_WriteData(g_blit, (u32)w * h * 2u);
+  SPI_LCD_Deselect();
 }

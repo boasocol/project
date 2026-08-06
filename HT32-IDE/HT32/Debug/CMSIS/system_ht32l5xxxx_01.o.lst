@@ -1,0 +1,1073 @@
+   1              		.cpu cortex-m0plus
+   2              		.arch armv6s-m
+   3              		.fpu softvfp
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 4
+  11              		.eabi_attribute 34, 0
+  12              		.eabi_attribute 18, 4
+  13              		.file	"system_ht32l5xxxx_01.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.file 1 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/system_ht32l5xxxx_01.c"
+  18              		.section	.text.SystemInit,"ax",%progbits
+  19              		.align	1
+  20              		.global	SystemInit
+  21              		.syntax unified
+  22              		.code	16
+  23              		.thumb_func
+  25              	SystemInit:
+  26              	.LFB46:
+   1:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**************************************************************************//**
+   2:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @file    library/Device/Holtek/HT32L5xxxx/Source/system_ht32l5xxxx_01.c
+   3:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief   CMSIS Cortex-M0+ Device Peripheral Access Layer Source File
+   4:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  *          for the Holtek HT32L5xxxx Device Series
+   5:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @version $Rev:: 1288         $
+   6:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @date    $Date:: 2026-05-06 #$
+   7:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  *
+   8:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @note
+   9:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * Copyright (C) Holtek Semiconductor Inc. All rights reserved.
+  10:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  *
+  11:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @par
+  12:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * ARM Limited (ARM) supplies this software for Cortex-M processor-based
+  13:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * microcontrollers. This file can be freely distributed within development
+  14:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * tools that are supporting such ARM based processors.
+  15:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  *
+  16:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @par
+  17:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * THIS SOFTWARE IS PROVIDED "AS IS".  NO WARRANTIES, WHETHER EXPRESS, IMPLIED
+  18:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * OR STATUTORY, INCLUDING, BUT NOT LIMITED TO, IMPLIED WARRANTIES OF
+  19:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE APPLY TO THIS SOFTWARE.
+  20:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * ARM SHALL NOT, IN ANY CIRCUMSTANCES, BE LIABLE FOR SPECIAL, INCIDENTAL, OR
+  21:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * CONSEQUENTIAL DAMAGES, FOR ANY REASON WHATSOEVER.
+  22:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  *
+  23:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  ******************************************************************************/
+  24:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  25:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** // Supported Device
+  26:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** // ========================================
+  27:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L52231, HT32L52241
+  28:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L62141
+  29:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT50L3200U
+  30:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L59046
+  31:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT50L3200W
+  32:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT50L3200X
+  33:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L52343, HT32L52353
+  34:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L64041
+  35:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L64141
+  36:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   HT32L57231, HT32L57241
+  37:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  38:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L52231_41
+  39:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L62141
+  40:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT50L3200U
+  41:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L59046
+  42:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT50L3200W
+  43:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT50L3200X
+  44:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L52343_53
+  45:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L64041
+  46:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L64141
+  47:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //#define USE_HT32L57231_41
+  48:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  49:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup CMSIS
+  50:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+  51:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+  52:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  53:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup HT32L5xxxx_system HT32L5xxxx System
+  54:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+  55:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+  56:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  57:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  58:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #include "ht32l5xxxx_01.h"
+  59:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  60:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup HT32L5xxxx_System_Private_Defines
+  61:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+  62:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+  63:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*
+  64:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //-------- <<< Use Configuration Wizard in Context Menu >>> ------------------
+  65:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+  66:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  67:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*--------------------- Clock Configuration ----------------------------------
+  68:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+  69:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <q1> Enable High Speed External Crystal Oscillator (HSE)
+  70:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <i> Default HSE = DISABLE
+  71:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+  72:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <e3> Enable Low Speed External Crystal Oscillator (LSE)
+  73:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <i> Default LSE = DISABLE
+  74:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //       <q13> Enable Waiting LSE Clock Ready
+  75:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default Waiting LSE Clock Ready = ENABLE
+  76:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    </e>
+  77:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+  78:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <e4> Enable PLL
+  79:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default PLL = DISABLE
+  80:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL Out = (((HSE or HSI) / SRC_DIV) x NF2 ) / NO2
+  81:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //        <o5>  PLL Clock Source
+  82:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <0=> CK_HSE
+  83:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> CK_HSI
+  84:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default PLL clock source = CK_HSI
+  85:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL source clock must be in the range of 4 MHz to 16 MHz
+  86:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //        <o6>  PLL Clock Source Divider (SRC_DIV)
+  87:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <0=> 1
+  88:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> 2
+  89:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL input clock = PLL Clock Source / (SRC_DIV)
+  90:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //        <o7>  PLL Feedback Clock Divider (NF2): 1 ~ 16
+  91:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1-16:1>
+  92:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL feedback clock = PLL input clock x NF2
+  93:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL feedback clock must be in the range of 24 MHz to 48 MHz
+  94:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //        <o8>  PLL Output Clock Divider (NO2)
+  95:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <0=> 1
+  96:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> 2
+  97:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <2=> 4
+  98:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <3=> 8
+  99:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL output clock = PLL feedback clock / NO2
+ 100:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> PLL output clock must be in the range of 4 MHz to 48 MHz
+ 101:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    </e>
+ 102:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+ 103:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <h> SystemCoreClock Configuration (CK_AHB)
+ 104:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o9>    SystemCoreClock Source
+ 105:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> CK_PLL
+ 106:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <2=> CK_HSE
+ 107:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <3=> CK_HSI
+ 108:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <6=> CK_LSE
+ 109:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <7=> CK_LSI
+ 110:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default SystemCoreClock source = CK_HSI
+ 111:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o10>   SystemCoreClock Source Divider
+ 112:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <0=> 1
+ 113:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> 2
+ 114:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <2=> 4
+ 115:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <3=> 8
+ 116:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <4=> 16
+ 117:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <5=> 32
+ 118:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default SystemCoreClock source divider = 1
+ 119:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    </h>
+ 120:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+ 121:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <h> FLASH Configuration
+ 122:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o11>   Wait state
+ 123:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <0=> 0 WS
+ 124:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <1=> 1 WS
+ 125:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <2=> 2 WS
+ 126:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <9=> AUTO
+ 127:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i>   0 WS:  1 kHz <= CK_AHB <= 16 MHz
+ 128:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i>   1 WS: 16 MHz <  CK_AHB <= 32 MHz
+ 129:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i>   2 WS: 32 MHz <  CK_AHB <= 48 MHz
+ 130:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <q12>   Cache Enable
+ 131:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //                <i> Default cache = DISABLE
+ 132:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    </h>
+ 133:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+ 134:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 135:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /* !!! NOTICE !!!
+ 136:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    HSI must keep turn on when doing the Flash operation (Erase/Program).
+ 137:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+ 138:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 139:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /* !!! NOTICE !!!
+ 140:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * How to adjust the value of High Speed External oscillator (HSE)?
+ 141:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    The default value of HSE is define by "HSE_VALUE" in "ht32lxxxxx_nn.h".
+ 142:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    If your board uses a different HSE speed, please add a new compiler preprocessor
+ 143:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    C define, "HSE_VALUE=n000000" ("n" represents n MHz) in the toolchain/IDE,
+ 144:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    or edit the "HSE_VALUE" in the "ht32l5xxxx_conf.h" file.
+ 145:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    Take Keil MDK-ARM for instance, to set HSE as 16 MHz:
+ 146:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****    "Option of Target -> C/C++ > Preprocessor Symbols"
+ 147:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       Define: USE_HT32_DRIVER, USE_HT32Lxxxxx_SK, USE_HT32Lxxxxx_xx, USE_MEM_HT32Lxxxxx, HSE_VALUE=
+ 148:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****                                                                                          ^^ Add "HS
+ 149:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****                                                                                             define 
+ 150:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+ 151:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define HSI_ENABLE        (1)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 152:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define HSE_ENABLE        (0)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 153:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define LSI_ENABLE        (1)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 154:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define LSE_ENABLE        (1)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 155:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define PLL_ENABLE        (1)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 156:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define PLL_CLK_SRC       (1)     /*!< 0: HSE,      1: HSI                                         
+ 157:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define PLL_CLK_SRC_DIV   (0)     /*!< 0: DIV1,     1: DIV2                                        
+ 158:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define PLL_NF2_DIV       (6)     /*!< 1~16: DIV1~DIV16                                            
+ 159:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define PLL_NO2_DIV       (0)     /*!< 0: DIV1,     1: DIV2,   2: DIV4,   3: DIV8                  
+ 160:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define HCLK_SRC          (1)     /*!< 0: PLL,      1: PLL,    2: HSE,    3: HSI     6: LSE,    7: 
+ 161:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define HCLK_DIV          (0)     /*!< 0: DIV1,     1: DIV2,   2: DIV4,   3: DIV8,   4: DIV16,  5: 
+ 162:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WAIT_STATE        (9)     /*!< 0: WS = 0,   1: WS = 1, 2: WS = 2,            9: AUTO       
+ 163:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define CACHE_ENABLE      (1)     /*!< 0: No Change,  1: ENABLE                                    
+ 164:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define LSE_WAIT_READY    (1)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 165:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define DEINIT_ENABLE     (1)     /* Set 0 for reduce code size                                    
+ 166:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 167:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*-------------------------------------------------------------------------------------------------
+ 168:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /* PLL Out = (((HSE or HSI) / (PLL_CLK_SRC_DIV + 1)) x PLL_NF2) / PLL_NO2                          
+ 169:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*-------------------------------------------------------------------------------------------------
+ 170:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 171:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 172:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*--------------------- WDT Configuration ----------------------------------
+ 173:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+ 174:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <e0> Enable WDT Configuration
+ 175:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o1> WDT Prescaler Selection
+ 176:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <0=> CK_WDT / 1
+ 177:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <1=> CK_WDT / 2
+ 178:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <2=> CK_WDT / 4
+ 179:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <3=> CK_WDT / 8
+ 180:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <4=> CK_WDT / 16
+ 181:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <5=> CK_WDT / 32
+ 182:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <6=> CK_WDT / 64
+ 183:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <7=> CK_WDT / 128
+ 184:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o2> WDT Reload Value <1-4095:1>
+ 185:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <q3> Enable WDT Reset function
+ 186:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o4> WDT Sleep Halt mode
+ 187:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <0=> No halt
+ 188:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <1=> Halt in DeepSleep1~3
+ 189:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //           <2=> Halt in Sleep & DeepSleep1~3
+ 190:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //   </e>
+ 191:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+ 192:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WDT_ENABLE        (0)     /*!< 0: DISABLE,  1: ENABLE                                      
+ 193:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WDT_PRESCALER     (5)     /*!< 0: 1/1, 1: 1/2, 2: 1/4, 3: 1/8, 4: 1/16, 5: 1/32, 6: 1/64, 7
+ 194:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WDT_RELOAD        (2000)  /*!< 0 ~ 4095, 12 bit                                            
+ 195:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WDT_RESET_ENABLE  (1)     /*!< 0: No Reset, 1: Reset when WDT over flow                    
+ 196:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WDT_SLEEP_HALT    (2)     /*!< 0: No halt,  1: Halt in DeepSleep1~3, 2: Halt in Sleep & Dee
+ 197:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 198:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 199:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /*--------------------- Load_Trim_Code Configuration -----------------------
+ 200:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //
+ 201:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    <h> Load_Trim_Code Configuration
+ 202:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <i> Notice: This Configuration only support specific MCU (EX: HT32F64041, HT32F64141...
+ 203:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o0> Load_Trim_Code Retry Times Limit <1-255:1>
+ 204:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //      <o1> Enable Load_Trim_Code Error Handling
+ 205:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <0=> DISABLE
+ 206:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <1=> ENABLE
+ 207:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //          <i> Default LTC_ERRORHANDLING = DISABLE
+ 208:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** //    </h>
+ 209:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** */
+ 210:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define ERROR_COUNTER_LIMIT (5)   /*!< Error handling retry limit                                  
+ 211:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define LTC_ERRORHANDLING   (0)   /*!< 0: DISABLE,  1: ENABLE                                      
+ 212:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 213:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 214:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief Check HSI frequency
+ 215:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 216:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (HSI_VALUE != 8000000UL)
+ 217:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_HSI clock issue: must be 8 MHz!"
+ 218:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 219:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 220:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 221:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief Check HSE frequency
+ 222:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 223:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if ((HSE_VALUE < 4000000UL) || (HSE_VALUE > 16000000UL))
+ 224:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_HSE clock issue: must be in the range of 4 MHz to 16 MHz!"
+ 225:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 226:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 227:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 228:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief Check LSI frequency
+ 229:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 230:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (LSI_VALUE != 32000UL)
+ 231:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_LSI clock issue: must be 32 kHz!"
+ 232:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 233:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 234:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 235:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief Check LSE frequency
+ 236:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 237:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (LSE_VALUE != 32768UL)
+ 238:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_LSE clock issue: must be 32.768 kHz!"
+ 239:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 240:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 241:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 242:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief CK_PLL definition
+ 243:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 244:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (PLL_ENABLE == 1)
+ 245:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* Get CK_VCO frequency                                                                          
+ 246:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (PLL_CLK_SRC == 1)
+ 247:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #if (HSI_ENABLE == 0)
+ 248:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       #error "CK_PLL clock source issue: HSI has not been enabled"
+ 249:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #else
+ 250:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       #define __CK_VCO    ((HSI_VALUE >> PLL_CLK_SRC_DIV) * PLL_NF2_DIV)   /*!< Select HSI as PLL s
+ 251:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #endif
+ 252:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 253:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #if (HSE_ENABLE == 0)
+ 254:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       #error "CK_PLL clock source issue: HSE has not been enabled!"
+ 255:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #else
+ 256:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       #define __CK_VCO    ((HSE_VALUE >> PLL_CLK_SRC_DIV) * PLL_NF2_DIV)  /*!< Select HSE as PLL so
+ 257:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #endif
+ 258:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 259:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 260:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define VCO_MIN 24000000UL
+ 261:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define VCO_MAX 48000000UL
+ 262:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define PLL_MIN  4000000UL
+ 263:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define PLL_MAX 48000000UL
+ 264:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 265:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* Check CK_VCO frequency                                                                        
+ 266:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if ((__CK_VCO < VCO_MIN) || (__CK_VCO > VCO_MAX))
+ 267:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_VCO clock issue: must be in the range!"
+ 268:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 269:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 270:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define __CK_PLL    (__CK_VCO >> PLL_NO2_DIV)                 /*!< Get CK_PLL frequency          
+ 271:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 272:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* Check CK_PLL frequency                                                                        
+ 273:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if ((__CK_PLL < PLL_MIN) || (__CK_PLL > PLL_MAX))
+ 274:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_PLL clock issue: must be in the range!"
+ 275:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 276:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 277:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 278:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 279:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief CK_SYS definition
+ 280:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 281:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (HCLK_SRC == 1)
+ 282:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (PLL_ENABLE == 1)
+ 283:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define __CK_SYS    __CK_PLL              /*!< Select PLL as CK_SYS source                     
+ 284:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 285:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_SYS clock source issue: PLL is not enable!"
+ 286:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 287:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #elif (HCLK_SRC == 2)
+ 288:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (HSE_ENABLE == 1)
+ 289:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define __CK_SYS    HSE_VALUE             /*!< Select HSE as CK_SYS source                     
+ 290:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 291:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_SYS clock source issue: HSE is not enable!"
+ 292:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 293:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #elif (HCLK_SRC == 3)
+ 294:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (HSI_ENABLE == 1)
+ 295:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define __CK_SYS    HSI_VALUE             /*!< Select HSI as CK_SYS source                     
+ 296:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 297:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_SYS clock source issue: HSI is not enable!"
+ 298:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 299:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #elif (HCLK_SRC == 6)
+ 300:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (LSE_ENABLE == 1)
+ 301:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define __CK_SYS    LSE_VALUE             /*!< Select LSE as CK_SYS source                     
+ 302:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 303:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_SYS clock source issue: LSE is not enable!"
+ 304:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 305:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #elif (HCLK_SRC == 7)
+ 306:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (LSI_ENABLE == 1)
+ 307:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define __CK_SYS    LSI_VALUE             /*!< Select LSI as CK_SYS source                     
+ 308:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 309:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #error "CK_SYS clock source issue: LSI is not enable!"
+ 310:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 311:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #else
+ 312:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_SYS clock source issue: No clock source is selected!"
+ 313:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 314:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 315:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 316:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  * @brief CK_AHB definition
+ 317:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****  */
+ 318:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define __CK_AHB    (__CK_SYS >> HCLK_DIV)    /*!< Get CK_AHB frequency                            
+ 319:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 320:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define CKAHB_MIN 1000UL
+ 321:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define CKAHB_MAX 48000000UL
+ 322:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WS0_CLK   16000000UL
+ 323:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #define WS1_CLK   32000000UL
+ 324:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 325:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /* Check CK_AHB frequency                                                                          
+ 326:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if ((__CK_AHB < CKAHB_MIN) || (__CK_AHB > CKAHB_MAX))
+ 327:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "CK_AHB clock issue: must be in the range!"
+ 328:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 329:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 330:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /* Check FLASH wait-state setting                                                                  
+ 331:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if ((__CK_AHB > WS1_CLK) && (WAIT_STATE < 2) || \
+ 332:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****      (__CK_AHB > WS0_CLK) && (WAIT_STATE < 1))
+ 333:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #error "FLASH wait state configuration issue!"
+ 334:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 335:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 336:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @}
+ 337:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 338:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 339:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup HT32Lxxxx_System_Private_Variables
+ 340:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+ 341:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 342:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** __IO uint32_t SystemCoreClock = __CK_AHB;   /*!< SystemCoreClock = CK_AHB                          
+ 343:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 344:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @}
+ 345:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 346:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 347:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup HT32Lxxxx_Load_Trim_Code
+ 348:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+ 349:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 350:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if !defined(DISABLE_TRIMCODE) && (defined(USE_HT32L64141) || defined(USE_HT32L64041))
+ 351:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #define TRIM_CODE
+ 352:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if defined(USE_HT32L64041)
+ 353:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define TRIM_CODE_IO_TYPE           (1)   /*!< TRIM CODE IO TYPE = 1 (SCL = PB7, SDA = PB8)    
+ 354:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 355:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     #define TRIM_CODE_IO_TYPE           (2)   /*!< TRIM CODE IO TYPE = 2 (SCL = PA4, SDA = PA5)    
+ 356:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 357:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 358:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 359:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if defined(TRIM_CODE)
+ 360:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   __STATIC_FORCEINLINE void SystemLoadTrimCode(void);
+ 361:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 362:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 363:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @}
+ 364:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 365:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 366:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /** @addtogroup HT32Lxxxx_System_Private_Functions
+ 367:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @{
+ 368:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 369:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 371:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @brief  Setup the microcontroller system.
+ 372:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   *         Initializes the system clocks and the embedded Flash.
+ 373:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @note   This function should be used after reset.
+ 374:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @retval None
+ 375:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 376:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** void SystemInit(void)
+ 377:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** {
+  27              		.loc 1 377 1 view -0
+  28              		.cfi_startproc
+  29              		@ args = 0, pretend = 0, frame = 0
+  30              		@ frame_needed = 0, uses_anonymous_args = 0
+ 378:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (WDT_ENABLE == 1)
+ 379:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->APBCCR1 |= (1UL << 4);
+ 380:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_WDT->PR = 0x35CA;
+ 381:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_WDT->MR0 = 0;
+ 382:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_WDT->MR1 = ((HT_WDT->MR1 & 0xFFF) | (WDT_PRESCALER << 12));
+ 383:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_WDT->MR0 = WDT_RELOAD | (WDT_RESET_ENABLE << 13) | (WDT_SLEEP_HALT << 14) | (1UL << 16);
+ 384:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_WDT->CR = 0x5FA00001;
+ 385:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #else
+ 386:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (DEINIT_ENABLE == 1)
+ 387:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_RSTCU->APBPRST1 = (1 << 4);
+  31              		.loc 1 387 3 view .LVU1
+  32              		.loc 1 387 22 is_stmt 0 view .LVU2
+  33 0000 1022     		movs	r2, #16
+  34 0002 434B     		ldr	r3, .L20
+ 377:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (WDT_ENABLE == 1)
+  35              		.loc 1 377 1 view .LVU3
+  36 0004 F0B5     		push	{r4, r5, r6, r7, lr}
+  37              	.LCFI0:
+  38              		.cfi_def_cfa_offset 20
+  39              		.cfi_offset 4, -20
+  40              		.cfi_offset 5, -16
+  41              		.cfi_offset 6, -12
+  42              		.cfi_offset 7, -8
+  43              		.cfi_offset 14, -4
+  44              		.loc 1 387 22 view .LVU4
+  45 0006 DA60     		str	r2, [r3, #12]
+ 388:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 389:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 390:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 391:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->APBCCR1), 6);                       /* enable VDD power domain register
+  46              		.loc 1 391 3 is_stmt 1 view .LVU5
+  47 0008 4023     		movs	r3, #64
+  48 000a 4248     		ldr	r0, .L20+4
+ 392:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 393:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 394:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (DEINIT_ENABLE == 1)
+ 395:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* De-init the setting                                                                           
+ 396:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->AHBCCR), 11);                     /* disable IP who may use PLL as so
+  49              		.loc 1 396 3 is_stmt 0 view .LVU6
+  50 000c 4249     		ldr	r1, .L20+8
+ 391:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  51              		.loc 1 391 3 view .LVU7
+  52 000e 0268     		ldr	r2, [r0]
+ 397:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 11);                         /* enable HSI                      
+ 398:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (!GetBit_BB((u32)(&HT_CKCU->GCSR), 3));                 /* wait for HSI ready              
+  53              		.loc 1 398 11 discriminator 1 view .LVU8
+  54 0010 424C     		ldr	r4, .L20+12
+ 391:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  55              		.loc 1 391 3 view .LVU9
+  56 0012 1343     		orrs	r3, r2
+ 396:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 11);                         /* enable HSI                      
+  57              		.loc 1 396 3 view .LVU10
+  58 0014 424A     		ldr	r2, .L20+16
+ 391:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+  59              		.loc 1 391 3 view .LVU11
+  60 0016 0360     		str	r3, [r0]
+ 396:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 11);                         /* enable HSI                      
+  61              		.loc 1 396 3 is_stmt 1 view .LVU12
+  62 0018 1368     		ldr	r3, [r2]
+  63 001a 0B40     		ands	r3, r1
+  64 001c 1360     		str	r3, [r2]
+ 397:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 11);                         /* enable HSI                      
+  65              		.loc 1 397 3 view .LVU13
+  66 001e 8023     		movs	r3, #128
+  67 0020 4049     		ldr	r1, .L20+20
+  68 0022 1B01     		lsls	r3, r3, #4
+  69 0024 0A68     		ldr	r2, [r1]
+  70 0026 1343     		orrs	r3, r2
+  71 0028 0B60     		str	r3, [r1]
+  72              		.loc 1 398 3 view .LVU14
+  73              		.loc 1 398 10 is_stmt 0 discriminator 1 view .LVU15
+  74 002a 0823     		movs	r3, #8
+  75              	.L2:
+  76              		.loc 1 398 10 is_stmt 1 discriminator 1 view .LVU16
+  77              		.loc 1 398 11 is_stmt 0 discriminator 1 view .LVU17
+  78 002c 2268     		ldr	r2, [r4]
+  79              		.loc 1 398 10 discriminator 1 view .LVU18
+  80 002e 1A42     		tst	r2, r3
+  81 0030 FCD0     		beq	.L2
+ 399:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->GCCR = ((HT_CKCU->GCCR & ~7UL) | 3UL);               /* select CK_SYS source            
+  82              		.loc 1 399 3 is_stmt 1 view .LVU19
+  83              		.loc 1 399 35 is_stmt 0 view .LVU20
+  84 0032 0725     		movs	r5, #7
+  85              		.loc 1 399 43 view .LVU21
+  86 0034 0322     		movs	r2, #3
+  87              		.loc 1 399 28 view .LVU22
+  88 0036 3C4B     		ldr	r3, .L20+24
+  89 0038 5E68     		ldr	r6, [r3, #4]
+  90              		.loc 1 399 35 view .LVU23
+  91 003a AE43     		bics	r6, r5
+  92              		.loc 1 399 43 view .LVU24
+  93 003c 3243     		orrs	r2, r6
+  94              		.loc 1 399 17 view .LVU25
+  95 003e 5A60     		str	r2, [r3, #4]
+ 400:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while ((HT_CKCU->CKST & 7UL) != 3UL);                         /* wait for clock switch complete  
+  96              		.loc 1 400 3 is_stmt 1 view .LVU26
+  97              	.L3:
+  98              		.loc 1 400 32 discriminator 1 view .LVU27
+  99              		.loc 1 400 18 is_stmt 0 discriminator 1 view .LVU28
+ 100 0040 5A6B     		ldr	r2, [r3, #52]
+ 101              		.loc 1 400 25 discriminator 1 view .LVU29
+ 102 0042 2A40     		ands	r2, r5
+ 103              		.loc 1 400 32 discriminator 1 view .LVU30
+ 104 0044 032A     		cmp	r2, #3
+ 105 0046 FBD1     		bne	.L3
+ 401:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_FLASH->WSCR = (((HT_FLASH->WSCR) & ~15UL) | 1UL);          /* set Wait State as 0 WS          
+ 106              		.loc 1 401 3 is_stmt 1 view .LVU31
+ 107              		.loc 1 401 31 is_stmt 0 view .LVU32
+ 108 0048 8027     		movs	r7, #128
+ 109              		.loc 1 401 39 view .LVU33
+ 110 004a 0F25     		movs	r5, #15
+ 111              		.loc 1 401 31 view .LVU34
+ 112 004c 374A     		ldr	r2, .L20+28
+ 113 004e BF00     		lsls	r7, r7, #2
+ 114 0050 D659     		ldr	r6, [r2, r7]
+ 115              		.loc 1 401 39 view .LVU35
+ 116 0052 AE43     		bics	r6, r5
+ 117              		.loc 1 401 48 view .LVU36
+ 118 0054 0E3D     		subs	r5, r5, #14
+ 119 0056 3543     		orrs	r5, r6
+ 120              		.loc 1 401 18 view .LVU37
+ 121 0058 D551     		str	r5, [r2, r7]
+ 402:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->AHBCFGR = 0;                                         /* set CK_AHB prescaler            
+ 122              		.loc 1 402 3 is_stmt 1 view .LVU38
+ 123              		.loc 1 402 20 is_stmt 0 view .LVU39
+ 124 005a 0025     		movs	r5, #0
+ 125 005c 1D62     		str	r5, [r3, #32]
+ 403:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->GCCR), 9);                        /* disable PLL                     
+ 126              		.loc 1 403 3 is_stmt 1 view .LVU40
+ 127 005e 0D68     		ldr	r5, [r1]
+ 128 0060 334E     		ldr	r6, .L20+32
+ 404:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCFGR), 8);                         /* select PLL source as HSI        
+ 405:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 406:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 407:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* HSE initiation                                                                                
+ 408:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (HSE_ENABLE == 1)
+ 409:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 10);                         /* enable HSE                      
+ 410:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (!GetBit_BB((u32)(&HT_CKCU->GCSR), 2)){};               /* wait for HSE ready              
+ 411:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 412:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 413:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* LSE initiation                                                                                
+ 414:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (LSE_ENABLE == 1)
+ 415:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if defined(USE_HT32L52343_53) || defined(USE_HT32L57231_41)
+ 416:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   do {
+ 417:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     HT_ERTC->WPR = 0x5FA0;
+ 418:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SetBit_BB((u32)(&HT_ERTC->CR0), 3);                         /* enable LSE                      
+ 419:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     HT_ERTC->WPR = 0xFFFF;
+ 420:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   } while (!GetBit_BB((u32)(&HT_ERTC->CR0), 3));
+ 421:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 422:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   do {
+ 423:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SetBit_BB((u32)(&HT_RTC->CR), 3);                           /* enable LSE                      
+ 129              		.loc 1 423 5 is_stmt 0 view .LVU41
+ 130 0062 F93F     		subs	r7, r7, #249
+ 403:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->GCCR), 9);                        /* disable PLL                     
+ 131              		.loc 1 403 3 view .LVU42
+ 132 0064 3540     		ands	r5, r6
+ 133 0066 0D60     		str	r5, [r1]
+ 404:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCFGR), 8);                         /* select PLL source as HSI        
+ 134              		.loc 1 404 3 is_stmt 1 view .LVU43
+ 135 0068 8025     		movs	r5, #128
+ 136 006a 1E68     		ldr	r6, [r3]
+ 137 006c 6D00     		lsls	r5, r5, #1
+ 138 006e 3543     		orrs	r5, r6
+ 139 0070 1D60     		str	r5, [r3]
+ 140              		.loc 1 423 5 is_stmt 0 view .LVU44
+ 141 0072 304D     		ldr	r5, .L20+36
+ 142 0074 FF3F     		subs	r7, r7, #255
+ 143              	.L4:
+ 422:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SetBit_BB((u32)(&HT_RTC->CR), 3);                           /* enable LSE                      
+ 144              		.loc 1 422 3 is_stmt 1 view .LVU45
+ 145              		.loc 1 423 5 view .LVU46
+ 146 0076 2E68     		ldr	r6, [r5]
+ 147 0078 3E43     		orrs	r6, r7
+ 148 007a 2E60     		str	r6, [r5]
+ 424:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   } while (!GetBit_BB((u32)(&HT_RTC->CR), 3));
+ 149              		.loc 1 424 12 discriminator 1 view .LVU47
+ 150              		.loc 1 424 13 is_stmt 0 discriminator 1 view .LVU48
+ 151 007c 2E68     		ldr	r6, [r5]
+ 152              		.loc 1 424 12 discriminator 1 view .LVU49
+ 153 007e 3E42     		tst	r6, r7
+ 154 0080 F9D0     		beq	.L4
+ 425:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 426:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (LSE_WAIT_READY == 1)
+ 427:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (!GetBit_BB((u32)(&HT_CKCU->GCSR), 4));                 /* wait for LSE ready              
+ 155              		.loc 1 427 10 discriminator 1 view .LVU50
+ 156 0082 1025     		movs	r5, #16
+ 157              	.L5:
+ 158              		.loc 1 427 10 is_stmt 1 discriminator 1 view .LVU51
+ 159              		.loc 1 427 11 is_stmt 0 discriminator 1 view .LVU52
+ 160 0084 2668     		ldr	r6, [r4]
+ 161              		.loc 1 427 10 discriminator 1 view .LVU53
+ 162 0086 2E42     		tst	r6, r5
+ 163 0088 FCD0     		beq	.L5
+ 428:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 429:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 430:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 431:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->APBCCR1), 6);                     /* disable Backup domain register c
+ 164              		.loc 1 431 3 is_stmt 1 view .LVU54
+ 165 008a 4026     		movs	r6, #64
+ 166 008c 0568     		ldr	r5, [r0]
+ 167 008e B543     		bics	r5, r6
+ 168 0090 0560     		str	r5, [r0]
+ 432:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 433:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* LSI initiation                                                                                
+ 434:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (HCLK_SRC == 7)
+ 435:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (!GetBit_BB((u32)(&HT_CKCU->GCSR), 5)){};               /* wait for LSI ready              
+ 436:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 437:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 438:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* PLL initiation                                                                                
+ 439:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (PLL_ENABLE == 1)
+ 440:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->PLLCFGR = ((PLL_NF2_DIV & 15UL) << 23) | (PLL_NO2_DIV << 21);  /* set PLL divider       
+ 169              		.loc 1 440 3 view .LVU55
+ 170              		.loc 1 440 20 is_stmt 0 view .LVU56
+ 171 0092 C020     		movs	r0, #192
+ 441:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 442:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (PLL_CLK_SRC_DIV == 1)
+ 443:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SetBit_BB((u32)(&HT_CKCU->PLLCFGR), 28);                    /* set PLL clock source divider    
+ 444:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 445:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     ResetBit_BB((u32)(&HT_CKCU->PLLCFGR), 28);                  /* reset PLL clock source divider  
+ 172              		.loc 1 445 5 view .LVU57
+ 173 0094 284D     		ldr	r5, .L20+40
+ 440:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 174              		.loc 1 440 20 view .LVU58
+ 175 0096 8004     		lsls	r0, r0, #18
+ 176 0098 9861     		str	r0, [r3, #24]
+ 177              		.loc 1 445 5 is_stmt 1 view .LVU59
+ 178 009a 2868     		ldr	r0, [r5]
+ 179 009c 274E     		ldr	r6, .L20+44
+ 180 009e 3040     		ands	r0, r6
+ 181 00a0 2860     		str	r0, [r5]
+ 446:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 447:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 448:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (PLL_CLK_SRC == 0)
+ 449:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     ResetBit_BB((u32)(&HT_CKCU->GCFGR), 8);                     /* select PLL source as HSE        
+ 450:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #else
+ 451:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SetBit_BB((u32)(&HT_CKCU->GCFGR), 8);                       /* select PLL source as HSI        
+ 182              		.loc 1 451 5 view .LVU60
+ 183 00a2 8020     		movs	r0, #128
+ 184 00a4 1D68     		ldr	r5, [r3]
+ 185 00a6 4000     		lsls	r0, r0, #1
+ 186 00a8 2843     		orrs	r0, r5
+ 187 00aa 1860     		str	r0, [r3]
+ 452:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 453:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 454:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SetBit_BB((u32)(&HT_CKCU->GCCR), 9);                          /* enable PLL                      
+ 188              		.loc 1 454 3 view .LVU61
+ 189 00ac 8020     		movs	r0, #128
+ 190 00ae 0D68     		ldr	r5, [r1]
+ 191 00b0 8000     		lsls	r0, r0, #2
+ 192 00b2 0543     		orrs	r5, r0
+ 193 00b4 0D60     		str	r5, [r1]
+ 455:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (!GetBit_BB((u32)(&HT_CKCU->GCSR), 1)){};               /* wait for PLL ready              
+ 194              		.loc 1 455 3 view .LVU62
+ 195              		.loc 1 455 10 is_stmt 0 discriminator 1 view .LVU63
+ 196 00b6 0225     		movs	r5, #2
+ 197              	.L6:
+ 198              		.loc 1 455 48 is_stmt 1 discriminator 1 view .LVU64
+ 199              		.loc 1 455 10 discriminator 1 view .LVU65
+ 200              		.loc 1 455 11 is_stmt 0 discriminator 1 view .LVU66
+ 201 00b8 2668     		ldr	r6, [r4]
+ 202              		.loc 1 455 10 discriminator 1 view .LVU67
+ 203 00ba 2E42     		tst	r6, r5
+ 204 00bc FCD0     		beq	.L6
+ 205              		.loc 1 455 49 is_stmt 1 discriminator 2 view .LVU68
+ 456:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 457:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 458:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* FLASH initiation                                                                              
+ 459:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (WAIT_STATE == 9)
+ 460:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #if (__CK_AHB > WS1_CLK)
+ 461:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     HT_FLASH->WSCR = (HT_FLASH->WSCR & ~15UL) | 3UL;            /* auto-select wait state          
+ 206              		.loc 1 461 5 view .LVU69
+ 207              		.loc 1 461 38 is_stmt 0 view .LVU70
+ 208 00be 0F24     		movs	r4, #15
+ 209              		.loc 1 461 31 view .LVU71
+ 210 00c0 1558     		ldr	r5, [r2, r0]
+ 211              		.loc 1 461 38 view .LVU72
+ 212 00c2 A543     		bics	r5, r4
+ 213              		.loc 1 461 47 view .LVU73
+ 214 00c4 0C3C     		subs	r4, r4, #12
+ 215 00c6 2C43     		orrs	r4, r5
+ 216              		.loc 1 461 20 view .LVU74
+ 217 00c8 1450     		str	r4, [r2, r0]
+ 462:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #elif (__CK_AHB > WS0_CLK)
+ 463:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     HT_FLASH->WSCR = (HT_FLASH->WSCR & ~15UL) | 2UL;            /* auto-select wait state          
+ 464:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   #endif
+ 465:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #else
+ 466:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_FLASH->WSCR = (HT_FLASH->WSCR & ~15UL) | (WAIT_STATE + 1); /* manual assign wait state        
+ 467:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 468:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 469:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* CK_AHB initiation                                                                             
+ 470:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->AHBCFGR = HCLK_DIV;                                  /* set CK_AHB prescaler            
+ 218              		.loc 1 470 3 is_stmt 1 view .LVU75
+ 219              		.loc 1 470 20 is_stmt 0 view .LVU76
+ 220 00ca 0020     		movs	r0, #0
+ 471:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 472:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 473:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* CK_SYS initiation                                                                             
+ 474:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_CKCU->GCCR = ((HT_CKCU->GCCR & ~7UL) | HCLK_SRC);          /* select CK_SYS source            
+ 221              		.loc 1 474 35 view .LVU77
+ 222 00cc 0725     		movs	r5, #7
+ 470:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 223              		.loc 1 470 20 view .LVU78
+ 224 00ce 1862     		str	r0, [r3, #32]
+ 225              		.loc 1 474 3 is_stmt 1 view .LVU79
+ 226              		.loc 1 474 28 is_stmt 0 view .LVU80
+ 227 00d0 5C68     		ldr	r4, [r3, #4]
+ 228              		.loc 1 474 43 view .LVU81
+ 229 00d2 0130     		adds	r0, r0, #1
+ 230              		.loc 1 474 35 view .LVU82
+ 231 00d4 AC43     		bics	r4, r5
+ 232              		.loc 1 474 43 view .LVU83
+ 233 00d6 2043     		orrs	r0, r4
+ 234              		.loc 1 474 17 view .LVU84
+ 235 00d8 5860     		str	r0, [r3, #4]
+ 475:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while ((HT_CKCU->CKST & 7UL) != HCLK_SRC);                    /* wait for clock switch complete  
+ 236              		.loc 1 475 3 is_stmt 1 view .LVU85
+ 237              	.L7:
+ 238              		.loc 1 475 32 discriminator 1 view .LVU86
+ 239              		.loc 1 475 18 is_stmt 0 discriminator 1 view .LVU87
+ 240 00da 586B     		ldr	r0, [r3, #52]
+ 241              		.loc 1 475 25 discriminator 1 view .LVU88
+ 242 00dc 2840     		ands	r0, r5
+ 243              		.loc 1 475 32 discriminator 1 view .LVU89
+ 244 00de 0128     		cmp	r0, #1
+ 245 00e0 FBD1     		bne	.L7
+ 476:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 477:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 478:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* Cache configuration                                                                           
+ 479:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if !defined(USE_HT32L52231_41)
+ 480:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_FLASH->CCR |= 0x200;
+ 481:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 482:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_FLASH->CCR = (HT_FLASH->CCR & 0xFFFFFFBF) | 0x100;
+ 246              		.loc 1 482 3 is_stmt 1 view .LVU90
+ 247              		.loc 1 482 28 is_stmt 0 view .LVU91
+ 248 00e2 8423     		movs	r3, #132
+ 249 00e4 9B00     		lsls	r3, r3, #2
+ 250 00e6 D558     		ldr	r5, [r2, r3]
+ 251              		.loc 1 482 48 view .LVU92
+ 252 00e8 154C     		ldr	r4, .L20+48
+ 253 00ea 2540     		ands	r5, r4
+ 254 00ec 8024     		movs	r4, #128
+ 255 00ee 6400     		lsls	r4, r4, #1
+ 256 00f0 2C43     		orrs	r4, r5
+ 257              		.loc 1 482 17 view .LVU93
+ 258 00f2 D450     		str	r4, [r2, r3]
+ 483:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if (CACHE_ENABLE == 1)
+ 484:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   HT_FLASH->CCR |= 0x001;                                       /* cache enable                    
+ 259              		.loc 1 484 3 is_stmt 1 view .LVU94
+ 260              		.loc 1 484 11 is_stmt 0 view .LVU95
+ 261 00f4 D458     		ldr	r4, [r2, r3]
+ 262              		.loc 1 484 17 view .LVU96
+ 263 00f6 2043     		orrs	r0, r4
+ 264 00f8 D050     		str	r0, [r2, r3]
+ 485:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   while (HT_FLASH->SR != 0x00000012);
+ 265              		.loc 1 485 3 is_stmt 1 view .LVU97
+ 266              		.loc 1 485 18 is_stmt 0 discriminator 1 view .LVU98
+ 267 00fa 8520     		movs	r0, #133
+ 268 00fc 8000     		lsls	r0, r0, #2
+ 269              	.L8:
+ 270              		.loc 1 485 23 is_stmt 1 discriminator 1 view .LVU99
+ 271              		.loc 1 485 18 is_stmt 0 discriminator 1 view .LVU100
+ 272 00fe 1358     		ldr	r3, [r2, r0]
+ 273              		.loc 1 485 23 discriminator 1 view .LVU101
+ 274 0100 122B     		cmp	r3, #18
+ 275 0102 FCD1     		bne	.L8
+ 486:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 487:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 488:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* HSE power down                                                                                
+ 489:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if ((HSE_ENABLE == 0) && (HCLK_SRC != 2) && ((PLL_ENABLE == 0) || (PLL_CLK_SRC == 1)))
+ 490:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->GCCR), 10);
+ 276              		.loc 1 490 3 is_stmt 1 view .LVU102
+ 491:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 492:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 493:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* HSI power down                                                                                
+ 494:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if ((HSI_ENABLE == 0) && (HCLK_SRC != 3) && ((PLL_ENABLE == 0) || (PLL_CLK_SRC == 0)))
+ 495:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   ResetBit_BB((u32)(&HT_CKCU->GCCR), 11);
+ 496:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 497:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 498:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #if defined(TRIM_CODE)
+ 499:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   SystemLoadTrimCode();
+ 500:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 501:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** }
+ 277              		.loc 1 501 1 is_stmt 0 view .LVU103
+ 278              		@ sp needed
+ 490:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** #endif
+ 279              		.loc 1 490 3 view .LVU104
+ 280 0104 0B68     		ldr	r3, [r1]
+ 281 0106 0F4A     		ldr	r2, .L20+52
+ 282 0108 1340     		ands	r3, r2
+ 283 010a 0B60     		str	r3, [r1]
+ 284              		.loc 1 501 1 view .LVU105
+ 285 010c F0BD     		pop	{r4, r5, r6, r7, pc}
+ 286              	.L21:
+ 287 010e C046     		.align	2
+ 288              	.L20:
+ 289 0110 00810840 		.word	1074299136
+ 290 0114 30800840 		.word	1074298928
+ 291 0118 FFF7FFFF 		.word	-2049
+ 292 011c 08800840 		.word	1074298888
+ 293 0120 24800840 		.word	1074298916
+ 294 0124 04800840 		.word	1074298884
+ 295 0128 00800840 		.word	1074298880
+ 296 012c 00000840 		.word	1074266112
+ 297 0130 FFFDFFFF 		.word	-513
+ 298 0134 08A00640 		.word	1074176008
+ 299 0138 18800840 		.word	1074298904
+ 300 013c FFFFFFEF 		.word	-268435457
+ 301 0140 BFFEFFFF 		.word	-321
+ 302 0144 FFFBFFFF 		.word	-1025
+ 303              		.cfi_endproc
+ 304              	.LFE46:
+ 306              		.section	.text.SystemCoreClockUpdate,"ax",%progbits
+ 307              		.align	1
+ 308              		.global	SystemCoreClockUpdate
+ 309              		.syntax unified
+ 310              		.code	16
+ 311              		.thumb_func
+ 313              	SystemCoreClockUpdate:
+ 314              	.LFB47:
+ 502:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 503:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** /**
+ 504:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @brief  Update SystemCoreClock
+ 505:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   * @retval None
+ 506:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   */
+ 507:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** void SystemCoreClockUpdate(void)
+ 508:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** {
+ 315              		.loc 1 508 1 is_stmt 1 view -0
+ 316              		.cfi_startproc
+ 317              		@ args = 0, pretend = 0, frame = 0
+ 318              		@ frame_needed = 0, uses_anonymous_args = 0
+ 509:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockDiv = HT_CKCU->AHBCFGR & 7UL;
+ 319              		.loc 1 509 3 view .LVU107
+ 320              		.loc 1 509 7 is_stmt 0 view .LVU108
+ 321 0000 0723     		movs	r3, #7
+ 322              		.loc 1 509 35 view .LVU109
+ 323 0002 1B49     		ldr	r1, .L37
+ 508:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockDiv = HT_CKCU->AHBCFGR & 7UL;
+ 324              		.loc 1 508 1 view .LVU110
+ 325 0004 F0B5     		push	{r4, r5, r6, r7, lr}
+ 326              	.LCFI1:
+ 327              		.cfi_def_cfa_offset 20
+ 328              		.cfi_offset 4, -20
+ 329              		.cfi_offset 5, -16
+ 330              		.cfi_offset 6, -12
+ 331              		.cfi_offset 7, -8
+ 332              		.cfi_offset 14, -4
+ 333              		.loc 1 509 35 view .LVU111
+ 334 0006 0A6A     		ldr	r2, [r1, #32]
+ 510:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllSourceClockDiv = (HT_CKCU->PLLCFGR >> 28) & 1UL;
+ 335              		.loc 1 510 35 view .LVU112
+ 336 0008 8D69     		ldr	r5, [r1, #24]
+ 509:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockDiv = HT_CKCU->AHBCFGR & 7UL;
+ 337              		.loc 1 509 7 view .LVU113
+ 338 000a 1A40     		ands	r2, r3
+ 339              	.LVL0:
+ 340              		.loc 1 510 3 is_stmt 1 view .LVU114
+ 511:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllFeedbackClockDiv = (((HT_CKCU->PLLCFGR >> 23) & 15UL) == 0) ? (16) : ((HT_CKCU->PLLCFGR >>
+ 341              		.loc 1 511 3 view .LVU115
+ 342              		.loc 1 511 77 is_stmt 0 view .LVU116
+ 343 000c F023     		movs	r3, #240
+ 344              		.loc 1 511 39 view .LVU117
+ 345 000e 8869     		ldr	r0, [r1, #24]
+ 346              		.loc 1 511 77 view .LVU118
+ 347 0010 DB04     		lsls	r3, r3, #19
+ 348              		.loc 1 511 77 discriminator 2 view .LVU119
+ 349 0012 1024     		movs	r4, #16
+ 350              		.loc 1 511 77 view .LVU120
+ 351 0014 1842     		tst	r0, r3
+ 352 0016 02D0     		beq	.L23
+ 353              		.loc 1 511 88 discriminator 1 view .LVU121
+ 354 0018 8C69     		ldr	r4, [r1, #24]
+ 355              		.loc 1 511 77 discriminator 1 view .LVU122
+ 356 001a 6401     		lsls	r4, r4, #5
+ 357 001c 240F     		lsrs	r4, r4, #28
+ 358              	.L23:
+ 359              	.LVL1:
+ 512:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllOutputClockDiv = (HT_CKCU->PLLCFGR >> 21) & 3UL;
+ 360              		.loc 1 512 3 is_stmt 1 view .LVU123
+ 513:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 361              		.loc 1 513 7 is_stmt 0 view .LVU124
+ 362 001e 0723     		movs	r3, #7
+ 512:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllOutputClockDiv = (HT_CKCU->PLLCFGR >> 21) & 3UL;
+ 363              		.loc 1 512 35 view .LVU125
+ 364 0020 8E69     		ldr	r6, [r1, #24]
+ 365              	.LVL2:
+ 366              		.loc 1 513 3 is_stmt 1 view .LVU126
+ 367              		.loc 1 513 35 is_stmt 0 view .LVU127
+ 368 0022 486B     		ldr	r0, [r1, #52]
+ 369              	.LVL3:
+ 514:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 515:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   /* Get system core clock according to global clock control & configuration registers             
+ 516:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   if (SystemCoreClockSrc == 1)
+ 370              		.loc 1 516 3 is_stmt 1 view .LVU128
+ 513:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 371              		.loc 1 513 7 is_stmt 0 view .LVU129
+ 372 0024 1840     		ands	r0, r3
+ 373              	.LVL4:
+ 513:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 374              		.loc 1 513 7 view .LVU130
+ 375 0026 0138     		subs	r0, r0, #1
+ 376              	.LVL5:
+ 513:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 377              		.loc 1 513 7 view .LVU131
+ 378 0028 0628     		cmp	r0, #6
+ 379 002a 18D8     		bhi	.L22
+ 380 002c FFF7FEFF 		bl	__gnu_thumb1_case_uqi
+ 381              	.L26:
+ 382 0030 04       		.byte	(.L30-.L26)/2
+ 383 0031 18       		.byte	(.L28-.L26)/2
+ 384 0032 18       		.byte	(.L28-.L26)/2
+ 385 0033 17       		.byte	(.L22-.L26)/2
+ 386 0034 17       		.byte	(.L22-.L26)/2
+ 387 0035 1A       		.byte	(.L27-.L26)/2
+ 388 0036 1D       		.byte	(.L25-.L26)/2
+ 389 0037 00       		.p2align 1
+ 390              	.L30:
+ 517:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   {
+ 518:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     if (GetBit_BB((u32)(&HT_CKCU->PLLCR), 31))
+ 391              		.loc 1 518 5 is_stmt 1 view .LVU132
+ 519:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 520:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       PllFeedbackClockDiv = 1;
+ 521:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       PllOutputClockDiv = 0;
+ 392              		.loc 1 521 25 is_stmt 0 view .LVU133
+ 393 0038 0020     		movs	r0, #0
+ 394              	.LVL6:
+ 518:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 395              		.loc 1 518 9 view .LVU134
+ 396 003a 0E4B     		ldr	r3, .L37+4
+ 397 003c 1F68     		ldr	r7, [r3]
+ 398 003e FB0F     		lsrs	r3, r7, #31
+ 518:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 399              		.loc 1 518 8 view .LVU135
+ 400 0040 8742     		cmp	r7, r0
+ 401 0042 02DB     		blt	.L31
+ 511:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllOutputClockDiv = (HT_CKCU->PLLCFGR >> 21) & 3UL;
+ 402              		.loc 1 511 7 discriminator 4 view .LVU136
+ 403 0044 2300     		movs	r3, r4
+ 512:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 404              		.loc 1 512 7 view .LVU137
+ 405 0046 7602     		lsls	r6, r6, #9
+ 406              	.LVL7:
+ 512:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 SystemCoreClockSrc = HT_CKCU->CKST & 7UL;
+ 407              		.loc 1 512 7 view .LVU138
+ 408 0048 B00F     		lsrs	r0, r6, #30
+ 409              	.L31:
+ 410              	.LVL8:
+ 522:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     }
+ 523:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** 
+ 524:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     if (GetBit_BB((u32)(&HT_CKCU->GCFGR), 8))
+ 411              		.loc 1 524 5 is_stmt 1 view .LVU139
+ 525:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 526:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       SystemCoreClock = (((HSI_VALUE >> PllSourceClockDiv) * PllFeedbackClockDiv) >> PllOutputClock
+ 412              		.loc 1 526 38 is_stmt 0 view .LVU140
+ 413 004a 0B4C     		ldr	r4, .L37+8
+ 510:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllFeedbackClockDiv = (((HT_CKCU->PLLCFGR >> 23) & 15UL) == 0) ? (16) : ((HT_CKCU->PLLCFGR >>
+ 414              		.loc 1 510 7 view .LVU141
+ 415 004c ED00     		lsls	r5, r5, #3
+ 416              	.LVL9:
+ 510:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   u32 PllFeedbackClockDiv = (((HT_CKCU->PLLCFGR >> 23) & 15UL) == 0) ? (16) : ((HT_CKCU->PLLCFGR >>
+ 417              		.loc 1 510 7 view .LVU142
+ 418 004e ED0F     		lsrs	r5, r5, #31
+ 419              		.loc 1 526 38 view .LVU143
+ 420 0050 EC40     		lsrs	r4, r4, r5
+ 421              		.loc 1 526 60 view .LVU144
+ 422 0052 6343     		muls	r3, r4
+ 423              	.LVL10:
+ 424              		.loc 1 526 83 view .LVU145
+ 425 0054 C340     		lsrs	r3, r3, r0
+ 524:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 426              		.loc 1 524 9 view .LVU146
+ 427 0056 0968     		ldr	r1, [r1]
+ 428              	.LVL11:
+ 429              	.L36:
+ 527:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     }
+ 528:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     else
+ 529:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     {
+ 530:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****       SystemCoreClock = (((HSE_VALUE >> PllSourceClockDiv) * PllFeedbackClockDiv) >> PllOutputClock
+ 531:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     }
+ 532:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 533:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   else if (SystemCoreClockSrc == 2)
+ 534:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   {
+ 535:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SystemCoreClock = HSE_VALUE >> SystemCoreClockDiv;
+ 536:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 537:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   else if (SystemCoreClockSrc == 3)
+ 538:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   {
+ 539:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SystemCoreClock = HSI_VALUE >> SystemCoreClockDiv;
+ 540:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 541:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   else if (SystemCoreClockSrc == 6)
+ 542:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   {
+ 543:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SystemCoreClock = LSE_VALUE >> SystemCoreClockDiv;
+ 544:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 545:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   else if (SystemCoreClockSrc == 7)
+ 546:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   {
+ 547:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****     SystemCoreClock = LSI_VALUE >> SystemCoreClockDiv;
+ 430              		.loc 1 547 33 view .LVU147
+ 431 0058 D340     		lsrs	r3, r3, r2
+ 432              		.loc 1 547 21 view .LVU148
+ 433 005a 084A     		ldr	r2, .L37+12
+ 434              	.LVL12:
+ 435              		.loc 1 547 21 view .LVU149
+ 436 005c 1360     		str	r3, [r2]
+ 437              	.L22:
+ 548:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 549:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c **** }
+ 438              		.loc 1 549 1 view .LVU150
+ 439              		@ sp needed
+ 440 005e F0BD     		pop	{r4, r5, r6, r7, pc}
+ 441              	.LVL13:
+ 442              	.L28:
+ 539:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 443              		.loc 1 539 5 is_stmt 1 view .LVU151
+ 539:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 444              		.loc 1 539 33 is_stmt 0 view .LVU152
+ 445 0060 054B     		ldr	r3, .L37+8
+ 446 0062 F9E7     		b	.L36
+ 447              	.L27:
+ 543:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 448              		.loc 1 543 5 is_stmt 1 view .LVU153
+ 543:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 449              		.loc 1 543 33 is_stmt 0 view .LVU154
+ 450 0064 8023     		movs	r3, #128
+ 451 0066 1B02     		lsls	r3, r3, #8
+ 452 0068 F6E7     		b	.L36
+ 453              	.L25:
+ 547:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 454              		.loc 1 547 5 is_stmt 1 view .LVU155
+ 547:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\system_ht32l5xxxx_01.c ****   }
+ 455              		.loc 1 547 33 is_stmt 0 view .LVU156
+ 456 006a FA23     		movs	r3, #250
+ 457 006c DB01     		lsls	r3, r3, #7
+ 458 006e F3E7     		b	.L36
+ 459              	.L38:
+ 460              		.align	2
+ 461              	.L37:
+ 462 0070 00800840 		.word	1074298880
+ 463 0074 1C800840 		.word	1074298908
+ 464 0078 00127A00 		.word	8000000
+ 465 007c 00000000 		.word	SystemCoreClock
+ 466              		.cfi_endproc
+ 467              	.LFE47:
+ 469              		.global	SystemCoreClock
+ 470              		.section	.data.SystemCoreClock,"aw"
+ 471              		.align	2
+ 474              	SystemCoreClock:
+ 475 0000 006CDC02 		.word	48000000
+ 476              		.text
+ 477              	.Letext0:
+ 478              		.file 2 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 479              		.file 3 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 480              		.file 4 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 481              		.file 5 "../../../../library/Device/Holtek/HT32L5xxxx/Include/system_ht32l5xxxx_01.h"
+DEFINED SYMBOLS
+                            *ABS*:00000000 system_ht32l5xxxx_01.c
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:19     .text.SystemInit:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:25     .text.SystemInit:00000000 SystemInit
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:289    .text.SystemInit:00000110 $d
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:307    .text.SystemCoreClockUpdate:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:313    .text.SystemCoreClockUpdate:00000000 SystemCoreClockUpdate
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:382    .text.SystemCoreClockUpdate:00000030 $d
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:462    .text.SystemCoreClockUpdate:00000070 $d
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:474    .data.SystemCoreClock:00000000 SystemCoreClock
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:471    .data.SystemCoreClock:00000000 $d
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:389    .text.SystemCoreClockUpdate:00000037 $d
+C:\Users\q3112\AppData\Local\Temp\ccYHIAVk.s:389    .text.SystemCoreClockUpdate:00000038 $t
+
+UNDEFINED SYMBOLS
+__gnu_thumb1_case_uqi
