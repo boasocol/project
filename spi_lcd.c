@@ -19,14 +19,21 @@
 static u8 SPI_LCD_SPI_SendByte(u8 data, u8 dc_bit)
 {
   u32 timeout = 100000;
-  while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXBE) == RESET) && (timeout--));
-  if (timeout == 0) { return 1; }
+  /* FIFO 模式下等 TX FIFO 有空位（深度 8）；等待时顺手清 RX，防 RX FIFO 溢出停 SPI */
+  while (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_TX) >= 8u)
+  {
+    if (--timeout == 0) { return 1; }
+    if (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) != RESET)
+      (void)SPI_ReceiveData(SPI_LCD_SPI);
+  }
 
-  SPI_SendData(SPI_LCD_SPI, (dc_bit << 8) | data);
+  SPI_SendData(SPI_LCD_SPI, ((u16)dc_bit << 8) | data);
 
   timeout = 100000;
-  while ((SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) == RESET) && (timeout--));
-  if (timeout == 0) { return 1; }
+  while (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) == RESET)
+  {
+    if (--timeout == 0) { return 1; }
+  }
 
   (void)SPI_ReceiveData(SPI_LCD_SPI);
   return 0;
@@ -91,12 +98,21 @@ void SPI_LCD_WriteCmd(u8 cmd)
  */
 void SPI_LCD_WriteData(const u8 *buf, u32 len)
 {
+  /* FIFO 批量发送：TX FIFO 有空位就填（深度 8），RX 及时收走防溢出，
+     CPU 只按空位节奏填数，吞吐接近 SPI 标称（原逐字节等 RXBNE 慢一倍） */
   while (len > 0)
   {
-    SPI_LCD_SPI_SendByte(*buf, 1);
-    buf++;
-    len--;
+    if (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) != RESET)
+      (void)SPI_ReceiveData(SPI_LCD_SPI);
+    if (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_TX) < 8u)
+    {
+      SPI_SendData(SPI_LCD_SPI, ((u16)1u << 8) | *buf);
+      buf++;
+      len--;
+    }
   }
+  /* 等所有数据从 TX FIFO 移出（FIFO 保序；Deselect 的 WaitDone 再兜底等线上发完） */
+  while (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXE) == RESET);
 }
 
 //-----------------------------------------------------------------------------
@@ -154,7 +170,7 @@ void SPI_LCD_Init(void)
   /* 4. SPI 初始化配置（主模式、9 位、软件 CS、CPOL=0、CPHA=0） */
   SPI_InitTypeDef SPI_InitStructure;
   SPI_InitStructure.SPI_Mode = SPI_MASTER;
-  SPI_InitStructure.SPI_FIFO = SPI_FIFO_DISABLE;
+  SPI_InitStructure.SPI_FIFO = SPI_FIFO_ENABLE;   /* 启用 FIFO：批量填充，吞吐接近标称 */
   SPI_InitStructure.SPI_DataLength = SPI_DATALENGTH_9;
   SPI_InitStructure.SPI_SELMode = SPI_SEL_SOFTWARE;
   SPI_InitStructure.SPI_SELPolarity = SPI_SELPOLARITY_LOW;

@@ -53,11 +53,15 @@ static void draw_clock_digit(int x, int d)
 {
   UI_DrawGlyphRect(x, YF(14, 84), 40, 84, (u32)('0' + d), UI_C_DIGIT);
 }
-/* ---- 冒号：14x84 区域（组间 18 间隙中居中，左右各 2px 呼吸）；on=0 时用空格字模 ---- */
+/* ---- 冒号：14x84 区域（组间 18 间隙中居中，左右各 2px 呼吸）；on=0 时用空格字模 ----
+   需求：翻页动画已足够动态，冒号功能停用（注释保留，未删除）。
+   背景图未画冒号（见 gen_ui.py：冒号由 MCU 绘制），注释后冒号区域显示纯背景色。
+   恢复：取消本函数及 Init / ColonBlink 中调用的注释即可。
 static void draw_colon(int x, int on)
 {
   UI_DrawGlyphRect(x, YF(14, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
+*/
 
 /* ============ 翻页动画状态（6 张卡片对应 6 个时/分/秒位） ============
    卡片 x 顺序（与 clock_xs 一致）：H1=13, H2=59, M1=117, M2=163, S1=221, S2=267
@@ -76,7 +80,8 @@ static const int g_card_x[6] = {13, 59, 117, 163, 221, 267};
 #define FLIP_CARD_Y0     (YF(14, 84))     /* 整卡 GRAM 起始列（=141） */
 #define FLIP_HALF_H      42
 
-/* 串行翻页：同一时刻只翻一位，按 秒个位→秒十位→分个位→分十位→时个位→时十位 顺序 */
+/* 串行翻页：同一时刻只翻一位，单卡动画时长恒定（并行会让每帧画多卡、帧间隔被
+   SPI 拖长导致节奏变差）。授时等大幅跳变由 Calendar_SetStaticNext 直接静态刷新。 */
 static int g_active = -1;                 /* 当前正在翻页的槽，-1 表示无 */
 static u8  g_pending[6];                  /* 待翻页队列标记 */
 static u8  g_pend_old[6], g_pend_new[6];  /* 队列中的 old/new 目标数字 */
@@ -94,14 +99,18 @@ static void flip_start(int slot, u8 old_digit, u8 new_digit)
 
 /* 翻页动画是否可用（Calendar_Init 时记录 UI_Anim_Ready() 结果） */
 static u8 g_anim_ok = 0;
+/* 蓝牙授时等大幅跳变：下一次 Refresh 强制静态刷新（不翻页连翻），用后即清 */
+static u8 g_static_next = 0;
 
-/* 每 6ms 推进一帧（main 主循环按 BFTM0 1ms 计数调用）。
-   翻页期间会调用 UI_Anim_DrawFrame 画当前帧；翻完恢复 IDLE（下次 Refresh 画静态）。 */
+/* 每 5ms 推进一帧（main 主循环按 BFTM0 1ms 计数调用）。
+   翻页期间会调用 UI_Anim_DrawFrame 画当前帧；翻完恢复 IDLE（下次 Refresh 画静态）。
+   串行单卡动画：1->9 等任意跳变一次动画到位（数据支持），帧间隔固定 5ms。
+   SPI FIFO + 15MHz 后单卡绘制约 3~4ms，5ms 门槛即“固定匀速”。 */
 void Calendar_FlipTick(u32 now_ms)
 {
   static u32 last_ms = 0;
   if (!g_anim_ok) return;              /* 动画区不可用：纯静态显示 */
-  if (now_ms - last_ms < 6u) return;   /* 6ms 间隔（原 8ms，提速）；BFTM 1ms 节拍做容差 */
+  if (now_ms - last_ms < 5u) return;   /* 5ms 固定间隔；BFTM 1ms 节拍做容差 */
   last_ms = now_ms;
 
   /* 无活动槽时，按 低->高 顺序（秒个位…时十位）取下一个待翻页 */
@@ -207,14 +216,18 @@ void Calendar_Init(void)
   for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; g_disp[i] = 0; }
   g_active = -1;
 
-  /* 初始冒号（之后由 BFTM1 半秒中断驱动 Calendar_ColonBlink 闪烁） */
+  /* 初始冒号：需求停用（注释保留）
   draw_colon(101, 1);
   draw_colon(205, 1);
+  */
 
   /* 强制首帧重绘所有动态块 */
   c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;
   c_hh = c_mm = c_ss = 0xFF;
   c_temp = c_humi = 0x7FFF;
+
+  /* 上电首帧刷新直接静态显示（不做翻页动画） */
+  g_static_next = 1;
 
   /* 蓝牙状态默认"未连接"（等状态机首次判定后更新） */
   s_bt_connected = 0xFF;
@@ -226,42 +239,52 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
 {
   int wd = CalcWeekday(t->year, t->month, t->day);
 
+  /* 蓝牙授时等大幅跳变：本次强制静态刷新（不做逐位连翻动画），并取消进行中的动画 */
+  int force_static = g_static_next;
+  g_static_next = 0;
+  if (force_static && g_anim_ok)
+  {
+    g_active = -1;
+    for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; }
+  }
+
   /* ---- 时钟数字（6 位独立变化检测，只翻真正变化的那一位） ----
-     动画可用：变化位启动翻页（Calendar_FlipTick 推进帧）；
-     动画不可用（如 Flash 未烧新 ANIM 区）：直接画静态字模，保证数字必现。 */
+     动画可用且非强制静态：变化位启动翻页（Calendar_FlipTick 推进帧）；
+     否则直接画静态字模并更新 g_disp（保证后续翻页起始数字正确）：
+     覆盖上电首刷、蓝牙授时跳变、Flash 无 ANIM 区等场景。 */
   if ((t->hour / 10) != (c_hh / 10))
   {
-    if (g_anim_ok) flip_start(0, c_hh / 10, t->hour / 10);
-    else           draw_clock_digit(13, t->hour / 10);
+    if (g_anim_ok && !force_static) flip_start(0, c_hh / 10, t->hour / 10);
+    else                            { draw_clock_digit(13, t->hour / 10); g_disp[0] = (u8)(t->hour / 10); }
   }
   if ((t->hour % 10) != (c_hh % 10))
   {
-    if (g_anim_ok) flip_start(1, c_hh % 10, t->hour % 10);
-    else           draw_clock_digit(59, t->hour % 10);
+    if (g_anim_ok && !force_static) flip_start(1, c_hh % 10, t->hour % 10);
+    else                            { draw_clock_digit(59, t->hour % 10); g_disp[1] = (u8)(t->hour % 10); }
   }
   c_hh = t->hour;
 
   if ((t->minute / 10) != (c_mm / 10))
   {
-    if (g_anim_ok) flip_start(2, c_mm / 10, t->minute / 10);
-    else           draw_clock_digit(117, t->minute / 10);
+    if (g_anim_ok && !force_static) flip_start(2, c_mm / 10, t->minute / 10);
+    else                            { draw_clock_digit(117, t->minute / 10); g_disp[2] = (u8)(t->minute / 10); }
   }
   if ((t->minute % 10) != (c_mm % 10))
   {
-    if (g_anim_ok) flip_start(3, c_mm % 10, t->minute % 10);
-    else           draw_clock_digit(163, t->minute % 10);
+    if (g_anim_ok && !force_static) flip_start(3, c_mm % 10, t->minute % 10);
+    else                            { draw_clock_digit(163, t->minute % 10); g_disp[3] = (u8)(t->minute % 10); }
   }
   c_mm = t->minute;
 
   if ((t->second / 10) != (c_ss / 10))
   {
-    if (g_anim_ok) flip_start(4, c_ss / 10, t->second / 10);
-    else           draw_clock_digit(221, t->second / 10);
+    if (g_anim_ok && !force_static) flip_start(4, c_ss / 10, t->second / 10);
+    else                            { draw_clock_digit(221, t->second / 10); g_disp[4] = (u8)(t->second / 10); }
   }
   if ((t->second % 10) != (c_ss % 10))
   {
-    if (g_anim_ok) flip_start(5, c_ss % 10, t->second % 10);
-    else           draw_clock_digit(267, t->second % 10);
+    if (g_anim_ok && !force_static) flip_start(5, c_ss % 10, t->second % 10);
+    else                            { draw_clock_digit(267, t->second % 10); g_disp[5] = (u8)(t->second % 10); }
   }
   c_ss = t->second;
 
@@ -321,13 +344,20 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
   }
 }
 
-/* ============ 冒号闪烁（0.5s 中断驱动） ============ */
+/* ============ 冒号闪烁（0.5s 中断驱动）：需求停用，注释保留 ============
 void Calendar_ColonBlink(void)
 {
   static u8 colon_on = 1;
   colon_on ^= 1;
   draw_colon(101, colon_on);
   draw_colon(205, colon_on);
+}
+*/
+
+/* 蓝牙授时等大幅跳变后调用：下一次 Calendar_Refresh 强制静态刷新（不做逐位连翻动画） */
+void Calendar_SetStaticNext(void)
+{
+  g_static_next = 1;
 }
 
 

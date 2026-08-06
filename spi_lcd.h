@@ -17,9 +17,9 @@
 #define SPI_LCD_SPI       HT_SPI0     /* SPI 外设 */
 /* SPI 波特率：数据手册主机模式上限 = fPCLK/2。
  * 主频(=fPCLK) 48MHz 时 SPI 最高可达 24MHz(fPCLK/2)；
- * ST7789 串行写周期下限 66ns(≈15MHz)，此处取安全的 12MHz，
- * 如需更激进、且所用屏支持，可改 24000000(=24MHz 硬件上限)。 */
-#define SPI_LCD_SPI_BAUD  12000000    /* SPI 波特率 12MHz（= 48MHz/4，留余量在 ST7789 15MHz 上限内） */
+ * ST7789 串行写周期下限 66ns(≈15MHz)，现取规格上限 15MHz（原 12MHz，提速 25%）；
+ * 超过 15MHz 即超 ST7789 规格（如 24MHz 仅当所用屏实测支持时才可）。 */
+#define SPI_LCD_SPI_BAUD  15000000    /* SPI 波特率 15MHz（ST7789 规格上限，48MHz/3.2） */
 
 void SPI_LCD_Init(void);              /* 配置时钟/引脚/SPI/硬件复位，建立通信 */
 void SPI_LCD_Select(void);            /* 拉低 CS，开始一次传输事务 */

@@ -15,7 +15,8 @@
 
 void Calendar_Init(void);
 void Calendar_Refresh(TimeStruct *t, int temp, int humi);
-void Calendar_ColonBlink(void);   /* 每调用一次翻转冒号显示/隐藏（配合半秒中断） */
+void Calendar_ColonBlink(void);   /* 每调用一次翻转冒号显示/隐藏（配合半秒中断）；当前需求停用，保留声明 */
+void Calendar_SetStaticNext(void);  /* 蓝牙授时等跳变：下一次 Refresh 强制静态刷新（不翻页） */
 void Calendar_SetBtState(int connected);  /* 设置蓝牙显示状态：1=已连接，0=未连接（内部去重） */
 /* 翻页动画推进：每帧 7.5ms，由 main 主循环按 BFTM0 1ms 计数器 (bftm0_ct) 调用。
    仅当某位数字正在翻页时实际画帧；其余时间 no-op。 */

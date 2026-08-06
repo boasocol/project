@@ -61,7 +61,7 @@ u32 Flash_Init(void)
 
   /* ---- 4. SPI 配置：主机，8bit，Mode 3，软件 CS ---- */
   SPI_InitStructure.SPI_Mode           = SPI_MASTER;
-  SPI_InitStructure.SPI_FIFO           = SPI_FIFO_DISABLE;
+  SPI_InitStructure.SPI_FIFO           = SPI_FIFO_ENABLE;  /* 启用 FIFO：批量读，吞吐接近标称 */
   SPI_InitStructure.SPI_DataLength     = SPI_DATALENGTH_8;
   SPI_InitStructure.SPI_SELMode        = SPI_SEL_SOFTWARE;
   SPI_InitStructure.SPI_SELPolarity    = SPI_SELPOLARITY_LOW;
@@ -164,7 +164,17 @@ void Flash_Read(u32 addr, u8 *buf, u32 len)
   Flash_SPI_SendByte((u8)((addr >> 16) & 0xFF));
   Flash_SPI_SendByte((u8)((addr >> 8) & 0xFF));
   Flash_SPI_SendByte((u8)(addr & 0xFF));
-  for (u32 i = 0; i < len; i++)
-    buf[i] = Flash_SPI_SendByte(0x00);
+  /* FIFO 批量读：连续填 TX(0x00 提供时钟)，同时从 RX FIFO 收数据，吞吐接近标称 */
+  u32 sent = 0, got = 0;
+  while (got < len)
+  {
+    if ((sent < len) && (SPI_GetFIFOStatus(HT_SPI1, SPI_FIFO_TX) < 8u))
+    {
+      SPI_SendData(HT_SPI1, 0x00);
+      sent++;
+    }
+    if (SPI_GetFlagStatus(HT_SPI1, SPI_FLAG_RXBNE) != RESET)
+      buf[got++] = (u8)SPI_ReceiveData(HT_SPI1);
+  }
   FLASH_CS_HIGH();
 }

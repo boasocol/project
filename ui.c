@@ -343,6 +343,9 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
     shade = (u16)g_anim_shade[half_idx][frame_idx] + 1u;   /* 0..255 -> 1..256 */
 
   /* 逐行读 UI 背景（小端->高字节先），直接合成进 g_blit。
+     （合并背景读无收益：跳地址必须每行重发命令，FIFO 化后每字节轮询已消失，
+     42 次事务只多 ~40µs CS 切换；且 g_blit 按 GRAM 顺序 x*h+yy 写回会与背景行重叠，
+     RAM 仅 8K 无法加独立大缓冲，故保持逐行读。）
      GRAM 自动递增顺序：行(逻辑x)外、列(逻辑y)内 -> 像素索引 = x*h + yy */
   for (u32 yy = 0; yy < h; yy++)
   {

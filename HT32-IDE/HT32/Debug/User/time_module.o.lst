@@ -364,7 +364,7 @@
  338:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   {
  339:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     /* ð����˸���ģ�ÿ 0.5s �ñ�־����ѭ�����Ѻ�תð�ţ�
  340:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****      * �ж���ֻ�ñ�־������ SPI����������ѭ��ˢ��
- 341:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     g_colon_blink_flag = 1;
+ 341:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     /* g_colon_blink_flag = 1; */   /* 冒号闪烁已停用（需求），保留置位代码 */
  342:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c **** 
  343:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     /* ÿ���� CSEC = 1 �룺��λʱ�䲢֪ͨ��ѭ��ˢ�¡�
  344:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****      * ��CNT ��Ϊ���������ʱ���԰����롱ά���� */
@@ -2358,270 +2358,263 @@
  803              		.loc 1 337 6 discriminator 1 view .LVU232
  804 0006 0123     		movs	r3, #1
  805 0008 1842     		tst	r0, r3
- 806 000a 11D0     		beq	.L40
+ 806 000a 0FD0     		beq	.L40
  807              	.LBB45:
- 341:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c **** 
- 808              		.loc 1 341 5 is_stmt 1 view .LVU233
- 341:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c **** 
- 809              		.loc 1 341 24 is_stmt 0 view .LVU234
- 810 000c 1F4A     		ldr	r2, .L50
- 811 000e 1370     		strb	r3, [r2]
  345:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     half_tick ^= 1;
- 812              		.loc 1 345 5 is_stmt 1 view .LVU235
+ 808              		.loc 1 345 5 is_stmt 1 view .LVU233
  346:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     if (half_tick == 0)
- 813              		.loc 1 346 5 view .LVU236
+ 809              		.loc 1 346 5 view .LVU234
  346:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     if (half_tick == 0)
- 814              		.loc 1 346 15 is_stmt 0 view .LVU237
- 815 0010 1F4A     		ldr	r2, .L50+4
- 816 0012 1778     		ldrb	r7, [r2]
- 817 0014 7B40     		eors	r3, r7
- 818 0016 1370     		strb	r3, [r2]
+ 810              		.loc 1 346 15 is_stmt 0 view .LVU235
+ 811 000c 1E4A     		ldr	r2, .L50
+ 812 000e 1778     		ldrb	r7, [r2]
+ 813 0010 7B40     		eors	r3, r7
+ 814 0012 1370     		strb	r3, [r2]
  347:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     {
- 819              		.loc 1 347 5 is_stmt 1 view .LVU238
+ 815              		.loc 1 347 5 is_stmt 1 view .LVU236
  347:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     {
- 820              		.loc 1 347 8 is_stmt 0 view .LVU239
- 821 0018 012F     		cmp	r7, #1
- 822 001a 09D1     		bne	.L40
+ 816              		.loc 1 347 8 is_stmt 0 view .LVU237
+ 817 0014 012F     		cmp	r7, #1
+ 818 0016 09D1     		bne	.L40
  349:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       g_time_update_flag = 1;
- 823              		.loc 1 349 7 is_stmt 1 view .LVU240
- 824              	.LBB46:
- 825              	.LBI46:
+ 819              		.loc 1 349 7 is_stmt 1 view .LVU238
+ 820              	.LBB46:
+ 821              	.LBI46:
  367:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c **** {
- 826              		.loc 1 367 13 view .LVU241
- 827              	.LVL69:
- 828              	.LBB47:
+ 822              		.loc 1 367 13 view .LVU239
+ 823              	.LVL69:
+ 824              	.LBB47:
  370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   
- 829              		.loc 1 370 3 view .LVU242
+ 825              		.loc 1 370 3 view .LVU240
  370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   
- 830              		.loc 1 370 7 is_stmt 0 view .LVU243
- 831 001c 1D4C     		ldr	r4, .L50+8
+ 826              		.loc 1 370 7 is_stmt 0 view .LVU241
+ 827 0018 1C4C     		ldr	r4, .L50+4
  370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   
- 832              		.loc 1 370 15 view .LVU244
- 833 001e A379     		ldrb	r3, [r4, #6]
- 834 0020 0133     		adds	r3, r3, #1
- 835 0022 DBB2     		uxtb	r3, r3
+ 828              		.loc 1 370 15 view .LVU242
+ 829 001a A379     		ldrb	r3, [r4, #6]
+ 830 001c 0133     		adds	r3, r3, #1
+ 831 001e DBB2     		uxtb	r3, r3
  373:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   {
- 836              		.loc 1 373 3 is_stmt 1 view .LVU245
+ 832              		.loc 1 373 3 is_stmt 1 view .LVU243
  373:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   {
- 837              		.loc 1 373 6 is_stmt 0 view .LVU246
- 838 0024 3B2B     		cmp	r3, #59
- 839 0026 04D8     		bhi	.L44
+ 833              		.loc 1 373 6 is_stmt 0 view .LVU244
+ 834 0020 3B2B     		cmp	r3, #59
+ 835 0022 04D8     		bhi	.L44
  370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   
- 840              		.loc 1 370 15 view .LVU247
- 841 0028 A371     		strb	r3, [r4, #6]
- 842              	.L45:
- 843              	.LVL70:
+ 836              		.loc 1 370 15 view .LVU245
+ 837 0024 A371     		strb	r3, [r4, #6]
+ 838              	.L45:
+ 839              	.LVL70:
  370:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****   
- 844              		.loc 1 370 15 view .LVU248
- 845              	.LBE47:
- 846              	.LBE46:
+ 840              		.loc 1 370 15 view .LVU246
+ 841              	.LBE47:
+ 842              	.LBE46:
  350:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     }
- 847              		.loc 1 350 7 is_stmt 1 view .LVU249
+ 843              		.loc 1 350 7 is_stmt 1 view .LVU247
  350:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     }
- 848              		.loc 1 350 26 is_stmt 0 view .LVU250
- 849 002a 0122     		movs	r2, #1
- 850 002c 1A4B     		ldr	r3, .L50+12
- 851 002e 1A60     		str	r2, [r3]
- 852              	.L40:
- 853              	.LBE45:
+ 844              		.loc 1 350 26 is_stmt 0 view .LVU248
+ 845 0026 0122     		movs	r2, #1
+ 846 0028 194B     		ldr	r3, .L50+8
+ 847 002a 1A60     		str	r2, [r3]
+ 848              	.L40:
+ 849              	.LBE45:
  353:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c **** 
- 854              		.loc 1 353 1 view .LVU251
- 855              		@ sp needed
- 856 0030 F7BD     		pop	{r0, r1, r2, r4, r5, r6, r7, pc}
- 857              	.LVL71:
- 858              	.L44:
- 859              	.LBB50:
- 860              	.LBB49:
- 861              	.LBB48:
+ 850              		.loc 1 353 1 view .LVU249
+ 851              		@ sp needed
+ 852 002c F7BD     		pop	{r0, r1, r2, r4, r5, r6, r7, pc}
+ 853              	.LVL71:
+ 854              	.L44:
+ 855              	.LBB50:
+ 856              	.LBB49:
+ 857              	.LBB48:
  375:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     time->minute++;     // �ֵ���
- 862              		.loc 1 375 5 is_stmt 1 view .LVU252
+ 858              		.loc 1 375 5 is_stmt 1 view .LVU250
  375:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     time->minute++;     // �ֵ���
- 863              		.loc 1 375 18 is_stmt 0 view .LVU253
- 864 0032 0022     		movs	r2, #0
- 865 0034 A271     		strb	r2, [r4, #6]
+ 859              		.loc 1 375 18 is_stmt 0 view .LVU251
+ 860 002e 0022     		movs	r2, #0
+ 861 0030 A271     		strb	r2, [r4, #6]
  376:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     
- 866              		.loc 1 376 5 is_stmt 1 view .LVU254
+ 862              		.loc 1 376 5 is_stmt 1 view .LVU252
  376:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     
- 867              		.loc 1 376 17 is_stmt 0 view .LVU255
- 868 0036 6379     		ldrb	r3, [r4, #5]
- 869 0038 0133     		adds	r3, r3, #1
- 870 003a DBB2     		uxtb	r3, r3
+ 863              		.loc 1 376 17 is_stmt 0 view .LVU253
+ 864 0032 6379     		ldrb	r3, [r4, #5]
+ 865 0034 0133     		adds	r3, r3, #1
+ 866 0036 DBB2     		uxtb	r3, r3
  379:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     {
- 871              		.loc 1 379 5 is_stmt 1 view .LVU256
+ 867              		.loc 1 379 5 is_stmt 1 view .LVU254
  379:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     {
- 872              		.loc 1 379 8 is_stmt 0 view .LVU257
- 873 003c 3B2B     		cmp	r3, #59
- 874 003e 01D8     		bhi	.L46
+ 868              		.loc 1 379 8 is_stmt 0 view .LVU255
+ 869 0038 3B2B     		cmp	r3, #59
+ 870 003a 01D8     		bhi	.L46
  376:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****     
- 875              		.loc 1 376 17 view .LVU258
- 876 0040 6371     		strb	r3, [r4, #5]
- 877 0042 F2E7     		b	.L45
- 878              	.L46:
+ 871              		.loc 1 376 17 view .LVU256
+ 872 003c 6371     		strb	r3, [r4, #5]
+ 873 003e F2E7     		b	.L45
+ 874              	.L46:
  381:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       time->hour++;     // ʱ����
- 879              		.loc 1 381 7 is_stmt 1 view .LVU259
+ 875              		.loc 1 381 7 is_stmt 1 view .LVU257
  381:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       time->hour++;     // ʱ����
- 880              		.loc 1 381 20 is_stmt 0 view .LVU260
- 881 0044 6271     		strb	r2, [r4, #5]
+ 876              		.loc 1 381 20 is_stmt 0 view .LVU258
+ 877 0040 6271     		strb	r2, [r4, #5]
  382:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       
- 882              		.loc 1 382 7 is_stmt 1 view .LVU261
+ 878              		.loc 1 382 7 is_stmt 1 view .LVU259
  382:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       
- 883              		.loc 1 382 17 is_stmt 0 view .LVU262
- 884 0046 2379     		ldrb	r3, [r4, #4]
- 885 0048 0133     		adds	r3, r3, #1
- 886 004a DBB2     		uxtb	r3, r3
+ 879              		.loc 1 382 17 is_stmt 0 view .LVU260
+ 880 0042 2379     		ldrb	r3, [r4, #4]
+ 881 0044 0133     		adds	r3, r3, #1
+ 882 0046 DBB2     		uxtb	r3, r3
  385:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       {
- 887              		.loc 1 385 7 is_stmt 1 view .LVU263
+ 883              		.loc 1 385 7 is_stmt 1 view .LVU261
  385:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       {
- 888              		.loc 1 385 10 is_stmt 0 view .LVU264
- 889 004c 172B     		cmp	r3, #23
- 890 004e 01D8     		bhi	.L48
+ 884              		.loc 1 385 10 is_stmt 0 view .LVU262
+ 885 0048 172B     		cmp	r3, #23
+ 886 004a 01D8     		bhi	.L48
  382:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****       
- 891              		.loc 1 382 17 view .LVU265
- 892 0050 2371     		strb	r3, [r4, #4]
- 893 0052 EAE7     		b	.L45
- 894              	.L48:
+ 887              		.loc 1 382 17 view .LVU263
+ 888 004c 2371     		strb	r3, [r4, #4]
+ 889 004e EAE7     		b	.L45
+ 890              	.L48:
  387:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         time->day++;    // �յ���
- 895              		.loc 1 387 9 is_stmt 1 view .LVU266
+ 891              		.loc 1 387 9 is_stmt 1 view .LVU264
  387:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         time->day++;    // �յ���
- 896              		.loc 1 387 20 is_stmt 0 view .LVU267
- 897 0054 2271     		strb	r2, [r4, #4]
+ 892              		.loc 1 387 20 is_stmt 0 view .LVU265
+ 893 0050 2271     		strb	r2, [r4, #4]
  388:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         
- 898              		.loc 1 388 9 is_stmt 1 view .LVU268
+ 894              		.loc 1 388 9 is_stmt 1 view .LVU266
  388:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         
- 899              		.loc 1 388 18 is_stmt 0 view .LVU269
- 900 0056 E678     		ldrb	r6, [r4, #3]
- 901 0058 0136     		adds	r6, r6, #1
- 902 005a F6B2     		uxtb	r6, r6
- 903 005c E670     		strb	r6, [r4, #3]
+ 895              		.loc 1 388 18 is_stmt 0 view .LVU267
+ 896 0052 E678     		ldrb	r6, [r4, #3]
+ 897 0054 0136     		adds	r6, r6, #1
+ 898 0056 F6B2     		uxtb	r6, r6
+ 899 0058 E670     		strb	r6, [r4, #3]
  392:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         {
- 904              		.loc 1 392 9 is_stmt 1 view .LVU270
+ 900              		.loc 1 392 9 is_stmt 1 view .LVU268
  392:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         {
- 905              		.loc 1 392 25 is_stmt 0 view .LVU271
- 906 005e 2388     		ldrh	r3, [r4]
- 907 0060 9BB2     		uxth	r3, r3
- 908 0062 0193     		str	r3, [sp, #4]
- 909 0064 A578     		ldrb	r5, [r4, #2]
- 910 0066 1800     		movs	r0, r3
- 911 0068 EDB2     		uxtb	r5, r5
- 912 006a 2900     		movs	r1, r5
- 913 006c FFF7FEFF 		bl	get_days_in_month
- 914              	.LVL72:
+ 901              		.loc 1 392 25 is_stmt 0 view .LVU269
+ 902 005a 2388     		ldrh	r3, [r4]
+ 903 005c 9BB2     		uxth	r3, r3
+ 904 005e 0193     		str	r3, [sp, #4]
+ 905 0060 A578     		ldrb	r5, [r4, #2]
+ 906 0062 1800     		movs	r0, r3
+ 907 0064 EDB2     		uxtb	r5, r5
+ 908 0066 2900     		movs	r1, r5
+ 909 0068 FFF7FEFF 		bl	get_days_in_month
+ 910              	.LVL72:
  392:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****         {
- 915              		.loc 1 392 12 discriminator 1 view .LVU272
- 916 0070 8642     		cmp	r6, r0
- 917 0072 DAD9     		bls	.L45
+ 911              		.loc 1 392 12 discriminator 1 view .LVU270
+ 912 006c 8642     		cmp	r6, r0
+ 913 006e DAD9     		bls	.L45
  394:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           time->month++;   // �µ���
- 918              		.loc 1 394 11 is_stmt 1 view .LVU273
+ 914              		.loc 1 394 11 is_stmt 1 view .LVU271
  395:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           
- 919              		.loc 1 395 22 is_stmt 0 view .LVU274
- 920 0074 0135     		adds	r5, r5, #1
- 921 0076 EDB2     		uxtb	r5, r5
+ 915              		.loc 1 395 22 is_stmt 0 view .LVU272
+ 916 0070 0135     		adds	r5, r5, #1
+ 917 0072 EDB2     		uxtb	r5, r5
  394:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           time->month++;   // �µ���
- 922              		.loc 1 394 21 view .LVU275
- 923 0078 E770     		strb	r7, [r4, #3]
+ 918              		.loc 1 394 21 view .LVU273
+ 919 0074 E770     		strb	r7, [r4, #3]
  395:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           
- 924              		.loc 1 395 11 is_stmt 1 view .LVU276
+ 920              		.loc 1 395 11 is_stmt 1 view .LVU274
  398:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           {
- 925              		.loc 1 398 11 view .LVU277
+ 921              		.loc 1 398 11 view .LVU275
  398:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           {
- 926              		.loc 1 398 14 is_stmt 0 view .LVU278
- 927 007a 0C2D     		cmp	r5, #12
- 928 007c 01D8     		bhi	.L49
+ 922              		.loc 1 398 14 is_stmt 0 view .LVU276
+ 923 0076 0C2D     		cmp	r5, #12
+ 924 0078 01D8     		bhi	.L49
  395:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           
- 929              		.loc 1 395 22 view .LVU279
- 930 007e A570     		strb	r5, [r4, #2]
- 931 0080 D3E7     		b	.L45
- 932              	.L49:
+ 925              		.loc 1 395 22 view .LVU277
+ 926 007a A570     		strb	r5, [r4, #2]
+ 927 007c D3E7     		b	.L45
+ 928              	.L49:
  400:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****             time->year++;    // �����
- 933              		.loc 1 400 13 is_stmt 1 view .LVU280
+ 929              		.loc 1 400 13 is_stmt 1 view .LVU278
  401:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           }
- 934              		.loc 1 401 23 is_stmt 0 view .LVU281
- 935 0082 019B     		ldr	r3, [sp, #4]
+ 930              		.loc 1 401 23 is_stmt 0 view .LVU279
+ 931 007e 019B     		ldr	r3, [sp, #4]
  400:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****             time->year++;    // �����
- 936              		.loc 1 400 25 view .LVU282
- 937 0084 A770     		strb	r7, [r4, #2]
+ 932              		.loc 1 400 25 view .LVU280
+ 933 0080 A770     		strb	r7, [r4, #2]
  401:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           }
- 938              		.loc 1 401 13 is_stmt 1 view .LVU283
+ 934              		.loc 1 401 13 is_stmt 1 view .LVU281
  401:C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project\time_module.c ****           }
- 939              		.loc 1 401 23 is_stmt 0 view .LVU284
- 940 0086 0133     		adds	r3, r3, #1
- 941 0088 2380     		strh	r3, [r4]
- 942 008a CEE7     		b	.L45
- 943              	.L51:
- 944              		.align	2
- 945              	.L50:
- 946 008c 00000000 		.word	g_colon_blink_flag
- 947 0090 00000000 		.word	half_tick.0
- 948 0094 00000000 		.word	g_current_time
- 949 0098 00000000 		.word	g_time_update_flag
- 950              	.LBE48:
- 951              	.LBE49:
- 952              	.LBE50:
- 953              		.cfi_endproc
- 954              	.LFE50:
- 956              		.section	.bss.half_tick.0,"aw",%nobits
- 959              	half_tick.0:
- 960 0000 00       		.space	1
- 961              		.section	.rodata.days_in_month.1,"a"
- 964              	days_in_month.1:
- 965 0000 1F1C1F1E 		.ascii	"\037\034\037\036\037\036\037\037\036\037\036\037"
- 965      1F1E1F1F 
- 965      1E1F1E1F 
- 966              		.global	g_colon_blink_flag
- 967              		.section	.bss.g_colon_blink_flag,"aw",%nobits
- 970              	g_colon_blink_flag:
- 971 0000 00       		.space	1
- 972              		.global	g_time_update_flag
- 973              		.section	.bss.g_time_update_flag,"aw",%nobits
- 974              		.align	2
- 977              	g_time_update_flag:
- 978 0000 00000000 		.space	4
- 979              		.section	.bss.g_current_time,"aw",%nobits
- 980              		.align	1
- 983              	g_current_time:
- 984 0000 00000000 		.space	8
- 984      00000000 
- 985              		.text
- 986              	.Letext0:
- 987              		.file 3 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
- 988              		.file 4 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
- 989              		.file 5 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
- 990              		.file 6 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_ckcu.h"
- 991              		.file 7 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_pwrcu.h"
- 992              		.file 8 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_rtc.h"
- 993              		.file 9 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/time_module.h"
- 994              		.file 10 "<built-in>"
+ 935              		.loc 1 401 23 is_stmt 0 view .LVU282
+ 936 0082 0133     		adds	r3, r3, #1
+ 937 0084 2380     		strh	r3, [r4]
+ 938 0086 CEE7     		b	.L45
+ 939              	.L51:
+ 940              		.align	2
+ 941              	.L50:
+ 942 0088 00000000 		.word	half_tick.0
+ 943 008c 00000000 		.word	g_current_time
+ 944 0090 00000000 		.word	g_time_update_flag
+ 945              	.LBE48:
+ 946              	.LBE49:
+ 947              	.LBE50:
+ 948              		.cfi_endproc
+ 949              	.LFE50:
+ 951              		.section	.bss.half_tick.0,"aw",%nobits
+ 954              	half_tick.0:
+ 955 0000 00       		.space	1
+ 956              		.section	.rodata.days_in_month.1,"a"
+ 959              	days_in_month.1:
+ 960 0000 1F1C1F1E 		.ascii	"\037\034\037\036\037\036\037\037\036\037\036\037"
+ 960      1F1E1F1F 
+ 960      1E1F1E1F 
+ 961              		.global	g_colon_blink_flag
+ 962              		.section	.bss.g_colon_blink_flag,"aw",%nobits
+ 965              	g_colon_blink_flag:
+ 966 0000 00       		.space	1
+ 967              		.global	g_time_update_flag
+ 968              		.section	.bss.g_time_update_flag,"aw",%nobits
+ 969              		.align	2
+ 972              	g_time_update_flag:
+ 973 0000 00000000 		.space	4
+ 974              		.section	.bss.g_current_time,"aw",%nobits
+ 975              		.align	1
+ 978              	g_current_time:
+ 979 0000 00000000 		.space	8
+ 979      00000000 
+ 980              		.text
+ 981              	.Letext0:
+ 982              		.file 3 "../../../../library/Device/Holtek/HT32L5xxxx/Include/ht32l5xxxx_01.h"
+ 983              		.file 4 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 984              		.file 5 "D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/arm-none-eabi/
+ 985              		.file 6 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_ckcu.h"
+ 986              		.file 7 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_pwrcu.h"
+ 987              		.file 8 "../../../../library/HT32L5xxxx_Driver/inc/ht32l5xxxx_rtc.h"
+ 988              		.file 9 "C:/Users/q3112/Desktop/HT/4/HT32L52231_QFN32/project/time_module.h"
+ 989              		.file 10 "<built-in>"
 DEFINED SYMBOLS
                             *ABS*:00000000 time_module.c
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:20     .text.get_days_in_month:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:25     .text.get_days_in_month:00000000 get_days_in_month
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:127    .text.get_days_in_month:00000034 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:964    .rodata.days_in_month.1:00000000 days_in_month.1
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:132    .text.time_to_timestamp:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:137    .text.time_to_timestamp:00000000 time_to_timestamp
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:337    .text.time_to_timestamp:00000094 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:350    .text.TimeModule_Init:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:356    .text.TimeModule_Init:00000000 TimeModule_Init
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:568    .text.TimeModule_Init:000000c4 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:983    .bss.g_current_time:00000000 g_current_time
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:580    .text.TimeModule_SetTime:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:586    .text.TimeModule_SetTime:00000000 TimeModule_SetTime
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:667    .text.TimeModule_SetTime:00000038 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:673    .text.TimeModule_GetTime:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:679    .text.TimeModule_GetTime:00000000 TimeModule_GetTime
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:738    .text.TimeModule_GetTime:00000024 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:743    .text.TimeModule_GetTimestamp:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:749    .text.TimeModule_GetTimestamp:00000000 TimeModule_GetTimestamp
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:775    .text.RTC_IRQHandler:00000000 $t
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:781    .text.RTC_IRQHandler:00000000 RTC_IRQHandler
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:946    .text.RTC_IRQHandler:0000008c $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:970    .bss.g_colon_blink_flag:00000000 g_colon_blink_flag
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:959    .bss.half_tick.0:00000000 half_tick.0
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:977    .bss.g_time_update_flag:00000000 g_time_update_flag
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:960    .bss.half_tick.0:00000000 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:971    .bss.g_colon_blink_flag:00000000 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:974    .bss.g_time_update_flag:00000000 $d
-C:\Users\q3112\AppData\Local\Temp\ccM4FXwa.s:980    .bss.g_current_time:00000000 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:20     .text.get_days_in_month:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:25     .text.get_days_in_month:00000000 get_days_in_month
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:127    .text.get_days_in_month:00000034 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:959    .rodata.days_in_month.1:00000000 days_in_month.1
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:132    .text.time_to_timestamp:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:137    .text.time_to_timestamp:00000000 time_to_timestamp
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:337    .text.time_to_timestamp:00000094 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:350    .text.TimeModule_Init:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:356    .text.TimeModule_Init:00000000 TimeModule_Init
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:568    .text.TimeModule_Init:000000c4 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:978    .bss.g_current_time:00000000 g_current_time
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:580    .text.TimeModule_SetTime:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:586    .text.TimeModule_SetTime:00000000 TimeModule_SetTime
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:667    .text.TimeModule_SetTime:00000038 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:673    .text.TimeModule_GetTime:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:679    .text.TimeModule_GetTime:00000000 TimeModule_GetTime
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:738    .text.TimeModule_GetTime:00000024 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:743    .text.TimeModule_GetTimestamp:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:749    .text.TimeModule_GetTimestamp:00000000 TimeModule_GetTimestamp
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:775    .text.RTC_IRQHandler:00000000 $t
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:781    .text.RTC_IRQHandler:00000000 RTC_IRQHandler
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:942    .text.RTC_IRQHandler:00000088 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:954    .bss.half_tick.0:00000000 half_tick.0
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:972    .bss.g_time_update_flag:00000000 g_time_update_flag
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:955    .bss.half_tick.0:00000000 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:965    .bss.g_colon_blink_flag:00000000 g_colon_blink_flag
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:966    .bss.g_colon_blink_flag:00000000 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:969    .bss.g_time_update_flag:00000000 $d
+C:\Users\q3112\AppData\Local\Temp\cccjQ5gb.s:975    .bss.g_current_time:00000000 $d
 
 UNDEFINED SYMBOLS
 __aeabi_uidivmod

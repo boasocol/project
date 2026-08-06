@@ -84,6 +84,8 @@ int main(void)
         bt_t.minute = bt.minute;
         bt_t.second = bt.second;
         TimeModule_SetTime(&bt_t);
+        /* 授时跳变：直接静态刷新（无动画），避免多位串行依次翻页 */
+        Calendar_SetStaticNext();
         printf("[HD9803] RTC calibrated to 20%02u-%02u-%02u %02u:%02u:%02u\r\n",
                bt.year, bt.month, bt.day,
                bt.hour, bt.minute, bt.second);
@@ -141,11 +143,12 @@ int main(void)
       Calendar_Refresh(&t, temp, humi);
     }
 
-    /* 冒号闪烁标志由 RTC 0.5s 中断置位；在主循环刷屏，避免中断内 SPI 与主循环冲突 */
+    /* 冒号闪烁已停用（翻页动画替代），代码保留：RTC 0.5s 中断仍置位标志但不再消费
     if (g_colon_blink_flag)
     {
       g_colon_blink_flag = 0;
       Calendar_ColonBlink();
     }
+    */
   }
 }

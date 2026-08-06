@@ -310,6 +310,8 @@ Discarded input sections
  .bss           0x00000000        0x0 ./User/time_module.o
  .text.TimeModule_GetTimestamp
                 0x00000000        0xa ./User/time_module.o
+ .bss.g_colon_blink_flag
+                0x00000000        0x1 ./User/time_module.o
  .text          0x00000000        0x0 ./User/uart_init.o
  .data          0x00000000        0x0 ./User/uart_init.o
  .bss           0x00000000        0x0 ./User/uart_init.o
@@ -954,8 +956,6 @@ Discarded input sections
                 0x00000000        0x4 ./Library/ht32l5xxxx_spi.o
  .text.SPI_IntConfig
                 0x00000000       0x10 ./Library/ht32l5xxxx_spi.o
- .text.SPI_GetFIFOStatus
-                0x00000000       0x18 ./Library/ht32l5xxxx_spi.o
  .text.SPI_ClearFlag
                 0x00000000        0x4 ./Library/ht32l5xxxx_spi.o
  .text.SPI_FIFOTriggerLevelConfig
@@ -1575,7 +1575,7 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
                 0x00000000                __interrupt_vector_cortex_m
                 0x000000c0                        . = ALIGN (0x4)
 
-.text           0x000000c0     0x425c
+.text           0x000000c0     0x4370
                 0x000000c0                        . = ALIGN (0x4)
  *(.text)
  .text          0x000000c0       0x14 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_thumb1_case_uqi.o)
@@ -1660,514 +1660,515 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
                 0x00000968       0x62 ./User/Display.o
                 0x00000968                CalcWeekday
  *fill*         0x000009ca        0x2 
+ .text.Calendar_SetStaticNext
+                0x000009cc        0xc ./User/Display.o
+                0x000009cc                Calendar_SetStaticNext
  .text.Flash_Init
-                0x000009cc       0xa0 ./User/Display.o
-                0x000009cc                Flash_Init
+                0x000009d8       0xa0 ./User/Display.o
+                0x000009d8                Flash_Init
  .text.Flash_Read
-                0x00000a6c       0x4c ./User/Display.o
-                0x00000a6c                Flash_Read
+                0x00000a78       0x7c ./User/Display.o
+                0x00000a78                Flash_Read
  .text.UI_LoadHeader
-                0x00000ab8       0x5c ./User/Display.o
-                0x00000ab8                UI_LoadHeader
+                0x00000af4       0x5c ./User/Display.o
+                0x00000af4                UI_LoadHeader
  .text.UI_CacheFont
-                0x00000b14       0xe8 ./User/Display.o
-                0x00000b14                UI_CacheFont
+                0x00000b50       0xe8 ./User/Display.o
+                0x00000b50                UI_CacheFont
  .text.UI_UploadBackground
-                0x00000bfc       0x8c ./User/Display.o
-                0x00000bfc                UI_UploadBackground
+                0x00000c38       0x8c ./User/Display.o
+                0x00000c38                UI_UploadBackground
  .text.ui_get_glyph
-                0x00000c88       0x7c ./User/Display.o
+                0x00000cc4       0x7c ./User/Display.o
  .text.UI_DrawGlyphRect.part.0
-                0x00000d04      0x178 ./User/Display.o
+                0x00000d40      0x178 ./User/Display.o
  .text.UI_DrawGlyphRect
-                0x00000e7c       0x1a ./User/Display.o
-                0x00000e7c                UI_DrawGlyphRect
+                0x00000eb8       0x1a ./User/Display.o
+                0x00000eb8                UI_DrawGlyphRect
  .text.UI_DrawGlyphs
-                0x00000e96       0x38 ./User/Display.o
-                0x00000e96                UI_DrawGlyphs
- *fill*         0x00000ece        0x2 
+                0x00000ed2       0x38 ./User/Display.o
+                0x00000ed2                UI_DrawGlyphs
+ *fill*         0x00000f0a        0x2 
  .text.draw_bt_state
-                0x00000ed0       0x30 ./User/Display.o
+                0x00000f0c       0x30 ./User/Display.o
  .text.Calendar_SetBtState
-                0x00000f00       0x20 ./User/Display.o
-                0x00000f00                Calendar_SetBtState
+                0x00000f3c       0x20 ./User/Display.o
+                0x00000f3c                Calendar_SetBtState
  .text.UI_DrawVarDigits
-                0x00000f20       0x64 ./User/Display.o
-                0x00000f20                UI_DrawVarDigits
- .text.draw_colon
-                0x00000f84       0x20 ./User/Display.o
- .text.Calendar_ColonBlink
-                0x00000fa4       0x20 ./User/Display.o
-                0x00000fa4                Calendar_ColonBlink
+                0x00000f5c       0x64 ./User/Display.o
+                0x00000f5c                UI_DrawVarDigits
  .text.draw_clock_digit
-                0x00000fc4       0x1c ./User/Display.o
+                0x00000fc0       0x1c ./User/Display.o
  .text.Calendar_Refresh
-                0x00000fe0      0x490 ./User/Display.o
-                0x00000fe0                Calendar_Refresh
+                0x00000fdc      0x558 ./User/Display.o
+                0x00000fdc                Calendar_Refresh
  .text.UI_Anim_Init
-                0x00001470       0xfc ./User/Display.o
-                0x00001470                UI_Anim_Init
+                0x00001534       0xfc ./User/Display.o
+                0x00001534                UI_Anim_Init
  .text.Calendar_Init
-                0x0000156c       0xe4 ./User/Display.o
-                0x0000156c                Calendar_Init
+                0x00001630       0xe0 ./User/Display.o
+                0x00001630                Calendar_Init
  .text.UI_Anim_DrawFrame
-                0x00001650      0x288 ./User/Display.o
-                0x00001650                UI_Anim_DrawFrame
+                0x00001710      0x288 ./User/Display.o
+                0x00001710                UI_Anim_DrawFrame
  .text.Calendar_FlipTick
-                0x000018d8      0x11c ./User/Display.o
-                0x000018d8                Calendar_FlipTick
+                0x00001998      0x11c ./User/Display.o
+                0x00001998                Calendar_FlipTick
  .text.YX8320B_Init
-                0x000019f4       0xac ./User/Display.o
-                0x000019f4                YX8320B_Init
+                0x00001ab4       0xac ./User/Display.o
+                0x00001ab4                YX8320B_Init
  .text.YX8320B_GetAddr
-                0x00001aa0        0xc ./User/Display.o
-                0x00001aa0                YX8320B_GetAddr
+                0x00001b60        0xc ./User/Display.o
+                0x00001b60                YX8320B_GetAddr
  .text.YX8320B_ReadTempHumi
-                0x00001aac      0x21c ./User/Display.o
-                0x00001aac                YX8320B_ReadTempHumi
+                0x00001b6c      0x21c ./User/Display.o
+                0x00001b6c                YX8320B_ReadTempHumi
  .text.BFTM1_IRQHandler
-                0x00001cc8       0x10 ./User/Display.o
-                0x00001cc8                BFTM1_IRQHandler
+                0x00001d88       0x10 ./User/Display.o
+                0x00001d88                BFTM1_IRQHandler
  .text.hd9803_send_frame
-                0x00001cd8       0x96 ./User/hd9803.o
- *fill*         0x00001d6e        0x2 
+                0x00001d98       0x96 ./User/hd9803.o
+ *fill*         0x00001e2e        0x2 
  .text.hd9803_delay_ms.constprop.0
-                0x00001d70       0x2c ./User/hd9803.o
+                0x00001e30       0x2c ./User/hd9803.o
  .text.Hd9803_SetPower
-                0x00001d9c       0x48 ./User/hd9803.o
-                0x00001d9c                Hd9803_SetPower
+                0x00001e5c       0x48 ./User/hd9803.o
+                0x00001e5c                Hd9803_SetPower
  .text.Hd9803_Init
-                0x00001de4       0xe8 ./User/hd9803.o
-                0x00001de4                Hd9803_Init
+                0x00001ea4       0xe8 ./User/hd9803.o
+                0x00001ea4                Hd9803_Init
  .text.Hd9803_RequestScan
-                0x00001ecc        0xc ./User/hd9803.o
-                0x00001ecc                Hd9803_RequestScan
+                0x00001f8c        0xc ./User/hd9803.o
+                0x00001f8c                Hd9803_RequestScan
  .text.Hd9803_RequestRelink
-                0x00001ed8        0xc ./User/hd9803.o
-                0x00001ed8                Hd9803_RequestRelink
+                0x00001f98        0xc ./User/hd9803.o
+                0x00001f98                Hd9803_RequestRelink
  .text.USART0_IRQHandler
-                0x00001ee4       0x44 ./User/hd9803.o
-                0x00001ee4                USART0_IRQHandler
+                0x00001fa4       0x44 ./User/hd9803.o
+                0x00001fa4                USART0_IRQHandler
  .text.Hd9803_Poll
-                0x00001f28      0x1ec ./User/hd9803.o
-                0x00001f28                Hd9803_Poll
+                0x00001fe8      0x1ec ./User/hd9803.o
+                0x00001fe8                Hd9803_Poll
  .text.Hd9803_GetTime
-                0x00002114       0x3c ./User/hd9803.o
-                0x00002114                Hd9803_GetTime
+                0x000021d4       0x3c ./User/hd9803.o
+                0x000021d4                Hd9803_GetTime
  .text.Hd9803_GetState
-                0x00002150        0xc ./User/hd9803.o
-                0x00002150                Hd9803_GetState
+                0x00002210        0xc ./User/hd9803.o
+                0x00002210                Hd9803_GetState
  .text.Hd9803_EnterRelinkMode
-                0x0000215c       0x20 ./User/hd9803.o
-                0x0000215c                Hd9803_EnterRelinkMode
+                0x0000221c       0x20 ./User/hd9803.o
+                0x0000221c                Hd9803_EnterRelinkMode
  .text.Hd9803_EnterPairRelinkMode
-                0x0000217c       0x20 ./User/hd9803.o
-                0x0000217c                Hd9803_EnterPairRelinkMode
+                0x0000223c       0x20 ./User/hd9803.o
+                0x0000223c                Hd9803_EnterPairRelinkMode
  .text.Hd9803_Tick
-                0x0000219c       0xb4 ./User/hd9803.o
-                0x0000219c                Hd9803_Tick
+                0x0000225c       0xb4 ./User/hd9803.o
+                0x0000225c                Hd9803_Tick
  .text.NMI_Handler
-                0x00002250        0x2 ./User/ht32l5xxxx_01_it.o
-                0x00002250                NMI_Handler
- *fill*         0x00002252        0x2 
+                0x00002310        0x2 ./User/ht32l5xxxx_01_it.o
+                0x00002310                NMI_Handler
+ *fill*         0x00002312        0x2 
  .text.HardFault_Handler
-                0x00002254       0x10 ./User/ht32l5xxxx_01_it.o
-                0x00002254                HardFault_Handler
+                0x00002314       0x10 ./User/ht32l5xxxx_01_it.o
+                0x00002314                HardFault_Handler
  .text.startup.main
-                0x00002264      0x214 ./User/main.o
-                0x00002264                main
+                0x00002324      0x204 ./User/main.o
+                0x00002324                main
  .text.SPI_LCD_SPI_SendByte.isra.0
-                0x00002478       0x50 ./User/spi_lcd.o
+                0x00002528       0x64 ./User/spi_lcd.o
  .text.SPI_LCD_Select
-                0x000024c8       0x10 ./User/spi_lcd.o
-                0x000024c8                SPI_LCD_Select
+                0x0000258c       0x10 ./User/spi_lcd.o
+                0x0000258c                SPI_LCD_Select
  .text.SPI_LCD_Deselect
-                0x000024d8       0x4c ./User/spi_lcd.o
-                0x000024d8                SPI_LCD_Deselect
+                0x0000259c       0x4c ./User/spi_lcd.o
+                0x0000259c                SPI_LCD_Deselect
  .text.SPI_LCD_WriteCmd
-                0x00002524        0xa ./User/spi_lcd.o
-                0x00002524                SPI_LCD_WriteCmd
+                0x000025e8        0xa ./User/spi_lcd.o
+                0x000025e8                SPI_LCD_WriteCmd
+ *fill*         0x000025f2        0x2 
  .text.SPI_LCD_WriteData
-                0x0000252e       0x18 ./User/spi_lcd.o
-                0x0000252e                SPI_LCD_WriteData
+                0x000025f4       0x50 ./User/spi_lcd.o
+                0x000025f4                SPI_LCD_WriteData
  .text.SPI_LCD_WriteDataByte
-                0x00002546        0xa ./User/spi_lcd.o
-                0x00002546                SPI_LCD_WriteDataByte
- .text.Delay    0x00002550       0x1c ./User/spi_lcd.o
-                0x00002550                Delay
+                0x00002644        0xa ./User/spi_lcd.o
+                0x00002644                SPI_LCD_WriteDataByte
+ *fill*         0x0000264e        0x2 
+ .text.Delay    0x00002650       0x1c ./User/spi_lcd.o
+                0x00002650                Delay
  .text.SPI_LCD_Init
-                0x0000256c       0xf0 ./User/spi_lcd.o
-                0x0000256c                SPI_LCD_Init
+                0x0000266c       0xf4 ./User/spi_lcd.o
+                0x0000266c                SPI_LCD_Init
  .text.get_days_in_month
-                0x0000265c       0x38 ./User/time_module.o
+                0x00002760       0x38 ./User/time_module.o
  .text.time_to_timestamp
-                0x00002694       0xa4 ./User/time_module.o
+                0x00002798       0xa4 ./User/time_module.o
  .text.TimeModule_Init
-                0x00002738       0xe4 ./User/time_module.o
-                0x00002738                TimeModule_Init
+                0x0000283c       0xe4 ./User/time_module.o
+                0x0000283c                TimeModule_Init
  .text.TimeModule_SetTime
-                0x0000281c       0x40 ./User/time_module.o
-                0x0000281c                TimeModule_SetTime
+                0x00002920       0x40 ./User/time_module.o
+                0x00002920                TimeModule_SetTime
  .text.TimeModule_GetTime
-                0x0000285c       0x28 ./User/time_module.o
-                0x0000285c                TimeModule_GetTime
+                0x00002960       0x28 ./User/time_module.o
+                0x00002960                TimeModule_GetTime
  .text.RTC_IRQHandler
-                0x00002884       0x9c ./User/time_module.o
-                0x00002884                RTC_IRQHandler
+                0x00002988       0x94 ./User/time_module.o
+                0x00002988                RTC_IRQHandler
  .text.UART0_Configuration
-                0x00002920       0x64 ./User/uart_init.o
-                0x00002920                UART0_Configuration
+                0x00002a1c       0x64 ./User/uart_init.o
+                0x00002a1c                UART0_Configuration
  .text.RETARGET_Configuration
-                0x00002984       0x5c ./Retarget/ht32_retarget.o
-                0x00002984                RETARGET_Configuration
- .text.putchar  0x000029e0        0x8 ./Retarget/ht32_retarget.o
-                0x000029e0                putchar
- .text.fputc    0x000029e8        0x8 ./Retarget/ht32_retarget.o
-                0x000029e8                fputc
+                0x00002a80       0x5c ./Retarget/ht32_retarget.o
+                0x00002a80                RETARGET_Configuration
+ .text.putchar  0x00002adc        0x8 ./Retarget/ht32_retarget.o
+                0x00002adc                putchar
+ .text.fputc    0x00002ae4        0x8 ./Retarget/ht32_retarget.o
+                0x00002ae4                fputc
  .text.SERIAL_PutChar
-                0x000029f0       0x18 ./Retarget/ht32_serial.o
-                0x000029f0                SERIAL_PutChar
+                0x00002aec       0x18 ./Retarget/ht32_serial.o
+                0x00002aec                SERIAL_PutChar
  .text.PutRepChar
-                0x00002a08       0x16 ./Retarget/printf.o
+                0x00002b04       0x16 ./Retarget/printf.o
  .text.PutString
-                0x00002a1e       0x1a ./Retarget/printf.o
- .text.printf   0x00002a38      0x1f6 ./Retarget/printf.o
-                0x00002a38                printf
- .text.puts     0x00002c2e       0x14 ./Retarget/printf.o
-                0x00002c2e                puts
+                0x00002b1a       0x1a ./Retarget/printf.o
+ .text.printf   0x00002b34      0x1f6 ./Retarget/printf.o
+                0x00002b34                printf
+ .text.puts     0x00002d2a       0x14 ./Retarget/printf.o
+                0x00002d2a                puts
  .text.BFTM_EnaCmd
-                0x00002c42       0x14 ./Library/ht32l5xxxx_bftm.o
-                0x00002c42                BFTM_EnaCmd
+                0x00002d3e       0x14 ./Library/ht32l5xxxx_bftm.o
+                0x00002d3e                BFTM_EnaCmd
  .text.BFTM_SetCompare
-                0x00002c56        0x4 ./Library/ht32l5xxxx_bftm.o
-                0x00002c56                BFTM_SetCompare
+                0x00002d52        0x4 ./Library/ht32l5xxxx_bftm.o
+                0x00002d52                BFTM_SetCompare
  .text.BFTM_SetCounter
-                0x00002c5a        0x4 ./Library/ht32l5xxxx_bftm.o
-                0x00002c5a                BFTM_SetCounter
+                0x00002d56        0x4 ./Library/ht32l5xxxx_bftm.o
+                0x00002d56                BFTM_SetCounter
  .text.BFTM_IntConfig
-                0x00002c5e       0x14 ./Library/ht32l5xxxx_bftm.o
-                0x00002c5e                BFTM_IntConfig
+                0x00002d5a       0x14 ./Library/ht32l5xxxx_bftm.o
+                0x00002d5a                BFTM_IntConfig
  .text.BFTM_ClearFlag
-                0x00002c72        0xe ./Library/ht32l5xxxx_bftm.o
-                0x00002c72                BFTM_ClearFlag
+                0x00002d6e        0xe ./Library/ht32l5xxxx_bftm.o
+                0x00002d6e                BFTM_ClearFlag
  .text.CKCU_GetClockReadyStatus
-                0x00002c80       0x14 ./Library/ht32l5xxxx_ckcu.o
-                0x00002c80                CKCU_GetClockReadyStatus
+                0x00002d7c       0x14 ./Library/ht32l5xxxx_ckcu.o
+                0x00002d7c                CKCU_GetClockReadyStatus
  .text.CKCU_GetPLLFrequency
-                0x00002c94       0x44 ./Library/ht32l5xxxx_ckcu.o
-                0x00002c94                CKCU_GetPLLFrequency
+                0x00002d90       0x44 ./Library/ht32l5xxxx_ckcu.o
+                0x00002d90                CKCU_GetPLLFrequency
  .text.CKCU_GetClocksFrequency
-                0x00002cd8       0x58 ./Library/ht32l5xxxx_ckcu.o
-                0x00002cd8                CKCU_GetClocksFrequency
+                0x00002dd4       0x58 ./Library/ht32l5xxxx_ckcu.o
+                0x00002dd4                CKCU_GetClocksFrequency
  .text.CKCU_GetPeripFrequency
-                0x00002d30       0x34 ./Library/ht32l5xxxx_ckcu.o
-                0x00002d30                CKCU_GetPeripFrequency
+                0x00002e2c       0x34 ./Library/ht32l5xxxx_ckcu.o
+                0x00002e2c                CKCU_GetPeripFrequency
  .text.CKCU_PeripClockConfig
-                0x00002d64       0x38 ./Library/ht32l5xxxx_ckcu.o
-                0x00002d64                CKCU_PeripClockConfig
+                0x00002e60       0x38 ./Library/ht32l5xxxx_ckcu.o
+                0x00002e60                CKCU_PeripClockConfig
  .text.GPIO_DirectionConfig
-                0x00002d9c       0x12 ./Library/ht32l5xxxx_gpio.o
-                0x00002d9c                GPIO_DirectionConfig
+                0x00002e98       0x12 ./Library/ht32l5xxxx_gpio.o
+                0x00002e98                GPIO_DirectionConfig
  .text.GPIO_PullResistorConfig
-                0x00002dae       0x20 ./Library/ht32l5xxxx_gpio.o
-                0x00002dae                GPIO_PullResistorConfig
+                0x00002eaa       0x20 ./Library/ht32l5xxxx_gpio.o
+                0x00002eaa                GPIO_PullResistorConfig
  .text.GPIO_InputConfig
-                0x00002dce       0x12 ./Library/ht32l5xxxx_gpio.o
-                0x00002dce                GPIO_InputConfig
+                0x00002eca       0x12 ./Library/ht32l5xxxx_gpio.o
+                0x00002eca                GPIO_InputConfig
  .text.GPIO_DriveConfig
-                0x00002de0       0x30 ./Library/ht32l5xxxx_gpio.o
-                0x00002de0                GPIO_DriveConfig
+                0x00002edc       0x30 ./Library/ht32l5xxxx_gpio.o
+                0x00002edc                GPIO_DriveConfig
  .text.GPIO_ReadInBit
-                0x00002e10        0xc ./Library/ht32l5xxxx_gpio.o
-                0x00002e10                GPIO_ReadInBit
+                0x00002f0c        0xc ./Library/ht32l5xxxx_gpio.o
+                0x00002f0c                GPIO_ReadInBit
  .text.GPIO_SetOutBits
-                0x00002e1c        0x4 ./Library/ht32l5xxxx_gpio.o
-                0x00002e1c                GPIO_SetOutBits
+                0x00002f18        0x4 ./Library/ht32l5xxxx_gpio.o
+                0x00002f18                GPIO_SetOutBits
  .text.GPIO_ClearOutBits
-                0x00002e20        0x4 ./Library/ht32l5xxxx_gpio.o
-                0x00002e20                GPIO_ClearOutBits
+                0x00002f1c        0x4 ./Library/ht32l5xxxx_gpio.o
+                0x00002f1c                GPIO_ClearOutBits
  .text.GPIO_WriteOutBits
-                0x00002e24        0xc ./Library/ht32l5xxxx_gpio.o
-                0x00002e24                GPIO_WriteOutBits
+                0x00002f20        0xc ./Library/ht32l5xxxx_gpio.o
+                0x00002f20                GPIO_WriteOutBits
  .text.AFIO_GPxConfig
-                0x00002e30       0x58 ./Library/ht32l5xxxx_gpio.o
-                0x00002e30                AFIO_GPxConfig
+                0x00002f2c       0x58 ./Library/ht32l5xxxx_gpio.o
+                0x00002f2c                AFIO_GPxConfig
  .text.PWRCU_DeInit
-                0x00002e88       0x20 ./Library/ht32l5xxxx_pwrcu.o
-                0x00002e88                PWRCU_DeInit
+                0x00002f84       0x20 ./Library/ht32l5xxxx_pwrcu.o
+                0x00002f84                PWRCU_DeInit
  .text.PWRCU_CheckReadyAccessed
-                0x00002ea8       0x20 ./Library/ht32l5xxxx_pwrcu.o
-                0x00002ea8                PWRCU_CheckReadyAccessed
+                0x00002fa4       0x20 ./Library/ht32l5xxxx_pwrcu.o
+                0x00002fa4                PWRCU_CheckReadyAccessed
  .text.PWRCU_ReadBackupRegister
-                0x00002ec8       0x10 ./Library/ht32l5xxxx_pwrcu.o
-                0x00002ec8                PWRCU_ReadBackupRegister
+                0x00002fc4       0x10 ./Library/ht32l5xxxx_pwrcu.o
+                0x00002fc4                PWRCU_ReadBackupRegister
  .text.PWRCU_WriteBackupRegister
-                0x00002ed8       0x10 ./Library/ht32l5xxxx_pwrcu.o
-                0x00002ed8                PWRCU_WriteBackupRegister
+                0x00002fd4       0x10 ./Library/ht32l5xxxx_pwrcu.o
+                0x00002fd4                PWRCU_WriteBackupRegister
  .text.RTC_ClockSourceConfig
-                0x00002ee8       0x14 ./Library/ht32l5xxxx_rtc.o
-                0x00002ee8                RTC_ClockSourceConfig
+                0x00002fe4       0x14 ./Library/ht32l5xxxx_rtc.o
+                0x00002fe4                RTC_ClockSourceConfig
  .text.RTC_LSESMConfig
-                0x00002efc       0x14 ./Library/ht32l5xxxx_rtc.o
-                0x00002efc                RTC_LSESMConfig
+                0x00002ff8       0x14 ./Library/ht32l5xxxx_rtc.o
+                0x00002ff8                RTC_LSESMConfig
  .text.RTC_LSECmd
-                0x00002f10       0x1c ./Library/ht32l5xxxx_rtc.o
-                0x00002f10                RTC_LSECmd
+                0x0000300c       0x1c ./Library/ht32l5xxxx_rtc.o
+                0x0000300c                RTC_LSECmd
  .text.RTC_SetPrescaler
-                0x00002f2c       0x18 ./Library/ht32l5xxxx_rtc.o
-                0x00002f2c                RTC_SetPrescaler
- .text.RTC_Cmd  0x00002f44       0x1c ./Library/ht32l5xxxx_rtc.o
-                0x00002f44                RTC_Cmd
+                0x00003028       0x18 ./Library/ht32l5xxxx_rtc.o
+                0x00003028                RTC_SetPrescaler
+ .text.RTC_Cmd  0x00003040       0x1c ./Library/ht32l5xxxx_rtc.o
+                0x00003040                RTC_Cmd
  .text.RTC_WakeupConfig
-                0x00002f60       0x18 ./Library/ht32l5xxxx_rtc.o
-                0x00002f60                RTC_WakeupConfig
+                0x0000305c       0x18 ./Library/ht32l5xxxx_rtc.o
+                0x0000305c                RTC_WakeupConfig
  .text.RTC_IntConfig
-                0x00002f78        0x8 ./Library/ht32l5xxxx_rtc.o
-                0x00002f78                RTC_IntConfig
+                0x00003074        0x8 ./Library/ht32l5xxxx_rtc.o
+                0x00003074                RTC_IntConfig
  .text.RTC_GetFlagStatus
-                0x00002f80        0xc ./Library/ht32l5xxxx_rtc.o
-                0x00002f80                RTC_GetFlagStatus
+                0x0000307c        0xc ./Library/ht32l5xxxx_rtc.o
+                0x0000307c                RTC_GetFlagStatus
  .text.SPI_Init
-                0x00002f8c       0x46 ./Library/ht32l5xxxx_spi.o
-                0x00002f8c                SPI_Init
- .text.SPI_Cmd  0x00002fd2       0x14 ./Library/ht32l5xxxx_spi.o
-                0x00002fd2                SPI_Cmd
+                0x00003088       0x46 ./Library/ht32l5xxxx_spi.o
+                0x00003088                SPI_Init
+ .text.SPI_Cmd  0x000030ce       0x14 ./Library/ht32l5xxxx_spi.o
+                0x000030ce                SPI_Cmd
  .text.SPI_SELOutputCmd
-                0x00002fe6       0x14 ./Library/ht32l5xxxx_spi.o
-                0x00002fe6                SPI_SELOutputCmd
+                0x000030e2       0x14 ./Library/ht32l5xxxx_spi.o
+                0x000030e2                SPI_SELOutputCmd
  .text.SPI_SoftwareSELCmd
-                0x00002ffa       0x14 ./Library/ht32l5xxxx_spi.o
-                0x00002ffa                SPI_SoftwareSELCmd
+                0x000030f6       0x14 ./Library/ht32l5xxxx_spi.o
+                0x000030f6                SPI_SoftwareSELCmd
  .text.SPI_SendData
-                0x0000300e        0x4 ./Library/ht32l5xxxx_spi.o
-                0x0000300e                SPI_SendData
+                0x0000310a        0x4 ./Library/ht32l5xxxx_spi.o
+                0x0000310a                SPI_SendData
  .text.SPI_ReceiveData
-                0x00003012        0x6 ./Library/ht32l5xxxx_spi.o
-                0x00003012                SPI_ReceiveData
+                0x0000310e        0x6 ./Library/ht32l5xxxx_spi.o
+                0x0000310e                SPI_ReceiveData
  .text.SPI_GetFlagStatus
-                0x00003018        0xe ./Library/ht32l5xxxx_spi.o
-                0x00003018                SPI_GetFlagStatus
- *fill*         0x00003026        0x2 
+                0x00003114        0xe ./Library/ht32l5xxxx_spi.o
+                0x00003114                SPI_GetFlagStatus
+ .text.SPI_GetFIFOStatus
+                0x00003122       0x18 ./Library/ht32l5xxxx_spi.o
+                0x00003122                SPI_GetFIFOStatus
+ *fill*         0x0000313a        0x2 
  .text.USART_Init
-                0x00003028       0x58 ./Library/ht32l5xxxx_usart.o
-                0x00003028                USART_Init
+                0x0000313c       0x58 ./Library/ht32l5xxxx_usart.o
+                0x0000313c                USART_Init
  .text.USART_SendData
-                0x00003080        0x4 ./Library/ht32l5xxxx_usart.o
-                0x00003080                USART_SendData
+                0x00003194        0x4 ./Library/ht32l5xxxx_usart.o
+                0x00003194                USART_SendData
  .text.USART_ReceiveData
-                0x00003084        0x6 ./Library/ht32l5xxxx_usart.o
-                0x00003084                USART_ReceiveData
+                0x00003198        0x6 ./Library/ht32l5xxxx_usart.o
+                0x00003198                USART_ReceiveData
  .text.USART_GetFlagStatus
-                0x0000308a        0xe ./Library/ht32l5xxxx_usart.o
-                0x0000308a                USART_GetFlagStatus
+                0x0000319e        0xe ./Library/ht32l5xxxx_usart.o
+                0x0000319e                USART_GetFlagStatus
  .text.USART_IntConfig
-                0x00003098       0x10 ./Library/ht32l5xxxx_usart.o
-                0x00003098                USART_IntConfig
+                0x000031ac       0x10 ./Library/ht32l5xxxx_usart.o
+                0x000031ac                USART_IntConfig
  .text.USART_TxRxCmd
-                0x000030a8       0x18 ./Library/ht32l5xxxx_usart.o
-                0x000030a8                USART_TxRxCmd
+                0x000031bc       0x18 ./Library/ht32l5xxxx_usart.o
+                0x000031bc                USART_TxRxCmd
  .text.WDT_Restart
-                0x000030c0       0x10 ./Library/ht32l5xxxx_wdt.o
-                0x000030c0                WDT_Restart
+                0x000031d4       0x10 ./Library/ht32l5xxxx_wdt.o
+                0x000031d4                WDT_Restart
  .text.Reset_Handler
-                0x000030d0       0x60 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
-                0x000030d0                Reset_Handler
-                0x0000310c                SVC_Handler
-                0x0000310e                PendSV_Handler
-                0x00003110                SysTick_Handler
-                0x00003112                SCI_IRQHandler
-                0x00003112                UART1_IRQHandler
-                0x00003112                I2C1_IRQHandler
-                0x00003112                SPI1_IRQHandler
-                0x00003112                LVD_BOD_IRQHandler
-                0x00003112                EXTI2_3_IRQHandler
-                0x00003112                PDMA_CH2_5_IRQHandler
-                0x00003112                UART0_IRQHandler
-                0x00003112                GPTM1_IRQHandler
-                0x00003112                GPTM0_IRQHandler
-                0x00003112                EXTI4_15_IRQHandler
-                0x00003112                Default_Handler
-                0x00003112                ADC_IRQHandler
-                0x00003112                EXTI0_1_IRQHandler
-                0x00003112                USB_IRQHandler
-                0x00003112                I2C0_IRQHandler
-                0x00003112                AES_RNG_IRQHandler
-                0x00003112                PDMA_CH0_1_IRQHandler
-                0x00003112                SCTM1_IRQHandler
-                0x00003112                COMP_IRQHandler
-                0x00003112                EVWUP_IRQHandler
-                0x00003112                MCTM0_IRQHandler
-                0x00003112                SPI0_IRQHandler
-                0x00003112                SCTM0_IRQHandler
-                0x00003112                FLASH_IRQHandler
-                0x00003112                USART1_IRQHandler
+                0x000031e4       0x60 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+                0x000031e4                Reset_Handler
+                0x00003220                SVC_Handler
+                0x00003222                PendSV_Handler
+                0x00003224                SysTick_Handler
+                0x00003226                SCI_IRQHandler
+                0x00003226                UART1_IRQHandler
+                0x00003226                I2C1_IRQHandler
+                0x00003226                SPI1_IRQHandler
+                0x00003226                LVD_BOD_IRQHandler
+                0x00003226                EXTI2_3_IRQHandler
+                0x00003226                PDMA_CH2_5_IRQHandler
+                0x00003226                UART0_IRQHandler
+                0x00003226                GPTM1_IRQHandler
+                0x00003226                GPTM0_IRQHandler
+                0x00003226                EXTI4_15_IRQHandler
+                0x00003226                Default_Handler
+                0x00003226                ADC_IRQHandler
+                0x00003226                EXTI0_1_IRQHandler
+                0x00003226                USB_IRQHandler
+                0x00003226                I2C0_IRQHandler
+                0x00003226                AES_RNG_IRQHandler
+                0x00003226                PDMA_CH0_1_IRQHandler
+                0x00003226                SCTM1_IRQHandler
+                0x00003226                COMP_IRQHandler
+                0x00003226                EVWUP_IRQHandler
+                0x00003226                MCTM0_IRQHandler
+                0x00003226                SPI0_IRQHandler
+                0x00003226                SCTM0_IRQHandler
+                0x00003226                FLASH_IRQHandler
+                0x00003226                USART1_IRQHandler
  .text.SystemInit
-                0x00003130      0x148 ./CMSIS/system_ht32l5xxxx_01.o
-                0x00003130                SystemInit
+                0x00003244      0x148 ./CMSIS/system_ht32l5xxxx_01.o
+                0x00003244                SystemInit
  .text.__gnu_ldivmod_helper
-                0x00003278       0x3c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(bpabi.o)
-                0x00003278                __gnu_ldivmod_helper
+                0x0000338c       0x3c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(bpabi.o)
+                0x0000338c                __gnu_ldivmod_helper
  .text.__aeabi_fadd
-                0x000032b4      0x340 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(addsf3.o)
-                0x000032b4                __aeabi_fadd
+                0x000033c8      0x340 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(addsf3.o)
+                0x000033c8                __aeabi_fadd
  .text.__aeabi_fdiv
-                0x000035f4      0x224 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
-                0x000035f4                __aeabi_fdiv
- .text.__eqsf2  0x00003818       0x50 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(eqsf2.o)
-                0x00003818                __eqsf2
-                0x00003818                __nesf2
- .text.__gesf2  0x00003868       0x94 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(gesf2.o)
-                0x00003868                __gesf2
-                0x00003868                __gtsf2
- .text.__lesf2  0x000038fc       0x90 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(lesf2.o)
-                0x000038fc                __ltsf2
-                0x000038fc                __lesf2
+                0x00003708      0x224 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
+                0x00003708                __aeabi_fdiv
+ .text.__eqsf2  0x0000392c       0x50 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(eqsf2.o)
+                0x0000392c                __eqsf2
+                0x0000392c                __nesf2
+ .text.__gesf2  0x0000397c       0x94 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(gesf2.o)
+                0x0000397c                __gesf2
+                0x0000397c                __gtsf2
+ .text.__lesf2  0x00003a10       0x90 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(lesf2.o)
+                0x00003a10                __ltsf2
+                0x00003a10                __lesf2
  .text.__aeabi_fmul
-                0x0000398c      0x280 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(mulsf3.o)
-                0x0000398c                __aeabi_fmul
+                0x00003aa0      0x280 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(mulsf3.o)
+                0x00003aa0                __aeabi_fmul
  .text.__aeabi_fsub
-                0x00003c0c      0x38c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(subsf3.o)
-                0x00003c0c                __aeabi_fsub
+                0x00003d20      0x38c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(subsf3.o)
+                0x00003d20                __aeabi_fsub
  .text.__aeabi_f2iz
-                0x00003f98       0x40 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(fixsfsi.o)
-                0x00003f98                __aeabi_f2iz
+                0x000040ac       0x40 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(fixsfsi.o)
+                0x000040ac                __aeabi_f2iz
  .text.__aeabi_ui2f
-                0x00003fd8       0x80 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(floatunsisf.o)
-                0x00003fd8                __aeabi_ui2f
+                0x000040ec       0x80 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(floatunsisf.o)
+                0x000040ec                __aeabi_ui2f
  .text.__muldi3
-                0x00004058       0x5c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_muldi3.o)
-                0x00004058                __muldi3
-                0x00004058                __aeabi_lmul
+                0x0000416c       0x5c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_muldi3.o)
+                0x0000416c                __muldi3
+                0x0000416c                __aeabi_lmul
  .text.__divdi3
-                0x000040b4      0x1e4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
-                0x000040b4                __divdi3
- .text.memset   0x00004298       0x10 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memset.o)
-                0x00004298                memset
+                0x000041c8      0x1e4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
+                0x000041c8                __divdi3
+ .text.memset   0x000043ac       0x10 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memset.o)
+                0x000043ac                memset
  .text.__libc_init_array
-                0x000042a8       0x48 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-init.o)
-                0x000042a8                __libc_init_array
- .text.memcpy   0x000042f0       0x12 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memcpy-stub.o)
-                0x000042f0                memcpy
+                0x000043bc       0x48 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-init.o)
+                0x000043bc                __libc_init_array
+ .text.memcpy   0x00004404       0x12 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memcpy-stub.o)
+                0x00004404                memcpy
  *(.glue_7)
- .glue_7        0x00004302        0x0 linker stubs
+ .glue_7        0x00004416        0x0 linker stubs
  *(.glue_7t)
- .glue_7t       0x00004302        0x0 linker stubs
+ .glue_7t       0x00004416        0x0 linker stubs
  *(.eh_frame)
- *fill*         0x00004302        0x2 
- .eh_frame      0x00004304        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
+ *fill*         0x00004416        0x2 
+ .eh_frame      0x00004418        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
  *(.init)
- .init          0x00004304        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crti.o
-                0x00004304                _init
- .init          0x00004308        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtn.o
+ .init          0x00004418        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crti.o
+                0x00004418                _init
+ .init          0x0000441c        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtn.o
  *(.fini)
- .fini          0x00004310        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crti.o
-                0x00004310                _fini
- .fini          0x00004314        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtn.o
-                0x0000431c                        . = ALIGN (0x4)
-                0x0000431c                        _etext = .
+ .fini          0x00004424        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crti.o
+                0x00004424                _fini
+ .fini          0x00004428        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtn.o
+                0x00004430                        . = ALIGN (0x4)
+                0x00004430                        _etext = .
 
-.vfp11_veneer   0x0000431c        0x0
- .vfp11_veneer  0x0000431c        0x0 linker stubs
+.vfp11_veneer   0x00004430        0x0
+ .vfp11_veneer  0x00004430        0x0 linker stubs
 
-.v4_bx          0x0000431c        0x0
- .v4_bx         0x0000431c        0x0 linker stubs
+.v4_bx          0x00004430        0x0
+ .v4_bx         0x00004430        0x0 linker stubs
 
-.iplt           0x0000431c        0x0
- .iplt          0x0000431c        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
+.iplt           0x00004430        0x0
+ .iplt          0x00004430        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
 
-.rodata         0x0000431c      0x928
-                0x0000431c                        . = ALIGN (0x4)
+.rodata         0x00004430      0x928
+                0x00004430                        . = ALIGN (0x4)
  *(.rodata)
  *(.rodata*)
  .rodata.Flash_Init.str1.1
-                0x0000431c      0x566 ./User/Display.o
+                0x00004430      0x566 ./User/Display.o
                                  0x2e (size before relaxing)
  .rodata.UI_Anim_Init.str1.1
-                0x00004882       0xae ./User/Display.o
+                0x00004996       0xae ./User/Display.o
  .rodata.YX8320B_ReadTempHumi.str1.1
-                0x00004882       0x39 ./User/Display.o
+                0x00004996       0x39 ./User/Display.o
  .rodata.addr_w_list.0
-                0x00004882        0x2 ./User/Display.o
- .rodata.lunar.2
-                0x00004884       0x10 ./User/Display.o
- .rodata.BT_DISC.3
-                0x00004894        0xc ./User/Display.o
- .rodata.BT_CONN.4
-                0x000048a0        0xc ./User/Display.o
- .rodata.order.5
-                0x000048ac       0x18 ./User/Display.o
+                0x00004996        0x2 ./User/Display.o
+ .rodata.lunar.1
+                0x00004998       0x10 ./User/Display.o
+ .rodata.BT_DISC.2
+                0x000049a8        0xc ./User/Display.o
+ .rodata.BT_CONN.3
+                0x000049b4        0xc ./User/Display.o
+ .rodata.order.4
+                0x000049c0       0x18 ./User/Display.o
  .rodata.g_card_x
-                0x000048c4       0x18 ./User/Display.o
- .rodata.WD_CN  0x000048dc       0x54 ./User/Display.o
+                0x000049d8       0x18 ./User/Display.o
+ .rodata.WD_CN  0x000049f0       0x54 ./User/Display.o
  .rodata.g_blank
-                0x00004930      0x280 ./User/Display.o
+                0x00004a44      0x280 ./User/Display.o
  .rodata.Hd9803_Init.str1.1
-                0x00004bb0       0x2d ./User/hd9803.o
+                0x00004cc4       0x2d ./User/hd9803.o
  .rodata.Hd9803_Poll.str1.1
-                0x00004bb0      0x1a3 ./User/hd9803.o
+                0x00004cc4      0x1a3 ./User/hd9803.o
  .rodata.Hd9803_EnterRelinkMode.str1.1
-                0x00004bb0       0x1c ./User/hd9803.o
+                0x00004cc4       0x1c ./User/hd9803.o
  .rodata.Hd9803_EnterPairRelinkMode.str1.1
-                0x00004bb0       0x21 ./User/hd9803.o
+                0x00004cc4       0x21 ./User/hd9803.o
  .rodata.Hd9803_Tick.str1.1
-                0x00004bb0       0x82 ./User/hd9803.o
+                0x00004cc4       0x82 ./User/hd9803.o
  .rodata.main.str1.1
-                0x00004bb0      0x156 ./User/main.o
+                0x00004cc4      0x156 ./User/main.o
  .rodata.str1.1
-                0x00004bb0       0x22 ./User/main.o
- .rodata.CSWTCH.21
-                0x00004bb0        0xc ./User/main.o
+                0x00004cc4       0x22 ./User/main.o
+ .rodata.CSWTCH.20
+                0x00004cc4        0xc ./User/main.o
  .rodata.TimeModule_Init.str1.1
-                0x00004bbc       0x4c ./User/time_module.o
+                0x00004cd0       0x4c ./User/time_module.o
  .rodata.days_in_month.1
-                0x00004bbc        0xc ./User/time_module.o
+                0x00004cd0        0xc ./User/time_module.o
  .rodata.__aeabi_fdiv
-                0x00004bc8       0x7c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
-                0x00004d54                        . = ALIGN (0x4)
+                0x00004cdc       0x7c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
+                0x00004e68                        . = ALIGN (0x4)
 
 .ARM.extab
  *(.ARM.extab* .gnu.linkonce.armextab.*)
 
-.ARM            0x00004c44        0x8
-                0x00004c44                        __exidx_start = .
+.ARM            0x00004d58        0x8
+                0x00004d58                        __exidx_start = .
  *(.ARM.exidx*)
  .ARM.exidx.text.__divdi3
-                0x00004c44        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
-                0x00004c4c                        __exidx_end = .
+                0x00004d58        0x8 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
+                0x00004d60                        __exidx_end = .
 
-.preinit_array  0x00004c4c        0x0
-                0x00004c4c                        PROVIDE (__preinit_array_start = .)
+.preinit_array  0x00004d60        0x0
+                0x00004d60                        PROVIDE (__preinit_array_start = .)
  *(.preinit_array*)
-                0x00004c4c                        PROVIDE (__preinit_array_end = .)
+                0x00004d60                        PROVIDE (__preinit_array_end = .)
 
-.init_array     0x00004c4c        0x4
-                0x00004c4c                        PROVIDE (__init_array_start = .)
+.init_array     0x00004d60        0x4
+                0x00004d60                        PROVIDE (__init_array_start = .)
  *(SORT_BY_NAME(.init_array.*))
  *(.init_array*)
- .init_array    0x00004c4c        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
-                0x00004c50                        PROVIDE (__init_array_end = .)
+ .init_array    0x00004d60        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
+                0x00004d64                        PROVIDE (__init_array_end = .)
 
-.fini_array     0x00004c50        0x4
+.fini_array     0x00004d64        0x4
                 [!provide]                        PROVIDE (__fini_array_start = .)
  *(SORT_BY_NAME(.fini_array.*))
  *(.fini_array*)
- .fini_array    0x00004c50        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
+ .fini_array    0x00004d64        0x4 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
                 [!provide]                        PROVIDE (__fini_array_end = .)
-                0x00004c54                        _sidata = LOADADDR (.data)
+                0x00004d68                        _sidata = LOADADDR (.data)
 
-.rel.dyn        0x00004c54        0x0
- .rel.iplt      0x00004c54        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
+.rel.dyn        0x00004d68        0x0
+ .rel.iplt      0x00004d68        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
 
-.data           0x20000000       0x20 load address 0x00004c54
+.data           0x20000000       0x20 load address 0x00004d68
                 0x20000000                        . = ALIGN (0x4)
                 0x20000000                        _sdata = .
  *(.data)
  *(.data*)
- .data.colon_on.1
-                0x20000000        0x1 ./User/Display.o
  .data.s_bt_connected
-                0x20000001        0x1 ./User/Display.o
- *fill*         0x20000002        0x2 
+                0x20000000        0x1 ./User/Display.o
+ *fill*         0x20000001        0x3 
  .data.g_active
                 0x20000004        0x4 ./User/Display.o
  .data.c_humi   0x20000008        0x4 ./User/Display.o
@@ -2190,17 +2191,17 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
                 0x20000020                        _edata = .
 
 .tm_clone_table
-                0x20000020        0x0 load address 0x00004c74
+                0x20000020        0x0 load address 0x00004d88
  .tm_clone_table
                 0x20000020        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
  .tm_clone_table
                 0x20000020        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtend.o
 
-.igot.plt       0x20000020        0x0 load address 0x00004c74
+.igot.plt       0x20000020        0x0 load address 0x00004d88
  .igot.plt      0x20000020        0x0 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
                 0x20000020                        . = ALIGN (0x4)
 
-.bss            0x20000020     0x187c load address 0x00004c74
+.bss            0x20000020     0x187c load address 0x00004d88
                 0x20000020                        _sbss = .
                 0x20000020                        __bss_start__ = _sbss
  *(.bss)
@@ -2211,26 +2212,28 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
  .bss.object.0  0x20000024       0x18 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp/crtbegin.o
  .bss.bftm0_ct  0x2000003c        0x4 ./User/BFTM0.o
                 0x2000003c                bftm0_ct
- .bss.last_ms.6
+ .bss.last_ms.5
                 0x20000040        0x4 ./User/Display.o
  .bss.g_yx_addr
                 0x20000044        0x1 ./User/Display.o
- .bss.g_anim_ok
+ .bss.g_static_next
                 0x20000045        0x1 ./User/Display.o
- .bss.g_disp    0x20000046        0x6 ./User/Display.o
+ .bss.g_anim_ok
+                0x20000046        0x1 ./User/Display.o
+ .bss.g_disp    0x20000047        0x6 ./User/Display.o
  .bss.g_pend_new
-                0x2000004c        0x6 ./User/Display.o
+                0x2000004d        0x6 ./User/Display.o
  .bss.g_pend_old
-                0x20000052        0x6 ./User/Display.o
+                0x20000053        0x6 ./User/Display.o
  .bss.g_pending
-                0x20000058        0x6 ./User/Display.o
- .bss.g_flip    0x2000005e       0x18 ./User/Display.o
- .bss.g_blit    0x20000076      0xd20 ./User/Display.o
+                0x20000059        0x6 ./User/Display.o
+ .bss.g_flip    0x2000005f       0x18 ./User/Display.o
+ .bss.g_blit    0x20000077      0xd20 ./User/Display.o
  .bss.g_anim_buf
-                0x20000d96      0x208 ./User/Display.o
+                0x20000d97      0x208 ./User/Display.o
  .bss.g_anim_shade
-                0x20000f9e       0x28 ./User/Display.o
- *fill*         0x20000fc6        0x2 
+                0x20000f9f       0x28 ./User/Display.o
+ *fill*         0x20000fc7        0x1 
  .bss.g_anim_planes
                 0x20000fc8        0x4 ./User/Display.o
  .bss.g_anim_half
@@ -2280,10 +2283,7 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
                 0x2000188c        0x1 ./User/main.o
  .bss.half_tick.0
                 0x2000188d        0x1 ./User/time_module.o
- .bss.g_colon_blink_flag
-                0x2000188e        0x1 ./User/time_module.o
-                0x2000188e                g_colon_blink_flag
- *fill*         0x2000188f        0x1 
+ *fill*         0x2000188e        0x2 
  .bss.g_time_update_flag
                 0x20001890        0x4 ./User/time_module.o
                 0x20001890                g_time_update_flag
@@ -2295,7 +2295,7 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
                 0x2000189c                        __bss_end__ = _ebss
 
 ._user_heap_stack
-                0x200018a0      0x400 load address 0x00004c74
+                0x200018a0      0x400 load address 0x00004d88
  *(.heap)
  .heap          0x200018a0        0x0 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
                 0x200018a0                __HeapLimit
@@ -2423,185 +2423,185 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
 LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libm.a
 LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a
 
-.debug_info     0x00000000    0x13989
+.debug_info     0x00000000    0x13a09
  .debug_info    0x00000000      0xa50 ./User/BFTM0.o
- .debug_info    0x00000a50     0x4e2c ./User/Display.o
- .debug_info    0x0000587c     0x1982 ./User/hd9803.o
- .debug_info    0x000071fe       0xdf ./User/ht32l5xxxx_01_it.o
- .debug_info    0x000072dd      0x8c2 ./User/main.o
- .debug_info    0x00007b9f     0x1024 ./User/spi_lcd.o
- .debug_info    0x00008bc3     0x12a4 ./User/time_module.o
- .debug_info    0x00009e67      0x907 ./User/uart_init.o
- .debug_info    0x0000a76e     0x127d ./Retarget/ht32_retarget.o
- .debug_info    0x0000b9eb      0x263 ./Retarget/ht32_serial.o
- .debug_info    0x0000bc4e      0xdaf ./Retarget/printf.o
- .debug_info    0x0000c9fd      0x832 ./Library/ht32l5xxxx_bftm.o
- .debug_info    0x0000d22f     0x1729 ./Library/ht32l5xxxx_ckcu.o
- .debug_info    0x0000e958     0x1205 ./Library/ht32l5xxxx_gpio.o
- .debug_info    0x0000fb5d      0xa17 ./Library/ht32l5xxxx_pwrcu.o
- .debug_info    0x00010574      0x5a1 ./Library/ht32l5xxxx_rtc.o
- .debug_info    0x00010b15      0xcc7 ./Library/ht32l5xxxx_spi.o
- .debug_info    0x000117dc     0x1049 ./Library/ht32l5xxxx_usart.o
- .debug_info    0x00012825      0x8e5 ./Library/ht32l5xxxx_wdt.o
- .debug_info    0x0001310a      0x21f ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
- .debug_info    0x00013329      0x660 ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_info    0x00000a50     0x4e04 ./User/Display.o
+ .debug_info    0x00005854     0x1982 ./User/hd9803.o
+ .debug_info    0x000071d6       0xdf ./User/ht32l5xxxx_01_it.o
+ .debug_info    0x000072b5      0x8a6 ./User/main.o
+ .debug_info    0x00007b5b     0x10e8 ./User/spi_lcd.o
+ .debug_info    0x00008c43     0x12a4 ./User/time_module.o
+ .debug_info    0x00009ee7      0x907 ./User/uart_init.o
+ .debug_info    0x0000a7ee     0x127d ./Retarget/ht32_retarget.o
+ .debug_info    0x0000ba6b      0x263 ./Retarget/ht32_serial.o
+ .debug_info    0x0000bcce      0xdaf ./Retarget/printf.o
+ .debug_info    0x0000ca7d      0x832 ./Library/ht32l5xxxx_bftm.o
+ .debug_info    0x0000d2af     0x1729 ./Library/ht32l5xxxx_ckcu.o
+ .debug_info    0x0000e9d8     0x1205 ./Library/ht32l5xxxx_gpio.o
+ .debug_info    0x0000fbdd      0xa17 ./Library/ht32l5xxxx_pwrcu.o
+ .debug_info    0x000105f4      0x5a1 ./Library/ht32l5xxxx_rtc.o
+ .debug_info    0x00010b95      0xcc7 ./Library/ht32l5xxxx_spi.o
+ .debug_info    0x0001185c     0x1049 ./Library/ht32l5xxxx_usart.o
+ .debug_info    0x000128a5      0x8e5 ./Library/ht32l5xxxx_wdt.o
+ .debug_info    0x0001318a      0x21f ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+ .debug_info    0x000133a9      0x660 ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_abbrev   0x00000000     0x38f2
+.debug_abbrev   0x00000000     0x38fd
  .debug_abbrev  0x00000000      0x256 ./User/BFTM0.o
- .debug_abbrev  0x00000256      0x6f3 ./User/Display.o
- .debug_abbrev  0x00000949      0x553 ./User/hd9803.o
- .debug_abbrev  0x00000e9c       0x98 ./User/ht32l5xxxx_01_it.o
- .debug_abbrev  0x00000f34      0x228 ./User/main.o
- .debug_abbrev  0x0000115c      0x2ba ./User/spi_lcd.o
- .debug_abbrev  0x00001416      0x476 ./User/time_module.o
- .debug_abbrev  0x0000188c      0x1b4 ./User/uart_init.o
- .debug_abbrev  0x00001a40      0x376 ./Retarget/ht32_retarget.o
- .debug_abbrev  0x00001db6      0x13b ./Retarget/ht32_serial.o
- .debug_abbrev  0x00001ef1      0x3c5 ./Retarget/printf.o
- .debug_abbrev  0x000022b6      0x231 ./Library/ht32l5xxxx_bftm.o
- .debug_abbrev  0x000024e7      0x320 ./Library/ht32l5xxxx_ckcu.o
- .debug_abbrev  0x00002807      0x33a ./Library/ht32l5xxxx_gpio.o
- .debug_abbrev  0x00002b41      0x25e ./Library/ht32l5xxxx_pwrcu.o
- .debug_abbrev  0x00002d9f      0x23b ./Library/ht32l5xxxx_rtc.o
- .debug_abbrev  0x00002fda      0x284 ./Library/ht32l5xxxx_spi.o
- .debug_abbrev  0x0000325e      0x2ab ./Library/ht32l5xxxx_usart.o
- .debug_abbrev  0x00003509      0x2aa ./Library/ht32l5xxxx_wdt.o
- .debug_abbrev  0x000037b3       0x21 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
- .debug_abbrev  0x000037d4      0x11e ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_abbrev  0x00000256      0x70d ./User/Display.o
+ .debug_abbrev  0x00000963      0x553 ./User/hd9803.o
+ .debug_abbrev  0x00000eb6       0x98 ./User/ht32l5xxxx_01_it.o
+ .debug_abbrev  0x00000f4e      0x219 ./User/main.o
+ .debug_abbrev  0x00001167      0x2ba ./User/spi_lcd.o
+ .debug_abbrev  0x00001421      0x476 ./User/time_module.o
+ .debug_abbrev  0x00001897      0x1b4 ./User/uart_init.o
+ .debug_abbrev  0x00001a4b      0x376 ./Retarget/ht32_retarget.o
+ .debug_abbrev  0x00001dc1      0x13b ./Retarget/ht32_serial.o
+ .debug_abbrev  0x00001efc      0x3c5 ./Retarget/printf.o
+ .debug_abbrev  0x000022c1      0x231 ./Library/ht32l5xxxx_bftm.o
+ .debug_abbrev  0x000024f2      0x320 ./Library/ht32l5xxxx_ckcu.o
+ .debug_abbrev  0x00002812      0x33a ./Library/ht32l5xxxx_gpio.o
+ .debug_abbrev  0x00002b4c      0x25e ./Library/ht32l5xxxx_pwrcu.o
+ .debug_abbrev  0x00002daa      0x23b ./Library/ht32l5xxxx_rtc.o
+ .debug_abbrev  0x00002fe5      0x284 ./Library/ht32l5xxxx_spi.o
+ .debug_abbrev  0x00003269      0x2ab ./Library/ht32l5xxxx_usart.o
+ .debug_abbrev  0x00003514      0x2aa ./Library/ht32l5xxxx_wdt.o
+ .debug_abbrev  0x000037be       0x21 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+ .debug_abbrev  0x000037df      0x11e ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_loc      0x00000000     0x7af2
+.debug_loc      0x00000000     0x7b29
  .debug_loc     0x00000000       0x56 ./User/BFTM0.o
- .debug_loc     0x00000056     0x3788 ./User/Display.o
- .debug_loc     0x000037de      0x727 ./User/hd9803.o
- .debug_loc     0x00003f05       0x79 ./User/main.o
- .debug_loc     0x00003f7e      0x328 ./User/spi_lcd.o
- .debug_loc     0x000042a6      0x56f ./User/time_module.o
- .debug_loc     0x00004815       0x2c ./User/uart_init.o
- .debug_loc     0x00004841      0x40b ./Retarget/ht32_retarget.o
- .debug_loc     0x00004c4c       0x20 ./Retarget/ht32_serial.o
- .debug_loc     0x00004c6c      0x8f0 ./Retarget/printf.o
- .debug_loc     0x0000555c       0xf2 ./Library/ht32l5xxxx_bftm.o
- .debug_loc     0x0000564e      0xc18 ./Library/ht32l5xxxx_ckcu.o
- .debug_loc     0x00006266      0x7e3 ./Library/ht32l5xxxx_gpio.o
- .debug_loc     0x00006a49      0x49f ./Library/ht32l5xxxx_pwrcu.o
- .debug_loc     0x00006ee8      0x11d ./Library/ht32l5xxxx_rtc.o
- .debug_loc     0x00007005      0x34b ./Library/ht32l5xxxx_spi.o
- .debug_loc     0x00007350      0x517 ./Library/ht32l5xxxx_usart.o
- .debug_loc     0x00007867      0x14d ./Library/ht32l5xxxx_wdt.o
- .debug_loc     0x000079b4      0x13e ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_loc     0x00000056     0x3796 ./User/Display.o
+ .debug_loc     0x000037ec      0x727 ./User/hd9803.o
+ .debug_loc     0x00003f13       0x79 ./User/main.o
+ .debug_loc     0x00003f8c      0x351 ./User/spi_lcd.o
+ .debug_loc     0x000042dd      0x56f ./User/time_module.o
+ .debug_loc     0x0000484c       0x2c ./User/uart_init.o
+ .debug_loc     0x00004878      0x40b ./Retarget/ht32_retarget.o
+ .debug_loc     0x00004c83       0x20 ./Retarget/ht32_serial.o
+ .debug_loc     0x00004ca3      0x8f0 ./Retarget/printf.o
+ .debug_loc     0x00005593       0xf2 ./Library/ht32l5xxxx_bftm.o
+ .debug_loc     0x00005685      0xc18 ./Library/ht32l5xxxx_ckcu.o
+ .debug_loc     0x0000629d      0x7e3 ./Library/ht32l5xxxx_gpio.o
+ .debug_loc     0x00006a80      0x49f ./Library/ht32l5xxxx_pwrcu.o
+ .debug_loc     0x00006f1f      0x11d ./Library/ht32l5xxxx_rtc.o
+ .debug_loc     0x0000703c      0x34b ./Library/ht32l5xxxx_spi.o
+ .debug_loc     0x00007387      0x517 ./Library/ht32l5xxxx_usart.o
+ .debug_loc     0x0000789e      0x14d ./Library/ht32l5xxxx_wdt.o
+ .debug_loc     0x000079eb      0x13e ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_aranges  0x00000000      0xae0
+.debug_aranges  0x00000000      0xad8
  .debug_aranges
                 0x00000000       0x28 ./User/BFTM0.o
  .debug_aranges
-                0x00000028      0x1a0 ./User/Display.o
+                0x00000028      0x198 ./User/Display.o
  .debug_aranges
-                0x000001c8       0x90 ./User/hd9803.o
+                0x000001c0       0x90 ./User/hd9803.o
  .debug_aranges
-                0x00000258       0x28 ./User/ht32l5xxxx_01_it.o
+                0x00000250       0x28 ./User/ht32l5xxxx_01_it.o
  .debug_aranges
-                0x00000280       0x20 ./User/main.o
+                0x00000278       0x20 ./User/main.o
  .debug_aranges
-                0x000002a0       0x58 ./User/spi_lcd.o
+                0x00000298       0x58 ./User/spi_lcd.o
  .debug_aranges
-                0x000002f8       0x50 ./User/time_module.o
+                0x000002f0       0x50 ./User/time_module.o
  .debug_aranges
-                0x00000348       0x20 ./User/uart_init.o
+                0x00000340       0x20 ./User/uart_init.o
  .debug_aranges
-                0x00000368       0x60 ./Retarget/ht32_retarget.o
+                0x00000360       0x60 ./Retarget/ht32_retarget.o
  .debug_aranges
-                0x000003c8       0x28 ./Retarget/ht32_serial.o
+                0x000003c0       0x28 ./Retarget/ht32_serial.o
  .debug_aranges
-                0x000003f0       0x38 ./Retarget/printf.o
+                0x000003e8       0x38 ./Retarget/printf.o
  .debug_aranges
-                0x00000428       0x68 ./Library/ht32l5xxxx_bftm.o
+                0x00000420       0x68 ./Library/ht32l5xxxx_bftm.o
  .debug_aranges
-                0x00000490      0x150 ./Library/ht32l5xxxx_ckcu.o
+                0x00000488      0x150 ./Library/ht32l5xxxx_ckcu.o
  .debug_aranges
-                0x000005e0       0xd0 ./Library/ht32l5xxxx_gpio.o
+                0x000005d8       0xd0 ./Library/ht32l5xxxx_gpio.o
  .debug_aranges
-                0x000006b0       0xd0 ./Library/ht32l5xxxx_pwrcu.o
+                0x000006a8       0xd0 ./Library/ht32l5xxxx_pwrcu.o
  .debug_aranges
-                0x00000780       0xa0 ./Library/ht32l5xxxx_rtc.o
+                0x00000778       0xa0 ./Library/ht32l5xxxx_rtc.o
  .debug_aranges
-                0x00000820       0xc8 ./Library/ht32l5xxxx_spi.o
+                0x00000818       0xc8 ./Library/ht32l5xxxx_spi.o
  .debug_aranges
-                0x000008e8      0x120 ./Library/ht32l5xxxx_usart.o
+                0x000008e0      0x120 ./Library/ht32l5xxxx_usart.o
  .debug_aranges
-                0x00000a08       0x90 ./Library/ht32l5xxxx_wdt.o
+                0x00000a00       0x90 ./Library/ht32l5xxxx_wdt.o
  .debug_aranges
-                0x00000a98       0x20 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+                0x00000a90       0x20 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
  .debug_aranges
-                0x00000ab8       0x28 ./CMSIS/system_ht32l5xxxx_01.o
+                0x00000ab0       0x28 ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_ranges   0x00000000     0x1208
+.debug_ranges   0x00000000     0x11d0
  .debug_ranges  0x00000000       0x18 ./User/BFTM0.o
- .debug_ranges  0x00000018      0x7b8 ./User/Display.o
- .debug_ranges  0x000007d0      0x140 ./User/hd9803.o
- .debug_ranges  0x00000910       0x18 ./User/ht32l5xxxx_01_it.o
- .debug_ranges  0x00000928       0x40 ./User/main.o
- .debug_ranges  0x00000968       0x60 ./User/spi_lcd.o
- .debug_ranges  0x000009c8       0xe8 ./User/time_module.o
- .debug_ranges  0x00000ab0       0x10 ./User/uart_init.o
- .debug_ranges  0x00000ac0       0x78 ./Retarget/ht32_retarget.o
- .debug_ranges  0x00000b38       0x18 ./Retarget/ht32_serial.o
- .debug_ranges  0x00000b50       0x98 ./Retarget/printf.o
- .debug_ranges  0x00000be8       0x58 ./Library/ht32l5xxxx_bftm.o
- .debug_ranges  0x00000c40      0x140 ./Library/ht32l5xxxx_ckcu.o
- .debug_ranges  0x00000d80       0xd8 ./Library/ht32l5xxxx_gpio.o
- .debug_ranges  0x00000e58       0xc0 ./Library/ht32l5xxxx_pwrcu.o
- .debug_ranges  0x00000f18       0x90 ./Library/ht32l5xxxx_rtc.o
- .debug_ranges  0x00000fa8       0xb8 ./Library/ht32l5xxxx_spi.o
- .debug_ranges  0x00001060      0x110 ./Library/ht32l5xxxx_usart.o
- .debug_ranges  0x00001170       0x80 ./Library/ht32l5xxxx_wdt.o
- .debug_ranges  0x000011f0       0x18 ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_ranges  0x00000018      0x798 ./User/Display.o
+ .debug_ranges  0x000007b0      0x140 ./User/hd9803.o
+ .debug_ranges  0x000008f0       0x18 ./User/ht32l5xxxx_01_it.o
+ .debug_ranges  0x00000908       0x28 ./User/main.o
+ .debug_ranges  0x00000930       0x60 ./User/spi_lcd.o
+ .debug_ranges  0x00000990       0xe8 ./User/time_module.o
+ .debug_ranges  0x00000a78       0x10 ./User/uart_init.o
+ .debug_ranges  0x00000a88       0x78 ./Retarget/ht32_retarget.o
+ .debug_ranges  0x00000b00       0x18 ./Retarget/ht32_serial.o
+ .debug_ranges  0x00000b18       0x98 ./Retarget/printf.o
+ .debug_ranges  0x00000bb0       0x58 ./Library/ht32l5xxxx_bftm.o
+ .debug_ranges  0x00000c08      0x140 ./Library/ht32l5xxxx_ckcu.o
+ .debug_ranges  0x00000d48       0xd8 ./Library/ht32l5xxxx_gpio.o
+ .debug_ranges  0x00000e20       0xc0 ./Library/ht32l5xxxx_pwrcu.o
+ .debug_ranges  0x00000ee0       0x90 ./Library/ht32l5xxxx_rtc.o
+ .debug_ranges  0x00000f70       0xb8 ./Library/ht32l5xxxx_spi.o
+ .debug_ranges  0x00001028      0x110 ./Library/ht32l5xxxx_usart.o
+ .debug_ranges  0x00001138       0x80 ./Library/ht32l5xxxx_wdt.o
+ .debug_ranges  0x000011b8       0x18 ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_line     0x00000000     0x989c
+.debug_line     0x00000000     0x9ab2
  .debug_line    0x00000000      0x2e3 ./User/BFTM0.o
- .debug_line    0x000002e3     0x2933 ./User/Display.o
- .debug_line    0x00002c16      0xbde ./User/hd9803.o
- .debug_line    0x000037f4       0xf7 ./User/ht32l5xxxx_01_it.o
- .debug_line    0x000038eb      0x45b ./User/main.o
- .debug_line    0x00003d46      0x4bb ./User/spi_lcd.o
- .debug_line    0x00004201      0x6fe ./User/time_module.o
- .debug_line    0x000048ff      0x294 ./User/uart_init.o
- .debug_line    0x00004b93      0x4fd ./Retarget/ht32_retarget.o
- .debug_line    0x00005090      0x272 ./Retarget/ht32_serial.o
- .debug_line    0x00005302      0x5ec ./Retarget/printf.o
- .debug_line    0x000058ee      0x3ec ./Library/ht32l5xxxx_bftm.o
- .debug_line    0x00005cda      0xb1f ./Library/ht32l5xxxx_ckcu.o
- .debug_line    0x000067f9      0x902 ./Library/ht32l5xxxx_gpio.o
- .debug_line    0x000070fb      0x7f5 ./Library/ht32l5xxxx_pwrcu.o
- .debug_line    0x000078f0      0x555 ./Library/ht32l5xxxx_rtc.o
- .debug_line    0x00007e45      0x749 ./Library/ht32l5xxxx_spi.o
- .debug_line    0x0000858e      0x8f8 ./Library/ht32l5xxxx_usart.o
- .debug_line    0x00008e86      0x4ee ./Library/ht32l5xxxx_wdt.o
- .debug_line    0x00009374       0xb6 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
- .debug_line    0x0000942a      0x472 ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_line    0x000002e3     0x2b1a ./User/Display.o
+ .debug_line    0x00002dfd      0xbde ./User/hd9803.o
+ .debug_line    0x000039db       0xf7 ./User/ht32l5xxxx_01_it.o
+ .debug_line    0x00003ad2      0x438 ./User/main.o
+ .debug_line    0x00003f0a      0x515 ./User/spi_lcd.o
+ .debug_line    0x0000441f      0x6f6 ./User/time_module.o
+ .debug_line    0x00004b15      0x294 ./User/uart_init.o
+ .debug_line    0x00004da9      0x4fd ./Retarget/ht32_retarget.o
+ .debug_line    0x000052a6      0x272 ./Retarget/ht32_serial.o
+ .debug_line    0x00005518      0x5ec ./Retarget/printf.o
+ .debug_line    0x00005b04      0x3ec ./Library/ht32l5xxxx_bftm.o
+ .debug_line    0x00005ef0      0xb1f ./Library/ht32l5xxxx_ckcu.o
+ .debug_line    0x00006a0f      0x902 ./Library/ht32l5xxxx_gpio.o
+ .debug_line    0x00007311      0x7f5 ./Library/ht32l5xxxx_pwrcu.o
+ .debug_line    0x00007b06      0x555 ./Library/ht32l5xxxx_rtc.o
+ .debug_line    0x0000805b      0x749 ./Library/ht32l5xxxx_spi.o
+ .debug_line    0x000087a4      0x8f8 ./Library/ht32l5xxxx_usart.o
+ .debug_line    0x0000909c      0x4ee ./Library/ht32l5xxxx_wdt.o
+ .debug_line    0x0000958a       0xb6 ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+ .debug_line    0x00009640      0x472 ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_str      0x00000000     0x4158
- .debug_str     0x00000000     0x4158 ./User/BFTM0.o
+.debug_str      0x00000000     0x4167
+ .debug_str     0x00000000     0x4167 ./User/BFTM0.o
                                 0x5d0 (size before relaxing)
- .debug_str     0x00004158     0x1015 ./User/Display.o
- .debug_str     0x00004158      0xa80 ./User/hd9803.o
- .debug_str     0x00004158      0x209 ./User/ht32l5xxxx_01_it.o
- .debug_str     0x00004158      0x547 ./User/main.o
- .debug_str     0x00004158      0x762 ./User/spi_lcd.o
- .debug_str     0x00004158      0xa42 ./User/time_module.o
- .debug_str     0x00004158      0x4e4 ./User/uart_init.o
- .debug_str     0x00004158      0x78d ./Retarget/ht32_retarget.o
- .debug_str     0x00004158      0x265 ./Retarget/ht32_serial.o
- .debug_str     0x00004158      0x5d8 ./Retarget/printf.o
- .debug_str     0x00004158      0x43b ./Library/ht32l5xxxx_bftm.o
- .debug_str     0x00004158     0x11cf ./Library/ht32l5xxxx_ckcu.o
- .debug_str     0x00004158      0x892 ./Library/ht32l5xxxx_gpio.o
- .debug_str     0x00004158      0x7f9 ./Library/ht32l5xxxx_pwrcu.o
- .debug_str     0x00004158      0x58b ./Library/ht32l5xxxx_rtc.o
- .debug_str     0x00004158      0x62c ./Library/ht32l5xxxx_spi.o
- .debug_str     0x00004158      0x962 ./Library/ht32l5xxxx_usart.o
- .debug_str     0x00004158      0x4bf ./Library/ht32l5xxxx_wdt.o
- .debug_str     0x00004158      0x30f ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
- .debug_str     0x00004158      0x419 ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_str     0x00004167     0x1036 ./User/Display.o
+ .debug_str     0x00004167      0xa80 ./User/hd9803.o
+ .debug_str     0x00004167      0x209 ./User/ht32l5xxxx_01_it.o
+ .debug_str     0x00004167      0x537 ./User/main.o
+ .debug_str     0x00004167      0x774 ./User/spi_lcd.o
+ .debug_str     0x00004167      0xa42 ./User/time_module.o
+ .debug_str     0x00004167      0x4e4 ./User/uart_init.o
+ .debug_str     0x00004167      0x78d ./Retarget/ht32_retarget.o
+ .debug_str     0x00004167      0x265 ./Retarget/ht32_serial.o
+ .debug_str     0x00004167      0x5d8 ./Retarget/printf.o
+ .debug_str     0x00004167      0x43b ./Library/ht32l5xxxx_bftm.o
+ .debug_str     0x00004167     0x11cf ./Library/ht32l5xxxx_ckcu.o
+ .debug_str     0x00004167      0x892 ./Library/ht32l5xxxx_gpio.o
+ .debug_str     0x00004167      0x7f9 ./Library/ht32l5xxxx_pwrcu.o
+ .debug_str     0x00004167      0x58b ./Library/ht32l5xxxx_rtc.o
+ .debug_str     0x00004167      0x62c ./Library/ht32l5xxxx_spi.o
+ .debug_str     0x00004167      0x962 ./Library/ht32l5xxxx_usart.o
+ .debug_str     0x00004167      0x4bf ./Library/ht32l5xxxx_wdt.o
+ .debug_str     0x00004167      0x30f ./GNU_ARM/startup_ht32l5xxxx_gcc_01.o
+ .debug_str     0x00004167      0x419 ./CMSIS/system_ht32l5xxxx_01.o
 
 .comment        0x00000000       0x44
  .comment       0x00000000       0x44 ./User/BFTM0.o
@@ -2626,44 +2626,44 @@ LOAD D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/
  .comment       0x00000044       0x45 ./Library/ht32l5xxxx_wdt.o
  .comment       0x00000044       0x45 ./CMSIS/system_ht32l5xxxx_01.o
 
-.debug_frame    0x00000000     0x1bc8
+.debug_frame    0x00000000     0x1ba8
  .debug_frame   0x00000000       0x4c ./User/BFTM0.o
- .debug_frame   0x0000004c      0x53c ./User/Display.o
- .debug_frame   0x00000588      0x198 ./User/hd9803.o
- .debug_frame   0x00000720       0x30 ./User/ht32l5xxxx_01_it.o
- .debug_frame   0x00000750       0x30 ./User/main.o
- .debug_frame   0x00000780       0xe0 ./User/spi_lcd.o
- .debug_frame   0x00000860       0xd4 ./User/time_module.o
- .debug_frame   0x00000934       0x2c ./User/uart_init.o
- .debug_frame   0x00000960       0xe8 ./Retarget/ht32_retarget.o
- .debug_frame   0x00000a48       0x38 ./Retarget/ht32_serial.o
- .debug_frame   0x00000a80       0x84 ./Retarget/printf.o
- .debug_frame   0x00000b04       0xbc ./Library/ht32l5xxxx_bftm.o
- .debug_frame   0x00000bc0      0x2f8 ./Library/ht32l5xxxx_ckcu.o
- .debug_frame   0x00000eb8      0x1e0 ./Library/ht32l5xxxx_gpio.o
- .debug_frame   0x00001098      0x1d0 ./Library/ht32l5xxxx_pwrcu.o
- .debug_frame   0x00001268      0x134 ./Library/ht32l5xxxx_rtc.o
- .debug_frame   0x0000139c      0x184 ./Library/ht32l5xxxx_spi.o
- .debug_frame   0x00001520      0x240 ./Library/ht32l5xxxx_usart.o
- .debug_frame   0x00001760      0x110 ./Library/ht32l5xxxx_wdt.o
- .debug_frame   0x00001870       0x50 ./CMSIS/system_ht32l5xxxx_01.o
- .debug_frame   0x000018c0       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o)
- .debug_frame   0x000018e0       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
- .debug_frame   0x00001900       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(bpabi.o)
- .debug_frame   0x00001938       0x34 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(addsf3.o)
- .debug_frame   0x0000196c       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
- .debug_frame   0x000019a4       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(eqsf2.o)
- .debug_frame   0x000019d0       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(gesf2.o)
- .debug_frame   0x000019fc       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(lesf2.o)
- .debug_frame   0x00001a28       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(mulsf3.o)
- .debug_frame   0x00001a60       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(subsf3.o)
- .debug_frame   0x00001a98       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(fixsfsi.o)
- .debug_frame   0x00001ab8       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(floatunsisf.o)
- .debug_frame   0x00001ae4       0x34 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_muldi3.o)
- .debug_frame   0x00001b18       0x3c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
- .debug_frame   0x00001b54       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memset.o)
- .debug_frame   0x00001b74       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-init.o)
- .debug_frame   0x00001ba0       0x28 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memcpy-stub.o)
+ .debug_frame   0x0000004c      0x518 ./User/Display.o
+ .debug_frame   0x00000564      0x198 ./User/hd9803.o
+ .debug_frame   0x000006fc       0x30 ./User/ht32l5xxxx_01_it.o
+ .debug_frame   0x0000072c       0x30 ./User/main.o
+ .debug_frame   0x0000075c       0xe4 ./User/spi_lcd.o
+ .debug_frame   0x00000840       0xd4 ./User/time_module.o
+ .debug_frame   0x00000914       0x2c ./User/uart_init.o
+ .debug_frame   0x00000940       0xe8 ./Retarget/ht32_retarget.o
+ .debug_frame   0x00000a28       0x38 ./Retarget/ht32_serial.o
+ .debug_frame   0x00000a60       0x84 ./Retarget/printf.o
+ .debug_frame   0x00000ae4       0xbc ./Library/ht32l5xxxx_bftm.o
+ .debug_frame   0x00000ba0      0x2f8 ./Library/ht32l5xxxx_ckcu.o
+ .debug_frame   0x00000e98      0x1e0 ./Library/ht32l5xxxx_gpio.o
+ .debug_frame   0x00001078      0x1d0 ./Library/ht32l5xxxx_pwrcu.o
+ .debug_frame   0x00001248      0x134 ./Library/ht32l5xxxx_rtc.o
+ .debug_frame   0x0000137c      0x184 ./Library/ht32l5xxxx_spi.o
+ .debug_frame   0x00001500      0x240 ./Library/ht32l5xxxx_usart.o
+ .debug_frame   0x00001740      0x110 ./Library/ht32l5xxxx_wdt.o
+ .debug_frame   0x00001850       0x50 ./CMSIS/system_ht32l5xxxx_01.o
+ .debug_frame   0x000018a0       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_udivsi3.o)
+ .debug_frame   0x000018c0       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divsi3.o)
+ .debug_frame   0x000018e0       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(bpabi.o)
+ .debug_frame   0x00001918       0x34 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(addsf3.o)
+ .debug_frame   0x0000194c       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(divsf3.o)
+ .debug_frame   0x00001984       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(eqsf2.o)
+ .debug_frame   0x000019b0       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(gesf2.o)
+ .debug_frame   0x000019dc       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(lesf2.o)
+ .debug_frame   0x00001a08       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(mulsf3.o)
+ .debug_frame   0x00001a40       0x38 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(subsf3.o)
+ .debug_frame   0x00001a78       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(fixsfsi.o)
+ .debug_frame   0x00001a98       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(floatunsisf.o)
+ .debug_frame   0x00001ac4       0x34 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_muldi3.o)
+ .debug_frame   0x00001af8       0x3c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libgcc.a(_divdi3.o)
+ .debug_frame   0x00001b34       0x20 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memset.o)
+ .debug_frame   0x00001b54       0x2c D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-init.o)
+ .debug_frame   0x00001b80       0x28 D:/HT32-IDE/xPack/arm-gnu-toolchain-13.2.Rel1-mingw-w64-i686-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/13.2.1/thumb/v6-m/nofp\libg_nano.a(libc_a-memcpy-stub.o)
 
 .debug_line_str
                 0x00000000      0x1bc
