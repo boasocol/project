@@ -29,7 +29,7 @@
   *         1. 使能GPIOB和UART0外设时钟
   *         2. 配置PB7为UART0_TX功能（AFIO_MODE_6）
   *         3. 配置PB8为UART0_RX功能（AFIO_MODE_6）
-  *         4. 配置UART0参数（波特率9600，8位数据，1位停止，无校验）
+  *         4. 配置UART0参数（波特率115200，8位数据，1位停止，无校验）
   *         5. 使能UART0发送和接收
   *         6. 配置printf重定向到UART0
   * @note   使用PB7/PB8作为UART0引脚，避免使用PA9（boot引脚）和PB6（QFN32封装不存在）
@@ -59,9 +59,8 @@ void UART0_Configuration(void)
   AFIO_GPxConfig(GPIO_PB, AFIO_PIN_8, AFIO_FUN_USART_UART);
   
   /* 配置UART0参数 */
-  /* 主频8MHz时，9600波特率更稳定可靠 */
-  /* 8MHz / 9600 ≈ 833，分频误差更小 */
-  USART_InitStructure.USART_BaudRate = 9600;        // 波特率9600
+  /* 系统时钟 CK_AHB = 48MHz（HSI 8MHz × PLL_NF2 6），115200 分频 48M/115200≈417 */
+  USART_InitStructure.USART_BaudRate = 115200;        // 波特率115200
   USART_InitStructure.USART_WordLength = USART_WORDLENGTH_8B;  // 8位数据位
   USART_InitStructure.USART_StopBits = USART_STOPBITS_1;      // 1位停止位
   USART_InitStructure.USART_Parity = USART_PARITY_NO;         // 无校验位

@@ -171,6 +171,11 @@ static u8 YX_CRC8(const u8 *data, u8 len)
  */
 static u8 g_yx_addr = 0;   /* 0=0x8A 应答，1=0x88 应答，2=均无应答 */
 
+/* 最近一次有效温湿度缓存（读数失败时保留上次值，界面始终有数可显示） */
+static int g_temp_cache = 260;   /* 默认 26.0°C（传感器未接/读失败时） */
+static int g_humi_cache = 600;   /* 默认 60.0%RH */
+static u8  g_first_ok   = 0;     /* 是否已成功读到过一次（用于首条成功日志） */
+
 void YX8320B_Init(void)
 {
   CKCU_PeripClockConfig_TypeDef CKCUClock = {{0}};
@@ -284,3 +289,34 @@ u8 YX8320B_ReadTempHumi(int *temp, int *humi)
   }
   return err;
 }
+
+/************************************************************************************************************
+ * 每秒调用：读一次温湿度（手册建议 <=1 次/秒，避免自热），失败时保留上一次有效值。
+ *   首次成功/失败会通过 printf 打印调试信息；界面通过 YX8320B_GetTemp/GetHumi 取当前值。
+ ************************************************************************************************************/
+void YX8320B_Task(void)
+{
+  int t, h;
+  u8 err = YX8320B_ReadTempHumi(&t, &h);
+  if (err != 0)
+  {
+    printf("[YX8320B] read fail(err=%u: %s), keep last: T=%d.%d H=%d.%d\r\n",
+           err, err == 1 ? "W-addr no ACK" : (err == 2 ? "R-addr no ACK" :
+               (err == 3 ? "T CRC" : "RH CRC")),
+           g_temp_cache / 10, g_temp_cache % 10, g_humi_cache / 10, g_humi_cache % 10);
+  }
+  else
+  {
+    g_temp_cache = t;
+    g_humi_cache = h;
+    if (!g_first_ok)
+    {
+      g_first_ok = 1;
+      printf("[YX8320B] OK: T=%d.%d C, H=%d.%d %%RH\r\n",
+             g_temp_cache / 10, g_temp_cache % 10, g_humi_cache / 10, g_humi_cache % 10);
+    }
+  }
+}
+
+int YX8320B_GetTemp(void) { return g_temp_cache; }
+int YX8320B_GetHumi(void) { return g_humi_cache; }

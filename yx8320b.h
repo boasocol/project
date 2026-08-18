@@ -15,4 +15,10 @@ u8   YX8320B_ReadTempHumi(int *temp, int *humi);
 /* 查询 Init 时探测的从机地址：0=0x88 应答，1=0x8A 应答，2=均无应答(硬件问题) */
 u8   YX8320B_GetAddr(void);
 
+/* 每秒调用：读一次温湿度（<=1次/秒，避免自热），失败时保留上一次有效值。
+   首次成功/失败均通过 printf 打印调试信息。读到的当前值由 GetTemp/GetHumi 取出供界面使用。 */
+void YX8320B_Task(void);
+int  YX8320B_GetTemp(void);   /* 当前温度，单位 0.1°C（如 255 = 25.5°C）；读数失败保留上次值 */
+int  YX8320B_GetHumi(void);   /* 当前湿度，单位 0.1%RH（如 603 = 60.3%）；读数失败保留上次值 */
+
 #endif

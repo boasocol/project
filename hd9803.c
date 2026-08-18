@@ -13,6 +13,8 @@
 #include "hd9803.h"
 #include <stdio.h>
 #include <string.h>
+#include "time_module.h"   /* TimeModule_SetTime（授时校准 RTC） */
+#include "calendar.h"     /* Calendar_SetStaticNext（授时跳变静态刷新） */
 
 #if HD9803_ENABLE   /* ======== 蓝牙模块启用 ======== */
 
@@ -84,6 +86,35 @@ void Hd9803_SetPower(u8 on)
   if (on) GPIO_ClearOutBits(HD9803_PWR_GPIO, HD9803_PWR_PIN);
   else    GPIO_SetOutBits(HD9803_PWR_GPIO, HD9803_PWR_PIN);
 #endif
+
+  /* ---- 通信脚 PC4(TX)/PC5(RX) 空闲低电平，杜绝断电后反灌漏电 ----
+     模块断电后，若 TX/RX 仍保持 USART 复用或高电平，会经模块内部 ESD/保护
+     二极管向已断电的 VCC 反灌电流，造成"假断电"漏电。
+     故断电(on=0)时把 PC4/PC5 切回 GPIO 推挽输出低；上电(on=1)时恢复
+     USART 复用（此时 Hd9803_Init 已配好串口；若尚未配置，则保持 GPIO 低，
+     等 Init 后续的 AFIO_GPxConfig 完成复用切换，此处幂等无副作用）。 */
+  {
+    CKCU_PeripClockConfig_TypeDef clk = {{0}};
+    clk.Bit.PC = 1;
+    CKCU_PeripClockConfig(clk, ENABLE);
+
+    if (!on)
+    {
+      /* 断电：切回 GPIO 推挽输出低 */
+      AFIO_GPxConfig(HD9803_GPIO_ID, HD9803_TX_AFIO_PIN, AFIO_FUN_GPIO);
+      AFIO_GPxConfig(HD9803_GPIO_ID, HD9803_RX_AFIO_PIN, AFIO_FUN_GPIO);
+      GPIO_DirectionConfig(HD9803_GPIO_PORT,
+                           (u16)(HD9803_TX_AFIO_PIN | HD9803_RX_AFIO_PIN), GPIO_DIR_OUT);
+      GPIO_ClearOutBits(HD9803_GPIO_PORT,
+                        (u16)(HD9803_TX_AFIO_PIN | HD9803_RX_AFIO_PIN));
+    }
+    else
+    {
+      /* 上电：恢复 USART 复用（若 Init 已配置则幂等；未配置也不影响后续 Init） */
+      AFIO_GPxConfig(HD9803_GPIO_ID, HD9803_TX_AFIO_PIN, AFIO_FUN_USART_UART);
+      AFIO_GPxConfig(HD9803_GPIO_ID, HD9803_RX_AFIO_PIN, AFIO_FUN_USART_UART);
+    }
+  }
 }
 
 /************************************************************************************************************
@@ -350,6 +381,56 @@ u8 Hd9803_GetTime(Hd9803Time *t)
 }
 
 Hd9803State Hd9803_GetState(void) { return g_state; }
+
+/************************************************************************************************************
+ * 主循环调用：解析串口帧 + 若收到新授时时间则校准 RTC（静态刷新，避免多位串行翻页）
+ *   原本这段逻辑散落在 main.c 的 while(1) 中，现收敛进本模块，main 只调一行。
+ ************************************************************************************************************/
+void Hd9803_Process(void)
+{
+  Hd9803_Poll();
+  Hd9803Time bt;
+  if (Hd9803_GetTime(&bt) != 1) return;   /* 1 = 收到新授时时间 */
+
+  /* HD9803 时间字段为普通十进制（非 BCD），year 为年份后两位 */
+  TimeStruct bt_t;
+  bt_t.year   = 2000 + bt.year;
+  bt_t.month  = bt.month;
+  bt_t.day    = bt.day;
+  bt_t.hour   = bt.hour;
+  bt_t.minute = bt.minute;
+  bt_t.second = bt.second;
+  TimeModule_SetTime(&bt_t);
+
+  /* 授时跳变：直接静态刷新（无动画），避免多位串行依次翻页 */
+  Calendar_SetStaticNext();
+  printf("[HD9803] RTC calibrated to 20%02u-%02u-%02u %02u:%02u:%02u\r\n",
+         bt.year, bt.month, bt.day,
+         bt.hour, bt.minute, bt.second);
+}
+
+/************************************************************************************************************
+ * 每秒心跳（main 在 g_time_update_flag 时调用一次）：驱动状态机 + 每日 8:00/18:00 整点回连校准
+ *   原本这段逻辑散落在 main.c 每秒分支中，现收敛进本模块。
+ ************************************************************************************************************/
+void Hd9803_OnSecondTick(const TimeStruct *now)
+{
+  Hd9803_Tick(1);   /* 状态机推进：窗口计时 / 电源开关 */
+
+  /* 已连接状态：每日 8:00 / 18:00 整点自动回连一次校准时间
+     （回连失败由状态机内部降级为未连接） */
+  if (Hd9803_GetState() == HD9803_ST_CONNECTED &&
+      now->minute == 0 && (now->hour == 8 || now->hour == 18))
+  {
+    static u8 last_trig_h = 0xFF;
+    if (last_trig_h != now->hour)
+    {
+      last_trig_h = now->hour;
+      printf("[HD9803] %02u:00 trigger daily relink\r\n", now->hour);
+      Hd9803_RequestRelink();
+    }
+  }
+}
 
 /* 发送单帧：0x24 + len + payload + 校验 + 0x42 */
 static void hd9803_send_frame(const u8 *payload, u8 plen)

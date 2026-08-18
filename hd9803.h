@@ -9,6 +9,7 @@
 #define __HD9803_H
 
 #include "ht32.h"
+#include "time_module.h"   /* TimeStruct（授时校准 RTC 用） */
 
 /* ---- 蓝牙模块总开关：1=启用（PC4/PC5 USART0 占用），0=禁用（不占引脚/不进中断） ---- */
 #ifndef HD9803_ENABLE
@@ -78,6 +79,8 @@ void Hd9803_RequestRelink(void);                 /* 请求回连窗口（每日 
 void Hd9803_Poll(void);                          /* 主循环调用：解析已接收帧（内部自动喂给状态机） */
 u8   Hd9803_GetTime(Hd9803Time *t);              /* 返回最近授时时间；1=有新时间，0=无 */
 Hd9803State Hd9803_GetState(void);               /* 返回当前蓝牙状态（供 UI 显示） */
+void Hd9803_Process(void);                        /* 主循环调用：解析串口 + 收到新授时则校准 RTC */
+void Hd9803_OnSecondTick(const TimeStruct *now);  /* 每秒调用：状态机推进 + 每日 8/18 点回连校准 */
 void Hd9803_SetName(const u8 *name, u8 len);     /* 设置模块名称（len<=15，ASCII） */
 void Hd9803_EnterPairMode(void);                 /* 0x08 0x01：配对模式（可被发现） */
 void Hd9803_EnterRelinkMode(void);               /* 0x08 0x02：回连上次手机 */

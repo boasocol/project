@@ -23,9 +23,25 @@
 
 /* 翻页动画区（位于 Reserved 0x110000，详见 build_flash.py build_anim） */
 #define UI_ANIM_OFF      0x110000u
+/* 动画卡片背景切片（build_flash.py 预提取的连续背景区，一次读 3360B） */
+#define UI_BGSLICE_OFF   0x130000u
+
+/* 用户配置容器（CONF @config_offset，对应 build_flash.py build_config 的 16B payload） */
+typedef struct {
+  u8 brightness;   /* 亮度 %（默认 80） */
+  u8 timezone;     /* 时区 UTC+n（默认 8） */
+  u8 alarm_on;     /* 闹钟开关（默认 0） */
+  u8 alarm_hour;   /* 闹钟时（默认 7） */
+  u8 alarm_min;    /* 闹钟分（默认 0） */
+  u8 bt_paired;    /* 蓝牙已配对（默认 1） */
+  u8 wifi_on;      /* WiFi 开关（默认 0） */
+  u8 reserved[9];  /* 保留 */
+} ui_cfg_t;
 
 /* ==================== API ==================== */
-int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font 基址。0=成功 */
+int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */
+int  UI_LoadConfig(void);   /* 读 CONF 配置容器并校验 CRC。0=成功；-1=magic；-2=CRC */
+const ui_cfg_t *UI_GetConfig(void); /* 访问已加载配置（未加载/失败为全 0） */
 void UI_UploadBackground(void); /* 整屏上传 UI 背景图到 ST7789 GRAM（小端->高字节先，软件转置横屏） */
 int  UI_CacheFont(void);    /* 缓存字库索引表（按需二分查找） */
 void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* 在逻辑矩形内画单字（还原背景+叠墨点） */

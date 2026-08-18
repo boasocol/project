@@ -171,6 +171,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/BFTM0.c</locationURI>
 		</link>
 		<link>
+			<name>User/BFTM1.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/BFTM1.c</locationURI>
+		</link>
+		<link>
+			<name>User/BFTM1.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/BFTM1.h</locationURI>
+		</link>
+		<link>
 			<name>User/Display.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/Display.c</locationURI>
@@ -191,6 +201,26 @@
 			<locationURI>PARENT-2-PROJECT_LOC/LED.h</locationURI>
 		</link>
 		<link>
+			<name>User/calendar.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/calendar.c</locationURI>
+		</link>
+		<link>
+			<name>User/calendar.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/calendar.h</locationURI>
+		</link>
+		<link>
+			<name>User/flash_read.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/flash_read.c</locationURI>
+		</link>
+		<link>
+			<name>User/flash_read.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/flash_read.h</locationURI>
+		</link>
+		<link>
 			<name>User/hd9803.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/hd9803.c</locationURI>
@@ -204,6 +234,16 @@
 			<name>User/ht32l5xxxx_01_it.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/ht32l5xxxx_01_it.c</locationURI>
+		</link>
+		<link>
+			<name>User/key.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/key.c</locationURI>
+		</link>
+		<link>
+			<name>User/key.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/key.h</locationURI>
 		</link>
 		<link>
 			<name>User/main.c</name>
@@ -239,6 +279,26 @@
 			<name>User/uart_init.h</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/uart_init.h</locationURI>
+		</link>
+		<link>
+			<name>User/ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/ui.c</locationURI>
+		</link>
+		<link>
+			<name>User/ui.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/ui.h</locationURI>
+		</link>
+		<link>
+			<name>User/yx8320b.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/yx8320b.c</locationURI>
+		</link>
+		<link>
+			<name>User/yx8320b.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/yx8320b.h</locationURI>
 		</link>
 		<link>
 			<name>Utilities/ht32_board.c</name>

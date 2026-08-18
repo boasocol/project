@@ -3,6 +3,7 @@
 
 #include "ht32.h"
 #include "spi_lcd.h"
+#include "time_module.h"   /* TimeStruct（Display_Update 参数） */
 
 /* ==================== 屏幕参数 ==================== */
 /* 物理 GRAM 尺寸（控制器内部固定 240 列 x 320 行，原生竖屏） */
@@ -46,6 +47,7 @@
 #define ST7789_SLPOUT    0x11   /* 退出睡眠 */
 #define ST7789_NORON     0x13   /* 正常显示模式 */
 #define ST7789_DISPON    0x29   /* 开启显示 */
+#define ST7789_DISPOFF   0x28   /* 关闭显示 */
 #define ST7789_CASET     0x2A   /* 列地址设置 */
 #define ST7789_RASET     0x2B   /* 行地址设置 */
 #define ST7789_RAMWR     0x2C   /* 写 RAM */
@@ -72,6 +74,10 @@ void Display_Fill_Color(u16 color);           /* 全屏填充 */
 void Display_FillRect(u16 x, u16 y, u16 w, u16 h, u16 color);  /* 填充矩形（逻辑坐标） */
 void Display_DrawPixel(u16 x, u16 y, u16 color);              /* 画单点 */
 void Display_on(void);
+void Display_off(void);
+
+/* 每轮调用：翻页动画 + 时钟/静态区块刷新（集中界面渲染，main 只需调这一行） */
+void Display_Update(TimeStruct *t);
 
 /* 坐标换算（供 framebuf 等需要直接写 GRAM 的模块使用） */
 void lcd_map(u16 x, u16 y, u16 *col, u16 *row);          /* 逻辑坐标 -> GRAM 列/行 */

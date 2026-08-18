@@ -1,7 +1,8 @@
 /************************************************************************************************************
  * @brief  主函数：横屏日历(320x240) + 浅黄背景
  *          流程：初始化外设 -> 初始化屏幕 -> 铺浅黄底 -> 画日历 -> 每秒刷新
- * @note   温湿度当前为占位值，实际请替换为传感器读数（如 SHT30/AHT20 等）
+ * @note   主循环只做“事件分发”：每个功能都收敛到对应模块名接口，
+ *         具体逻辑（蓝牙授时 / 温湿度读取 / 翻页动画 / 界面刷新 / 按键休眠）藏在模块内部。
  ************************************************************************************************************/
 #include "ht32.h"
 #include "BFTM0.h"
@@ -13,48 +14,34 @@
 #include "calendar.h"
 #include "yx8320b.h"
 #include "hd9803.h"   /* 无条件包含；HD9803_ENABLE 宏在 hd9803.h 内部定义 */
+#include "key.h"      /* PB12 按键：关屏/低功耗/唤醒 */
 
-/**
- * @brief  主函数：初始化各外设与界面，主循环中处理秒刷新与冒号闪烁
- * @note   两个事件标志均由中断置位、主循环消费（中断内不做 SPI 操作）：
- *         - g_time_update_flag：RTC 每 1s（两次 0.5s 进位）置位 -> Calendar_Refresh 增量刷新
- *         - g_colon_blink_flag：RTC 每 0.5s 置位 -> Calendar_ColonBlink 冒号闪烁
- * @retval 不返回（死循环）
- */
 int main(void)
 {
   UART0_Configuration();
   BFTM0_Configuration();
   TimeModule_Init();   /* RTC 现同时提供 1s 时间节拍与 0.5s 冒号闪烁节拍 */
 
-  /* ---- SPI1 外部 Flash 初始化（必须！Calendar_Init 内 UI_LoadHeader/UI_UploadBackground
-         依赖 Flash_Read 读字库与背景，未初始化会因 SPI1 时钟未使能而 HardFault） ---- */
+  /* SPI1 外部 Flash：Calendar_Init 内读字库/背景依赖 Flash_Read，
+     未初始化会因 SPI1 时钟未使能而 HardFault */
   Flash_Init();
 
   Display_Init();
+  Display_on();        /* 先开启显示，再上传背景防止花屏 */
+  Calendar_Init();     /* 画静态标签(TEMP/HUMI) + 从 Flash 整屏上传背景 */
 
-  /* 注意：背景由 Calendar_Init 内 UI_UploadBackground() 从 Flash 整屏上传覆盖，
-     不再程序化铺浅黄底；Display_on 必须在上传前开启显示。 */
-  Display_on();			// 先开启显示，再上传背景防止花屏
-  /* 画静态标签（TEMP/HUMI） */
-  Calendar_Init();
-
-  /* YX8320B 温湿度传感器（软件 I2C：PB0=SCL, PB1=SDA）
-     读数单位 0.1：temp=255 表示 25.5°C，humi=603 表示 60.3%RH */
+  /* 温湿度传感器（软件 I2C：PB0=SCL, PB1=SDA，读数单位 0.1） */
   YX8320B_Init();
   {
     u8 aw = YX8320B_GetAddr();
     printf("[YX8320B] probe: %s\r\n",
            aw == 0 ? "addr 0x8A ACK (0x45)" : (aw == 1 ? "addr 0x88 ACK (0x44)" : "NO DEVICE (check wiring/pullup!)"));
   }
-  int temp = 260;  /* 传感器未接/读失败时保留的默认显示值（26.0°C） */
-  int humi = 600;  /* 60.0%RH */
+
+  /* PB12 按键：关屏/深度休眠1/唤醒（EXTI12 + 唤醒事件，唤醒后程序继续执行） */
+  Key_Init();
 
 #if HD9803_ENABLE
-  /* HD9803 蓝牙授时模块（USART：PC4=TX, PC5=RX @9600）
-     上电进入 20s 发现窗口（回连+可发现），窗口内收到手机授时则判定已连接，
-     窗口结束无论结果如何都关闭模块电源省电；
-     已连接状态每日 8/18 点自动回连校准时间，失败则降级为未连接。 */
   Hd9803_Init();
   Hd9803_RequestScan();   /* 启动上电发现窗口 */
 #endif
@@ -67,88 +54,44 @@ int main(void)
     if (HT_CKCU->APBCCR1 & (1 << 4))
       WDT_Restart();
 
-#if HD9803_ENABLE
-    /* 蓝牙授时轮询（每次循环快速检查，有数据才处理） */
-    Hd9803_Poll();
+    /* 深度休眠期间：每 1s 节流打印一次 RTC 时间，验证休眠走时 / 排查残留唤醒源 */
     {
-      Hd9803Time bt;
-      u8 r = Hd9803_GetTime(&bt);
-      if (r == 1)   /* 收到新的授时时间 -> 校准 RTC */
+      static vu32 last_ds_print = 0;
+      if (g_key_deep_sleep_flag && ((u32)bftm0_ct - last_ds_print) >= 1000u)
       {
-        /* HD9803 时间字段为普通十进制（非 BCD），year 为年份后两位 */
-        TimeStruct bt_t;
-        bt_t.year   = 2000 + bt.year;
-        bt_t.month  = bt.month;
-        bt_t.day    = bt.day;
-        bt_t.hour   = bt.hour;
-        bt_t.minute = bt.minute;
-        bt_t.second = bt.second;
-        TimeModule_SetTime(&bt_t);
-        /* 授时跳变：直接静态刷新（无动画），避免多位串行依次翻页 */
-        Calendar_SetStaticNext();
-        printf("[HD9803] RTC calibrated to 20%02u-%02u-%02u %02u:%02u:%02u\r\n",
-               bt.year, bt.month, bt.day,
-               bt.hour, bt.minute, bt.second);
+        last_ds_print = (u32)bftm0_ct;
+        TimeModule_GetTime(&t);
+        printf("[DSLEEP] %04u-%02u-%02u %02u:%02u:%02u\r\n",
+               t.year, t.month, t.day, t.hour, t.minute, t.second);
       }
     }
-#endif /* HD9803_ENABLE */
 
-    /* 翻页动画帧推进（每 7-8ms 一帧，BFTM0 1ms 计数作为时间基准） */
-    Calendar_FlipTick((u32)bftm0_ct);
+    Key_Process();            /* 关屏/开屏 + 深度休眠1（阻塞至唤醒） */
 
+#if HD9803_ENABLE
+    Hd9803_Process();         /* 蓝牙授时：解析串口 + 收到新时间则校准 RTC */
+#endif
+
+    /* 每轮取最新时间快照：
+       Display_Update 的 Calendar_Refresh 每轮用它对比秒变化。若只在 flag 置位时
+       读一次，采样分支(温湿度读取等)阻塞后 t 是过期值，且 g_time_update_flag 是
+       单 bit 无法累积——阻塞期间置位的整秒会被合并掉，造成“5 秒等两秒才翻 7 秒”。 */
+    TimeModule_GetTime(&t);
+
+    /* 每秒数据采样（温湿度 / 蓝牙状态机），仅时间节拍到来时执行一次。
+       此处消费 g_time_update_flag（清零）：Display_Update 里的 Calendar_Refresh
+       已改为每轮增量刷新、不再消费该标志，故清零归本分支管，保证温湿度每秒只读一次。 */
     if (g_time_update_flag)
     {
       g_time_update_flag = 0;
-      /* 每秒读取一次 YX8320B 温湿度（手册建议 <=1 次/秒避免自热影响）；
-         读失败时保留上次有效值继续显示 */
-      static u8 first_ok = 0;
-      u8 err = YX8320B_ReadTempHumi(&temp, &humi);
-      if (err != 0)
-      {
-        printf("[YX8320B] read fail(err=%u: %s), keep last: T=%d.%d H=%d.%d\r\n",
-               err, err == 1 ? "W-addr no ACK" : (err == 2 ? "R-addr no ACK" :
-                   (err == 3 ? "T CRC" : "RH CRC")),
-               temp / 10, temp % 10, humi / 10, humi % 10);
-      }
-      else if (!first_ok)
-      {
-        first_ok = 1;
-        printf("[YX8320B] OK: T=%d.%d C, H=%d.%d %%RH\r\n",
-               temp / 10, temp % 10, humi / 10, humi % 10);
-      }
-      TimeModule_GetTime(&t);
-
+      YX8320B_Task();             /* 每秒读一次温湿度（失败保留上次值） */
 #if HD9803_ENABLE
-      /* 蓝牙状态机每秒心跳（驱动窗口计时/电源） */
-      Hd9803_Tick(1);
-
-      /* 界面蓝牙状态：已连接(收到过授时) / 未连接(其余) */
-      Calendar_SetBtState(Hd9803_GetState() == HD9803_ST_CONNECTED);
-
-      /* 已连接状态：每天 8:00 / 18:00 整点自动回连一次校准时间
-         （回连失败由状态机内部降级为未连接） */
-      if (Hd9803_GetState() == HD9803_ST_CONNECTED &&
-          (t.minute == 0) && (t.hour == 8 || t.hour == 18))
-      {
-        static u8 last_trig_h = 0xFF;
-        if (last_trig_h != t.hour)
-        {
-          last_trig_h = t.hour;
-          printf("[HD9803] %02u:00 trigger daily relink\r\n", t.hour);
-          Hd9803_RequestRelink();
-        }
-      }
-#endif /* HD9803_ENABLE */
-
-      Calendar_Refresh(&t, temp, humi);
+      Hd9803_OnSecondTick(&t);    /* 蓝牙状态机推进 + 每日 8/18 点回连校准 */
+#endif
     }
 
-    /* 冒号闪烁已停用（翻页动画替代），代码保留：RTC 0.5s 中断仍置位标志但不再消费
-    if (g_colon_blink_flag)
-    {
-      g_colon_blink_flag = 0;
-      Calendar_ColonBlink();
-    }
-    */
+    Display_Update(&t);       /* 翻页动画 + 时钟/静态区块刷新（集中界面渲染） */
+
+    /* 冒号闪烁已停用（翻页动画替代）；标志位仍由 RTC 0.5s 中断置位但不再消费 */
   }
 }

@@ -47,6 +47,35 @@ typedef struct
 } TimeStruct;
 
 /**
+  * @brief  农历日期结构体
+  * @note   用于存储农历年月日信息，由 TimeModule_GetLunar 计算得到。
+  *         年份为农历干支纪年（如 2026 -> 农历 2026），含闰月信息。
+  */
+typedef struct
+{
+  u16 lunarYear;      /* 农历年份（同公历年份数字，如 2026） */
+  u8  lunarMonth;     /* 农历月份 1..12 */
+  u8  lunarDay;       /* 农历日 1..30 */
+  u8  isLeapMonth;    /* 是否为闰月：1=闰月，0=非闰月 */
+} LunarDate;
+
+/**
+  * @brief  农历转换函数
+  * @note   将公历日期转换为农历日期。数据表覆盖 2000-2099 年。
+  *         超出数据范围返回 0 并输出"数据越界"提示。
+  * @param  year:  公历年（2000-2099）
+  * @param  month: 公历月 1-12
+  * @param  day:   公历日 1-31
+  * @param  lunar: 输出参数，计算得到的农历日期（LunarDate*）
+  * @retval 0=成功；-1=年份超出 2000-2099 数据范围
+  */
+int TimeModule_GetLunar(u16 year, u8 month, u8 day, LunarDate *lunar);
+
+/* 半秒相位标志（RTC CSEC 中断翻转）：0=前半秒(0-500ms)、1=后半秒(500-1000ms)。
+   main 据此分时隙：前半秒只做翻页动画，后半秒做其他静态刷新。 */
+extern volatile u8 g_half_phase;
+
+/**
   * @brief  时间模块初始化函数
   * @note   优化方案：使用RTC秒中断维护时间结构体，避免每次读取都做时间戳转换
   *         初始化流程：
@@ -97,6 +126,12 @@ void TimeModule_GetTime(TimeStruct *time);
   * @retval 当前Unix时间戳（秒）
   */
 u32 TimeModule_GetTimestamp(void);
+
+/* 从 RTC 硬件计数器重新同步全局时间结构体。
+   【已弃用，不再被调用】：时间源是结构体 g_current_time（RTC CSEC 中断逐秒推进），
+   休眠期间 CSEC 中断保持使能、结构体持续走时，唤醒后无需硬件校准。
+   保留实现仅为防御（读 CNT 前已加唤醒稳定延时 + CNT=0 保护）。 */
+void TimeModule_ResyncFromRTC(void);
 
 extern vu32 g_time_update_flag;
 

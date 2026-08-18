@@ -1,11 +1,12 @@
 /************************************************************************************************************
- * @file    st7789.c  （编译聚合文件 / 构建兼容用）
- * @brief   本文件已存在于 HT32-IDE 自动生成的源列表(subdir.mk)中，故用作“编译入口”，
- *          通过 #include 把 SPI 通信层(spi_lcd.c) 与 显示驱动(Display.c) 合并进同一编译单元。
- *          Display.c 内部再 #include gfx.c / calendar.c。
- * @warning 不要在 IDE 中把 Display.c / spi_lcd.c / gfx.c / calendar.c 单独加入工程源列表，
- *          否则会出现“重复定义”链接错误。需要正规工程结构时：删除本文件，
- *          并把 Display.c、spi_lcd.c 加入工程即可（gfx.c/calendar.c 仍由 Display.c 包含）。
+ * @file    st7789.c
+ * @brief   历史遗留的“编译聚合入口”文件，原用 #include 把 spi_lcd.c / Display.c 合并编译。
+ *          现已改为平铺工程：spi_lcd.c 与 Display.c 都在 IDE 源组独立编译，本文件不再 include 它们。
+ *          本文件本身不定义函数；st7789.h 中声明的 ST7789_* 接口由 Display.c + SPI_LCD 提供，
+ *          当前固件未直接调用（沿用 Display_* / SPI_LCD_*）。可保留为空模块备用。
  ************************************************************************************************************/
-#include "spi_lcd.c"
-#include "Display.c"
+/* 本文件原为“编译聚合入口”，用 #include 把 spi_lcd.c / Display.c 合并进同一编译单元。
+ * 现已改为平铺工程结构：spi_lcd.c 与 Display.c 都在 IDE 源组中独立编译，
+ * 故此处不再 #include 它们（否则会 multiple definition）。
+ * 本文件本身不定义函数；st7789.h 中声明的 ST7789_* 接口由 Display.c + SPI_LCD 提供，
+ * 当前固件未直接调用（沿用 Display_* / SPI_LCD_*），保留头文件以备扩展。 */

@@ -5,6 +5,12 @@
  *          MADCTL 旋转由 lcd_map() 在绘制时换算坐标，原生竖屏 240x320 不会越界。
  ************************************************************************************************************/
 #include "Display.h"
+#include "time_module.h"   /* g_time_update_flag / g_half_phase */
+#include "BFTM0.h"         /* bftm0_ct：翻页动画时间基准 */
+#include "calendar.h"      /* Calendar_* 界面刷新 */
+#include "yx8320b.h"       /* YX8320B_GetTemp / YX8320B_GetHumi */
+#include "key.h"           /* Key_IsScreenOff */
+#include "hd9803.h"        /* Hd9803_GetState（蓝牙图标，#if HD9803_ENABLE） */
 
 /* 软件层方向（与写入硬件的 MADCTL 解耦）：
  * 本模块 MADCTL 硬件旋转实测不生效，故用“软件坐标转置”得到 90° 横屏：
@@ -123,6 +129,16 @@ void Display_on(void)
 	Delay(1000);
 }
 
+/* 关显示：ST7789 DISPOFF（0x28）。用于关屏低功耗前，配合背光灭、蓝牙断电。
+   注意：ST7789 在 DISPOFF 后 RAM 内容保留，重新 DISPON 即恢复画面。 */
+void Display_off(void)
+{
+	SPI_LCD_Select();
+	SPI_LCD_WriteCmd(ST7789_DISPOFF);
+	SPI_LCD_Deselect();
+	Delay(1000);
+}
+
 
 //-----------------------------------------------------------------------------
 /**
@@ -227,15 +243,40 @@ void Display_DrawPixel(u16 x, u16 y, u16 color)
   Display_FillRect(x, y, 1, 1, color);
 }
 
-/* ===========================================================================
- * 把图形库与日历界面合并进本编译单元。
- * 原因：HT32-IDE 的 subdir.mk 为自动生成文件，手动添加源文件会被覆盖，
- *       故用 #include 方式让以下 .c 随 Display.c 一起链接进固件。
- * 注意：若将来在 IDE 中把这些 .c 正式加入工程源列表，请删除对应行，
- *       否则会出现“重复定义”链接错误。
- * =========================================================================== */
-#include "ui.c"          /* Flash UI：背景上传 + 字库渲染（就地改造，复用 spi_lcd/Display/flash_read） */
-#include "calendar.c"     /* 日历界面：调用 UI_* 在背景图上叠加动态文字 */
-#include "flash_read.c"   /* SPI1 Flash 读取模块 */
-#include "yx8320b.c"      /* YX8320B 温湿度传感器（软件 I2C PB0/PB1）；借此纳入编译 */
-#include "BFTM1.c"        /* 半秒中断(冒号闪烁)；IDE 源列表固定，借此纳入编译 */
+/* ------------------------------------------------------------------ */
+/**
+ * @brief  显示刷新调度（主循环每轮调用一次）
+ * @note   集中封装所有“界面渲染”逻辑，让 main 只负责事件分发：
+ *         - 翻页动画帧推进（每轮）
+ *         - 时间节拍到来时刷新时钟（Calendar_Refresh，可能触发翻页动画）
+ *         - 后半秒时隙刷新静态区块（日期 / 温湿度 / 蓝牙图标）
+ *         温湿度与蓝牙状态由各自模块提供（YX8320B 与 Hd9803 系列函数），本函数只负责“画”。
+ * @param  t : [输入] 当前时间快照
+ * @retval 无
+ */
+void Display_Update(TimeStruct *t)
+{
+  Calendar_FlipTick((u32)bftm0_ct);
+
+  /* 每轮无条件增量刷新：Calendar_Refresh 内部用 c_* 缓存去重，只有时间/温湿度
+     真正变化才启动翻页或重绘，开销极小（几十条比较指令）。
+     不能用 g_time_update_flag 门控——它是单 bit，主循环若在采样分支(YX8320B 读取
+     /HD9803 轮询)被阻塞超过整秒，flag 多次置位会被合并成一次消费，整秒被吞，
+     表现为"5 秒等两秒才翻页成 7 秒"。每轮对比最新 t 则永不丢秒。 */
+  Calendar_Refresh(t, YX8320B_GetTemp(), YX8320B_GetHumi());
+
+  /* 后半秒时隙：静态区块刷新（日期/温湿度/蓝牙），需动画空闲且未关屏 */
+  if (g_half_phase == 1 && !Calendar_AnimBusy() && !Calendar_StaticDeferred() && !Key_IsScreenOff())
+  {
+    Calendar_RefreshStatic(t, YX8320B_GetTemp(), YX8320B_GetHumi());
+#if HD9803_ENABLE
+    Calendar_SetBtState(Hd9803_GetState() == HD9803_ST_CONNECTED);
+#else
+    Calendar_SetBtState(0);
+#endif
+  }
+}
+
+/* 注意：ui/calendar/flash_read/yx8320b/BFTM1 现在各自作为独立 .c 编译（请在 IDE 源组里
+ * 单独勾选），通过对应 .h 暴露接口（见 main.c 及各调用方的 #include）。
+ * 切勿再用 #include "xxx.c" 聚合——会造成 multiple definition of xxx。 */

@@ -98,18 +98,27 @@ void SPI_LCD_WriteCmd(u8 cmd)
  */
 void SPI_LCD_WriteData(const u8 *buf, u32 len)
 {
-  /* FIFO 批量发送：TX FIFO 有空位就填（深度 8），RX 及时收走防溢出，
-     CPU 只按空位节奏填数，吞吐接近 SPI 标称（原逐字节等 RXBNE 慢一倍） */
+  /* FIFO 批量发送：每批 8 字节才轮询一次 TX FIFO（深度 8），RX 及时收走防溢出。
+     注意：本 SPI 配 RXFTLS=0，RXBNE 标志恒为 1（RX FIFO 空也置位），
+     因此收 RX 一律用 SPI_GetFIFOStatus(RX) > 0 判断真实计数，不能用 while(RXBNE)。 */
   while (len > 0)
   {
-    if (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_RXBNE) != RESET)
-      (void)SPI_ReceiveData(SPI_LCD_SPI);
-    if (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_TX) < 8u)
+    /* 等 TX FIFO 有空位（<8）再填一批；等待时用 FIFO 计数收走 RX 防溢出 */
+    while (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_TX) >= 8u)
+    {
+      if (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_RX) > 0u)
+        (void)SPI_ReceiveData(SPI_LCD_SPI);
+    }
+    u32 n = (len >= 8u) ? 8u : len;
+    for (u32 k = 0; k < n; k++)
     {
       SPI_SendData(SPI_LCD_SPI, ((u16)1u << 8) | *buf);
       buf++;
-      len--;
     }
+    len -= n;
+    /* 读走已到的 RX 帧（FIFO 计数判断，空即退出） */
+    while (SPI_GetFIFOStatus(SPI_LCD_SPI, SPI_FIFO_RX) > 0u)
+      (void)SPI_ReceiveData(SPI_LCD_SPI);
   }
   /* 等所有数据从 TX FIFO 移出（FIFO 保序；Deselect 的 WaitDone 再兜底等线上发完） */
   while (SPI_GetFlagStatus(SPI_LCD_SPI, SPI_FLAG_TXE) == RESET);

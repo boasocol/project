@@ -62,3 +62,26 @@ void HardFault_Handler(void)
   #endif
 }
 
+//-----------------------------------------------------------------------------
+/* 外部中断 4-15（PB12 按键，正常态按键检测）：
+   只转交 Key_HandleIrq 置按键标志，具体关屏在主循环 Key_Process，
+   避免在中断内操作 SPI/LCD。 */
+extern void Key_HandleIrq(void);
+void EXTI4_15_IRQHandler(void)
+{
+  Key_HandleIrq();
+}
+
+//-----------------------------------------------------------------------------
+/* EXTI 事件唤醒 / WAKEUP 引脚中断（深度休眠1 唤醒源）：
+   深度休眠1 下 PB12 低电平唤醒事件经 EVWUP 这一 NVIC 线把内核从 WFI 唤醒。
+   此处仅清标志并暂关 PB12 低电平唤醒事件（防按键按住时电平持续触发反复进中断），
+   真正的开/关屏动作由主循环 Key_Process 读 PB12 电平决定，避免在中断内操作 SPI/LCD。 */
+extern void Key_ClearWakeup(void);
+void EVWUP_IRQHandler(void)
+{
+  Key_ClearWakeup();
+}
+
+//-----------------------------------------------------------------------------
+

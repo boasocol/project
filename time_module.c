@@ -23,6 +23,11 @@
 #include "time_module.h"
 #include "stdio.h"
 
+/* 半秒相位标志：RTC CSEC 中断每 0.5s 翻转一次。
+   0=前半秒（整秒进位后 0-500ms），1=后半秒（500-1000ms）。
+   main 据此分时隙调度：前半秒只做翻页动画，后半秒做其他静态刷新。 */
+volatile u8 g_half_phase = 0;
+
 /**
  * @brief  RTC��ʼ��ħ����
  * @note   д�뱸�ݼĴ��������ڱ��RTC�Ƿ��ѳ�ʼ����
@@ -318,6 +323,29 @@ u32 TimeModule_GetTimestamp(void)
 
 //-----------------------------------------------------------------------------
 /**
+  * @brief  Resync g_current_time from RTC hardware counter.
+  * @note   During Deep Sleep, the RTC second interrupt is disabled to stop
+  *         waking the CPU, so g_current_time stops updating; but the RTC
+  *         counter (LSI) keeps counting. Call this after wakeup to restore
+  *         the correct time (it uses TimeModule_GetTimestamp which reads
+  *         the hardware counter).
+  * @retval None
+  */
+void TimeModule_ResyncFromRTC(void)
+{
+  /* 库要求：从 DeepSleep1/2 唤醒后【立即】读 CNT 需等待至少 1/CK_RTC(约30us)，
+     否则读到的是未同步的旧值，导致时间被回拨/重置。
+     RTC 用 LSE=32768Hz，1/CK_RTC ≈ 30us，取 60us 留余量。 */
+  volatile u32 dly = (SystemCoreClock / 1000000u) * 60u;
+  while (dly--);
+
+  u32 ts = TimeModule_GetTimestamp();   /* RTC hardware counter, accurate */
+  if (ts == 0) return;                  /* CNT=0 说明备份域被复位，保留现有软时钟，避免时间变 1970 */
+  timestamp_to_time(ts, (TimeStruct *)&g_current_time);
+}
+
+//-----------------------------------------------------------------------------
+/**
  * @brief  RTC�жϴ�������
  * @note   ÿ�봥��һ�Σ�ִ�����²�����
  *         1. ����ȫ��ʱ��ṹ�壨���λ��
@@ -341,10 +369,10 @@ void RTC_IRQHandler(void)
     /* g_colon_blink_flag = 1; */   /* 冒号闪烁已停用（需求），保留置位代码 */
 
     /* ÿ���� CSEC = 1 �룺��λʱ�䲢֪ͨ��ѭ��ˢ�¡�
-     * ��CNT ��Ϊ���������ʱ���԰����롱ά���� */
-    static u8 half_tick = 0;
-    half_tick ^= 1;
-    if (half_tick == 0)
+     * ��CNT ��Ϊ���������ʱ���԰����롱ά����
+     * g_half_phase 翻转即半秒时隙切换（0=前半秒, 1=后半秒）。 */
+    g_half_phase ^= 1;
+    if (g_half_phase == 0)
     {
       time_add_second((TimeStruct *)&g_current_time);
       g_time_update_flag = 1;
@@ -597,5 +625,144 @@ static void timestamp_to_time(u32 timestamp, TimeStruct *time)
   time->hour = hour;
   time->minute = minute;
   time->second = second;
+}
+//-----------------------------------------------------------------------------
+
+/* ============================================================================
+ * Lunar (Chinese calendar) conversion
+ * Data table covers 2000-2099. Each entry encodes one lunar year:
+ *   bit 0-3  : leap month number (0 = no leap month)
+ *   bit 4-15 : big(1)/small(0) month flags for 1..12 (30/29 days)
+ *   bit 16   : leap month is big(1)/small(0)
+ * Reference date: 1900-01-31 = lunar 1900 first day of first month.
+ * Algorithm validated against known dates (Spring Festival 2023/24/25/26,
+ * 2023 leap-2nd-month, 2024 Lantern). 2026-08-07 = lunar 6th month 25th.
+ * ========================================================================== */
+#define LUNAR_BASE_YEAR   2000u
+/* 农历数据表覆盖 2000-2099（索引 = year-2000）。
+   offset 以【2000-02-05 = 农历 2000 年正月初一】为基准（见 TimeModule_GetLunar），
+   故数组只含 2000 年起的数据，无需 1900-1999（省一半表空间）。
+   数据与标准农历（春节/闰月/元宵等已知日期）一致。 */
+static const u32 s_lunar_info[100] = {
+  /* 2000-2009 */
+  0x0c960,0x0d954,0x0d4a0,0x0da50,0x07552,0x056a0,0x0abb7,0x025d0,0x092d0,0x0cab5,
+  /* 2010-2019 */
+  0x0a950,0x0b4a0,0x0baa4,0x0ad50,0x055d9,0x04ba0,0x0a5b0,0x15176,0x052b0,0x0a930,
+  /* 2020-2029 */
+  0x07954,0x06aa0,0x0ad50,0x05b52,0x04b60,0x0a6e6,0x0a4e0,0x0d260,0x0ea65,0x0d530,
+  /* 2030-2039 */
+  0x05aa0,0x076a3,0x096d0,0x04afb,0x04ad0,0x0a4d0,0x1d0b6,0x0d250,0x0d520,0x0dd45,
+  /* 2040-2049 */
+  0x0b5a0,0x056d0,0x055b2,0x049b0,0x0a577,0x0a4b0,0x0aa50,0x0b255,0x06d20,0x0ada0,
+  /* 2050-2059 */
+  0x14b63,0x09370,0x049f8,0x04970,0x064b0,0x168a6,0x0ea50,0x06b20,0x1a6c4,0x0aae0,
+  /* 2060-2069 */
+  0x0a2e0,0x0d2e3,0x0c960,0x0d557,0x0d4a0,0x0da50,0x05d55,0x056a0,0x0a6d0,0x055d4,
+  /* 2070-2079 */
+  0x052d0,0x0a9b8,0x0a950,0x0b4a0,0x0b6a6,0x0ad50,0x055a0,0x0aba4,0x0a5b0,0x052b0,
+  /* 2080-2089 */
+  0x0b273,0x06930,0x07337,0x06aa0,0x0ad50,0x14b55,0x04b60,0x0a570,0x054e4,0x0d160,
+  /* 2090-2099 */
+  0x0e968,0x0d520,0x0daa0,0x16aa6,0x056d0,0x04ae0,0x0a9d4,0x0a2d0,0x0d150,0x0f252
+};
+
+/** Index into s_lunar_info for a lunar year (only valid 2000-2099). */
+static u16 lunar_info_index(u16 year)
+{
+  return (u16)(year - LUNAR_BASE_YEAR);
+}
+
+/** Get leap month number (0 = none) for a lunar year. */
+static u8 lunar_leap_month(u16 year)
+{
+  return (u8)(s_lunar_info[lunar_info_index(year)] & 0x0Fu);
+}
+
+/** Days in the leap month of a lunar year (0 if no leap). */
+static u8 lunar_leap_days(u16 year)
+{
+  if (lunar_leap_month(year) == 0) return 0;
+  return (s_lunar_info[lunar_info_index(year)] & 0x10000u) ? 30u : 29u;
+}
+
+/** Days in month m (1..12) of a lunar year. */
+static u8 lunar_month_days(u16 year, u8 month)
+{
+  return (s_lunar_info[lunar_info_index(year)] & (0x10000u >> month)) ? 30u : 29u;
+}
+
+/** Total days in a lunar year. */
+static u16 lunar_year_days(u16 year)
+{
+  u16 sum = 348u;                    /* 12 months x 29 min */
+  u32 info = s_lunar_info[lunar_info_index(year)];
+  u16 i = 0x8000u;
+  while (i > 0x8u) { if (info & i) sum++; i >>= 1; }
+  return (u16)(sum + lunar_leap_days(year));
+}
+
+/**
+  * @brief  Convert Gregorian date to lunar date.
+  * @param  year:  Gregorian year (2000-2099)
+  * @param  month: Gregorian month 1-12
+  * @param  day:   Gregorian day 1-31
+  * @param  lunar: output LunarDate*
+  * @retval 0=success; -1=year out of range
+  */
+int TimeModule_GetLunar(u16 year, u8 month, u8 day, LunarDate *lunar)
+{
+  if (year < 2000u || year > 2099u)
+  {
+    lunar->lunarYear = year; lunar->lunarMonth = 0; lunar->lunarDay = 0;
+    lunar->isLeapMonth = 0;
+    return -1;
+  }
+  /* offset = 目标日期距 2000-02-05（农历2000正月初一）的天数。
+     offset = Σ(2000..year-1 各年天数) + 目标日期当年序数 - 36。
+     其中 36 = 2000-02-05 在 2000 年的序数（1月31天+5天），
+     使 2000-02-05 时 offset=0，正月初一=0。 */
+  u32 offset = 0;
+  u16 yy;
+  for (yy = LUNAR_BASE_YEAR; yy < year; yy++)
+    offset += ((yy % 4 == 0 && yy % 100 != 0) || yy % 400 == 0) ? 366u : 365u;
+  /* 目标日期当年序数 day_of_year（1月1日=1） */
+  static const u8 md[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
+  u8 m;
+  for (m = 0; m < month - 1; m++) offset += md[m];
+  if (month > 2 && ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0))
+    offset += 1;                       /* 闰年 2 月 +1 */
+  offset += (u32)day;                  /* day_of_year = 前月天数 + day */
+  offset -= 36u;                       /* 减 2000-02-05 的序数 36，基准归零 */
+
+  /* locate lunar year（从 2000 起，数组只含 2000 起数据） */
+  u16 ly = LUNAR_BASE_YEAR;
+  while (offset >= lunar_year_days(ly)) { offset -= lunar_year_days(ly); ly++; }
+
+  /* locate lunar month */
+  u8 leap = lunar_leap_month(ly);
+  u8 is_leap = 0;
+  u8 lm = 1;
+  for (;;)
+  {
+    u8 dim;
+    if (leap > 0 && lm == leap + 1 && !is_leap)
+    {
+      is_leap = 1; lm--; dim = lunar_leap_days(ly);
+    }
+    else
+    {
+      dim = lunar_month_days(ly, lm);
+    }
+    if (offset < dim) break;
+    offset -= dim;
+    if (is_leap && lm == leap) is_leap = 0;
+    lm++;
+  }
+
+  lunar->lunarYear = ly;
+  lunar->lunarMonth = lm;
+  lunar->lunarDay = (u8)(offset + 1);
+  lunar->isLeapMonth = is_leap;
+  return 0;
 }
 //-----------------------------------------------------------------------------
