@@ -2,9 +2,10 @@
  * @file    voice.h
  * @brief   CI-D0XGS02S 语音识别模块驱动（UART0：PB7=TX, PB8=RX，波特率 9600）
  * @note    占用 UART0（原 printf 调试口）；printf 调试改走 USART0(PC4/PC5)（原蓝牙口）。
- *          帧格式：A5 FC | LEN(2B LE) | TYPE | CMD | SEQ | DATA[LEN] | SUM(2B LE) | FB
- *          校验 SUM = TYPE..DATA 逐字节 16 位累加（LE 输出），不含头/长度/尾。
- *          TYPE 0xA0=命令词信息、0xA3=通知（如唤醒状态变化）。
+ *          帧格式（深合芯 语音时钟 V10 协议）：
+ *            [H0][H1] [ID] [CMD] [d0][d1][d2][d3] [CS] [FB]   （10 字节）
+ *          H0H1 = A5 FA 或 FA F1（自适应两种帧头）
+ *          CS = (u8)(H0+H1+ID+CMD+d0+d1+d2+d3) 累加和，FB 帧尾。
  ************************************************************************************************************/
 #ifndef __VOICE_H
 #define __VOICE_H
@@ -26,25 +27,21 @@
 #define VOICE_UART_IRQHandler UART0_IRQHandler
 #define VOICE_BAUDRATE        9600u           /* 模块默认 9600 */
 
-/* ---- 帧协议常量 ---- */
-#define VOICE_FRM_HEAD0       0xA5u           /* 帧头第 1 字节 */
-#define VOICE_FRM_HEAD1       0xFCu           /* 帧头第 2 字节 */
+/* ---- 帧协议常量（语音时钟 V10） ---- */
+#define VOICE_FRM_HEAD_A0     0xA5u           /* 帧头变体 A：A5 FA */
+#define VOICE_FRM_HEAD_A1     0xFAu
+#define VOICE_FRM_HEAD_B0     0xFAu           /* 帧头变体 B：FA F1 */
+#define VOICE_FRM_HEAD_B1     0xF1u
 #define VOICE_FRM_TAIL        0xFBu           /* 帧尾 */
-#define VOICE_TYPE_CMDINFO    0xA0u           /* 命令词信息 */
-#define VOICE_TYPE_NOTIFY     0xA3u           /* 通知（如状态变化） */
-#define VOICE_CMD_CMDWORD     0x91u           /* 命令词数据（TYPE=CMDINFO 时） */
-#define VOICE_CMD_VOICE_STATE 0x9Au           /* 语音状态变化（TYPE=NOTIFY 时） */
-#define VOICE_MAX_DATA        16u             /* 数据区上限（实际命令词 ~6B，足够） */
 #define VOICE_RX_BUF_SIZE     128u            /* 环形接收缓冲 */
 
-/* ---- 解析结果 ---- */
+/* ---- 解析结果（语音时钟 V10 帧） ---- */
 typedef struct
 {
-  u8 type;              /* 0xA0 命令词信息 / 0xA3 通知 */
-  u8 cmd;               /* 命令号（命令词信息 0x91） */
-  u8 seq;               /* 包序号（模块外发计数） */
-  u8 data[VOICE_MAX_DATA]; /* 数据区（命令词唯一数据 / 通知内容） */
-  u8 len;               /* data 有效字节数 */
+  u8 head[2];   /* 实际帧头（A5 FA 或 FA F1） */
+  u8 id;        /* 产品 ID（默认 0） */
+  u8 cmd;       /* 指令号码 */
+  u8 d0, d1, d2, d3;  /* 指令内容 4 字节 */
 } VoiceFrame;
 
 /* ---- API ---- */

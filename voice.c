@@ -1,9 +1,8 @@
 /************************************************************************************************************
  * @file    voice.c
- * @brief   CI-D0XGS02S 语音识别模块驱动（USART：PC4=TX, PC5=RX，波特率 9600）
+ * @brief   CI-D0XGS02S 语音识别模块驱动（UART0：PB7=TX, PB8=RX，波特率 9600）
  * @note    - 占用 UART0（PB7/PB8，原 printf 调试口）；printf 改走 USART0(PC4/PC5)
- *          - 帧格式：A5 FC | LEN(2B LE) | TYPE | CMD | SEQ | DATA[LEN] | SUM(2B LE) | FB
- *            SUM = TYPE..DATA 逐字节 16 位累加（LE 输出），不含头/长度/尾
+ *          - 帧格式（语音时钟 V10）：[H0][H1][ID][CMD][d0..d3][CS][FB]，H0H1=A5FA|FAF1
  *          - 接收中断把字节入环形缓冲，Voice_Process 在主循环做状态机解析
  ************************************************************************************************************/
 #include "voice.h"
@@ -17,25 +16,23 @@ static volatile u8  g_vrx_buf[VOICE_RX_BUF_SIZE];
 static volatile u16 g_vrx_head = 0;   /* ISR 写入指针 */
 static volatile u16 g_vrx_tail = 0;   /* poll 读取指针 */
 
-/* ---- 解析状态机 ---- */
+/* ---- 解析状态机（语音时钟 V10：固定 10 字节帧） ---- */
 typedef enum
 {
-  VS_HEAD0 = 0,   /* 等 0xA5 */
-  VS_HEAD1,       /* 等 0xFC */
-  VS_LEN_LO,      /* 等长度低字节 */
-  VS_LEN_HI,      /* 等长度高字节 */
-  VS_DATA,        /* 收 TYPE/CMD/SEQ/DATA */
-  VS_SUM_LO,      /* 等校验低字节 */
-  VS_SUM_HI,      /* 等校验高字节 */
+  VS_HEAD0 = 0,   /* 等帧头第 1 字节（A5 或 FA） */
+  VS_HEAD1,       /* 等帧头第 2 字节（FA 或 F1） */
+  VS_ID,          /* 等 ID */
+  VS_CMD,         /* 等 CMD */
+  VS_D0, VS_D1, VS_D2, VS_D3,  /* 指令内容 4 字节 */
+  VS_CS,          /* 等校验和 */
   VS_TAIL,        /* 等帧尾 0xFB */
 } VoiceState;
 
-static u8    g_vstate   = VS_HEAD0;
-static u16   g_vlen     = 0;        /* 本次帧 DATA 长度 */
-static u16   g_vpos     = 0;        /* 已收 (TYPE+CMD+SEQ+DATA) 字节数 */
-static u8    g_vframe[3 + VOICE_MAX_DATA];  /* TYPE CMD SEQ DATA */
-static u16   g_vsum     = 0;        /* 累加和（校验段） */
-static u16   g_vsum_rx  = 0;        /* 收到的校验值 */
+static u8    g_vstate = VS_HEAD0;
+static u8    g_vh0, g_vh1;         /* 帧头（A5FA 或 FAF1） */
+static u8    g_vfrm[8];            /* ID CMD D0 D1 D2 D3 CS（校验前 6 字节累加） */
+static u8    g_vpos = 0;           /* 已收 [ID..D3] 字节数 */
+static u8    g_vcs = 0;            /* 本地累加和 */
 
 /* ---- 解析结果 ---- */
 static VoiceFrame g_vresult;
@@ -60,68 +57,76 @@ void VOICE_UART_IRQHandler(void)
 
 /* ------------------------------------------------------------------
  * 状态机：喂一个字节，返回 1=完整帧解析完成
+ * 帧：[H0][H1][ID][CMD][d0][d1][d2][d3][CS][FB]
+ * 校验：CS = (u8)(H0+H1+ID+CMD+d0+d1+d2+d3)
+ * 帧头兼容：A5 FA 与 FA F1 两种变体
  * ------------------------------------------------------------------ */
 static u8 voice_feed(u8 d)
 {
   switch (g_vstate)
   {
     case VS_HEAD0:
-      if (d == VOICE_FRM_HEAD0) g_vstate = VS_HEAD1;
+      if (d == VOICE_FRM_HEAD_A0 || d == VOICE_FRM_HEAD_B0)
+      {
+        g_vh0 = d;
+        g_vstate = VS_HEAD1;
+      }
       break;
 
     case VS_HEAD1:
-      if (d == VOICE_FRM_HEAD1) g_vstate = VS_LEN_LO;
-      else if (d == VOICE_FRM_HEAD0) g_vstate = VS_HEAD1;   /* 连续头 */
-      else g_vstate = VS_HEAD0;
-      break;
-
-    case VS_LEN_LO:
-      g_vlen = d;
-      g_vstate = VS_LEN_HI;
-      break;
-
-    case VS_LEN_HI:
-      g_vlen |= (u16)(d << 8);
-      if (g_vlen > VOICE_MAX_DATA)
+      if ((g_vh0 == VOICE_FRM_HEAD_A0 && d == VOICE_FRM_HEAD_A1) ||
+          (g_vh0 == VOICE_FRM_HEAD_B0 && d == VOICE_FRM_HEAD_B1))
       {
-        /* 超长帧：丢弃，等新头 */
-        g_vstate = VS_HEAD0;
-        break;
+        g_vh1 = d;
+        g_vpos = 0;
+        g_vcs  = (u8)(g_vh0 + g_vh1);
+        g_vstate = VS_ID;
       }
-      g_vpos = 0;
-      g_vsum = 0;
-      g_vstate = VS_DATA;
+      else if (d == VOICE_FRM_HEAD_A0 || d == VOICE_FRM_HEAD_B0)
+      {
+        g_vh0 = d;                     /* 连续帧头 */
+      }
+      else
+        g_vstate = VS_HEAD0;
       break;
 
-    case VS_DATA:
-      if (g_vpos < sizeof(g_vframe))
-        g_vframe[g_vpos] = d;
-      g_vsum += d;                       /* 校验段累加：TYPE..DATA */
-      g_vpos++;
-      if (g_vpos >= 3u + g_vlen)         /* TYPE+CMD+SEQ+DATA 收满 */
-        g_vstate = VS_SUM_LO;
+    case VS_ID:
+      g_vfrm[0] = d; g_vcs += d; g_vstate = VS_CMD;
+      break;
+    case VS_CMD:
+      g_vfrm[1] = d; g_vcs += d; g_vstate = VS_D0;
+      break;
+    case VS_D0:
+      g_vfrm[2] = d; g_vcs += d; g_vstate = VS_D1;
+      break;
+    case VS_D1:
+      g_vfrm[3] = d; g_vcs += d; g_vstate = VS_D2;
+      break;
+    case VS_D2:
+      g_vfrm[4] = d; g_vcs += d; g_vstate = VS_D3;
+      break;
+    case VS_D3:
+      g_vfrm[5] = d; g_vcs += d; g_vstate = VS_CS;
       break;
 
-    case VS_SUM_LO:
-      g_vsum_rx = d;
-      g_vstate = VS_SUM_HI;
-      break;
-
-    case VS_SUM_HI:
-      g_vsum_rx |= (u16)(d << 8);
+    case VS_CS:
       g_vstate = VS_TAIL;
+      if (d != g_vcs)                 /* 校验错：等新头 */
+        g_vstate = VS_HEAD0;
       break;
 
     case VS_TAIL:
       g_vstate = VS_HEAD0;
-      if (d == VOICE_FRM_TAIL && g_vsum == g_vsum_rx && g_vpos >= 3u)
+      if (d == VOICE_FRM_TAIL)
       {
-        g_vresult.type = g_vframe[0];
-        g_vresult.cmd  = g_vframe[1];
-        g_vresult.seq  = g_vframe[2];
-        g_vresult.len  = (u8)(g_vpos - 3u);
-        for (u8 i = 0; i < g_vresult.len; i++)
-          g_vresult.data[i] = g_vframe[3u + i];
+        g_vresult.head[0] = g_vh0;
+        g_vresult.head[1] = g_vh1;
+        g_vresult.id  = g_vfrm[0];
+        g_vresult.cmd = g_vfrm[1];
+        g_vresult.d0  = g_vfrm[2];
+        g_vresult.d1  = g_vfrm[3];
+        g_vresult.d2  = g_vfrm[4];
+        g_vresult.d3  = g_vfrm[5];
         g_vnew = 1;
         return 1;
       }
