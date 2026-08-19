@@ -134,6 +134,7 @@ u32 TimeModule_GetTimestamp(void);
 void TimeModule_ResyncFromRTC(void);
 
 extern vu32 g_time_update_flag;
+extern vu8 g_colon_blink_flag;
 
 #endif
 //-----------------------------------------------------------------------------

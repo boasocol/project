@@ -25,6 +25,8 @@
 #define UI_ANIM_OFF      0x110000u
 /* 动画卡片背景切片（build_flash.py 预提取的连续背景区，一次读 3360B） */
 #define UI_BGSLICE_OFF   0x130000u
+/* 语音助手小女孩形象（MSCT 容器：w/h/像素/掩码，build_flash.py build_mascot） */
+#define UI_MASCOT_OFF    0x140000u
 
 /* 用户配置容器（CONF @config_offset，对应 build_flash.py build_config 的 16B payload） */
 typedef struct {
@@ -48,6 +50,7 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* �
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
 void UI_DrawGlyphs(const u32 *codes, int n, int x, int y, int cell_w, int cell_h, u16 color); /* 直接传 Unicode 码点数组（避免源文件中文字面量） */
 void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base); /* 数字串按变体 code 段绘制(1:1，base 区分尺寸) */
+void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，56x52，透明像素写黑（背景恒黑） */
 
 /* 翻页动画 API（ANI2 双位面折叠模型）：
    half_idx: 0=物理下半（阶段 B 新数字展开），1=物理上半（阶段 A 旧数字折叠）。

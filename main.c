@@ -97,6 +97,11 @@ int main(void)
 
     Display_Update(&t);       /* 翻页动画 + 时钟/静态区块刷新（集中界面渲染） */
 
-    /* 冒号闪烁已停用（翻页动画替代）；标志位仍由 RTC 0.5s 中断置位但不再消费 */
+    /* 冒号闪烁：消费 RTC 0.5s 中断置位的 g_colon_blink_flag，每半秒翻转冒号 */
+    if (g_colon_blink_flag)
+    {
+      g_colon_blink_flag = 0;
+      Calendar_ColonBlink();
+    }
   }
 }

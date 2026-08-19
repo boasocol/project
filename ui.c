@@ -255,6 +255,57 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
     SPI_LCD_Deselect();
   }
 }
+/* ============ 语音助手小女孩形象（MASCOT 容器，56x52 RGB565 + 1bpp 掩码） ============ */
+/* 资源布局（build_flash.py build_mascot）：
+   [0..4) 'MSCT' | [4..8) ver | [8..12) w | [12..16) h |
+   [16..20) pixel_off | [20..24) mask_off | [24..256) 保留 |
+   [pixel_off..) 像素 RGB565 行优先小端 | [mask_off..) 掩码 1bpp 行优先。 */
+void UI_DrawMascot(int rx, int ry)
+{
+  u8 hdr[24];
+  u32 w, h, po, mo;
+  Flash_Read(UI_MASCOT_OFF, hdr, 24);
+  if (!(hdr[0] == 'M' && hdr[1] == 'S' && hdr[2] == 'C' && hdr[3] == 'T'))
+    return;                                    /* 旧镜像无 mascot 区：背景已擦黑，跳过 */
+  w  = (u32)hdr[8]  | ((u32)hdr[9]  << 8) | ((u32)hdr[10] << 16) | ((u32)hdr[11] << 24);
+  h  = (u32)hdr[12] | ((u32)hdr[13] << 8) | ((u32)hdr[14] << 16) | ((u32)hdr[15] << 24);
+  po = (u32)hdr[16] | ((u32)hdr[17] << 8) | ((u32)hdr[18] << 16) | ((u32)hdr[19] << 24);
+  mo = (u32)hdr[20] | ((u32)hdr[21] << 8) | ((u32)hdr[22] << 16) | ((u32)hdr[23] << 24);
+  if (w == 0 || h == 0 || w > 80 || h > 80) return;
+  {
+    u32 pbase = UI_MASCOT_OFF + po;
+    u32 mbase = UI_MASCOT_OFF + mo;
+    u32 mrow  = (w + 7u) / 8u;                 /* 掩码每行字节数 */
+    for (u32 yy = 0; yy < h; yy++)
+    {
+      int  ly = ry + (int)yy;
+      u8   msk[10];
+      Flash_Read(pbase + yy * w * 2u, g_line, w * 2u);        /* 像素行（小端 RGB565） */
+      Flash_Read(mbase + yy * mrow, msk, mrow);               /* 掩码行（1bpp） */
+      for (u32 i = 0; i < w * 2u; i += 2)                     /* 小端 -> 高字节先 */
+      {
+        u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
+      }
+      for (u32 xx = 0; xx < w; xx++)                          /* 透明像素写黑（背景恒黑） */
+      {
+        if (!((msk[xx >> 3] >> (7 - (xx & 7))) & 1u))
+        {
+          g_line[xx * 2u] = 0; g_line[xx * 2u + 1] = 0;
+        }
+      }
+      SPI_LCD_Select();
+      SPI_LCD_WriteCmd(ST7789_CASET);
+      { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+      SPI_LCD_WriteCmd(ST7789_RASET);
+      { u8 d[4] = {HI8((u16)rx), LO8((u16)rx), HI8((u16)(rx + (int)w - 1)), LO8((u16)(rx + (int)w - 1))};
+        SPI_LCD_WriteData(d, 4); }
+      SPI_LCD_WriteCmd(ST7789_RAMWR);
+      SPI_LCD_WriteData(g_line, w * 2u);
+      SPI_LCD_Deselect();
+    }
+  }
+}
+
 
 /* ============ UTF-8 解析（取下一码点，*pp 前移） ============ */
 /* ------------------------------------------------------------------

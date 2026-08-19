@@ -102,14 +102,11 @@ static void draw_clock_digit(int x, int d)
 }
 
 /* ---- 冒号：14x84 区域（组间 18 间隙中居中，左右各 2px 呼吸）；on=0 时用空格字模 ----
-   需求：翻页动画已足够动态，冒号功能停用（注释保留，未删除）。
-   背景图未画冒号（见 gen_ui.py：冒号由 MCU 绘制），注释后冒号区域显示纯背景色。
-   恢复：取消本函数及 Init / ColonBlink 中调用的注释即可。
+   冒号闪烁恢复启用（翻页动画停用，见 g_anim_ok）。背景图未画冒号，由 MCU 绘制。 */
 static void draw_colon(int x, int on)
 {
   UI_DrawGlyphRect(x, YF(14, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
-*/
 
 /* ==================================================================
  * 翻页动画状态（6 张卡片对应 6 个时/分/秒位）
@@ -433,17 +430,22 @@ void Calendar_Init(void)
   UI_UploadBackground();          /* 整屏上传 Flash 中的新 UI 背景图 */
   UI_CacheFont();                 /* 缓存字库索引表 */
   UI_LoadConfig();                /* 读 CONF 配置容器（亮度/时区/闹钟/蓝牙） */
-  g_anim_ok = (UI_Anim_Init() == 0 && UI_Anim_Ready()) ? 1 : 0;
+  /* 翻页动画停用（语音开发期，省开销）：数字走静态直画、冒号恢复闪烁。
+     恢复翻页：g_anim_ok = (UI_Anim_Init()==0 && UI_Anim_Ready()) ? 1 : 0 */
+  (void)UI_Anim_Init();   /* 仍初始化动画区（bg slice 自检），但不启用翻页 */
+  g_anim_ok = 0;
 
   /* 翻页状态清零（首次 Refresh 若动画可用则按双卡队列启动翻页） */
   for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; g_disp[i] = 0; }
   g_active_a = -1;
   g_active_b = -1;
 
-  /* 初始冒号：需求停用（注释保留）
+  /* 初始冒号：亮起（冒号闪烁已恢复） */
   draw_colon(101, 1);
   draw_colon(205, 1);
-  */
+
+  /* 语音助手小女孩：画布 (18,156) 56x52 -> GRAM 顶行 239-(156+52)+1=32 */
+  UI_DrawMascot(18, 32);
 
   /* 强制首帧重绘所有动态块 */
   c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;
@@ -645,7 +647,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
   }
 }
 
-/* ============ 冒号闪烁（0.5s 中断驱动）：需求停用，注释保留 ============
+/* ============ 冒号闪烁（0.5s 中断驱动，g_colon_blink_flag 触发） ============ */
 void Calendar_ColonBlink(void)
 {
   static u8 colon_on = 1;
@@ -653,7 +655,6 @@ void Calendar_ColonBlink(void)
   draw_colon(101, colon_on);
   draw_colon(205, colon_on);
 }
-*/
 
 /* ------------------------------------------------------------------
  * Calendar_SetStaticNext：请求下一次 Refresh 强制静态刷新。
