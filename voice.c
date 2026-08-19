@@ -152,7 +152,7 @@ void Voice_Init(void)
   /* 2) RX 脚内部上拉，避免悬空 */
   GPIO_PullResistorConfig(VOICE_GPIO_PORT, VOICE_RX_AFIO_PIN, GPIO_PR_UP);
 
-  /* 3) 引脚复用：PC4=USART_TX, PC5=USART_RX */
+  /* 3) 引脚复用：PB7=UART0_TX, PB8=UART0_RX */
   AFIO_GPxConfig(VOICE_GPIO_ID, VOICE_TX_AFIO_PIN, AFIO_FUN_USART_UART);
   AFIO_GPxConfig(VOICE_GPIO_ID, VOICE_RX_AFIO_PIN, AFIO_FUN_USART_UART);
 
@@ -190,6 +190,16 @@ void Voice_Process(void)
     u8 d = g_vrx_buf[g_vrx_tail];
     g_vrx_tail = (u16)((g_vrx_tail + 1) % VOICE_RX_BUF_SIZE);
     voice_feed(d);
+  }
+
+  /* [调试] 打印收到的完整语音帧（验证通讯用，后续按需替换为动作映射） */
+  {
+    VoiceFrame f;
+    if (Voice_GetFrame(&f))
+    {
+      printf("[VOICE] cmd=0x%02X d0=0x%02X d1=0x%02X d2=0x%02X d3=0x%02X\r\n",
+             f.cmd, f.d0, f.d1, f.d2, f.d3);
+    }
   }
 }
 
