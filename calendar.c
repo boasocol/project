@@ -256,8 +256,10 @@ static int anim_advance(int i)
     vu32 t0 = bftm0_ct;
     UI_Anim_DrawFrame(g_card_x[i], hy, digit, half_idx, g_flip[i].frame,
                       bg_digit, UI_C_DIGIT);
-    if ((n++ & 0x07) == 0)
-      printf("[DRAW] frame dt=%u ms slot=%d\r\n", (unsigned)((u32)bftm0_ct - t0), i);
+    (void)n;                                  /* 帧计时打印已注释（语音开发期） */
+    /* if ((n++ & 0x07) == 0)
+      printf("[DRAW] frame dt=%u ms slot=%d\r\n", (unsigned)((u32)bftm0_ct - t0), i); */
+    (void)t0;
   }
 #else
   UI_Anim_DrawFrame(g_card_x[i], hy, digit, half_idx, g_flip[i].frame,
@@ -331,13 +333,15 @@ void Calendar_FlipTick(u32 now_ms)
       if (running && !anim_running)
       {
         anim_start_ms = (u32)bftm0_ct;
-        printf("[ANIM] start @%u ms A=%d B=%d\r\n",
-               anim_start_ms, g_active_a, g_active_b);
+        /* [ANIM] start/end 打印已注释（语音开发期） */
+        /* printf("[ANIM] start @%u ms A=%d B=%d\r\n",
+               anim_start_ms, g_active_a, g_active_b); */
       }
       else if (!running && anim_running)
       {
         u32 dur = (u32)bftm0_ct - anim_start_ms;
-        printf("[ANIM] end @%u ms dur=%u ms\r\n", (u32)bftm0_ct, dur);
+        (void)dur;
+        /* printf("[ANIM] end @%u ms dur=%u ms\r\n", (u32)bftm0_ct, dur); */
       }
       anim_running = running;
     }

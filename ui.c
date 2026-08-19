@@ -610,12 +610,13 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
   SPI_LCD_Deselect();
   vu32 dt_spi = (u32)bftm0_ct - (u32)t_spi;
 
-  /* [调试] 分段计时（每 32 帧打一次，看 15ms 花在哪） */
-  {
+  /* [调试] 分段计时已注释（语音开发期），保留 dt_* 计算避免改结构 */
+  (void)dt_flash; (void)dt_bgread; (void)dt_synth; (void)dt_spi;
+  /* {
     static u32 n = 0;
     if ((n++ & 0x1F) == 0)
       printf("[T] flash=%u bgread=%u synth=%u spi=%u\r\n",
              (unsigned)dt_flash, (unsigned)dt_bgread,
              (unsigned)(dt_synth - dt_bgread), (unsigned)dt_spi);
-  }
+  } */
 }

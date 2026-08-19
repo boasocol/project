@@ -172,7 +172,7 @@ void Voice_Init(void)
   g_vstate = VS_HEAD0;
   g_vnew = 0;
 
-  printf("[VOICE] USART init OK: PC4=TX PC5=RX @9600\r\n");
+  printf("[VOICE] init OK: PB7=TX PB8=RX @9600\r\n");
 }
 
 /************************************************************************************************************

@@ -291,6 +291,16 @@
 			<locationURI>PARENT-2-PROJECT_LOC/ui.h</locationURI>
 		</link>
 		<link>
+			<name>User/voice.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/voice.c</locationURI>
+		</link>
+		<link>
+			<name>User/voice.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/voice.h</locationURI>
+		</link>
+		<link>
 			<name>User/yx8320b.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/yx8320b.c</locationURI>
