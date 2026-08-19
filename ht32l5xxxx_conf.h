@@ -62,7 +62,7 @@
 //       <i> Auto Return function adds "\r" before "\n" automatically when print message by Retarget.
 */
 #define _RETARGET            1
-#define RETARGET_PORT        14
+#define RETARGET_PORT        12    /* 12=USART0(PC4/PC5 原蓝牙口)：printf 调试口；UART0(PB7/PB8) 让给语音模块 */
 #define _AUTO_RETURN         0
 
 // <q> Use Standard C Library printf() Implementation of GNU Compiler

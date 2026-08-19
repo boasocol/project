@@ -13,7 +13,7 @@
 
 /* ---- 蓝牙模块总开关：1=启用（PC4/PC5 USART0 占用），0=禁用（不占引脚/不进中断） ---- */
 #ifndef HD9803_ENABLE
-#define HD9803_ENABLE 1
+#define HD9803_ENABLE 0    /* BT disabled: USART0(PC4/PC5) -> voice, re-enable later */
 #endif
 
 /* ---- 引脚与串口实例（如需改脚仅改这里） ---- */

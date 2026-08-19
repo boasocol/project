@@ -14,6 +14,7 @@
 #include "calendar.h"
 #include "yx8320b.h"
 #include "hd9803.h"   /* 无条件包含；HD9803_ENABLE 宏在 hd9803.h 内部定义 */
+#include "voice.h"   /* 语音模块（USART0，HD9803_ENABLE=0 时占用） */
 #include "key.h"      /* PB12 按键：关屏/低功耗/唤醒 */
 
 int main(void)
@@ -44,6 +45,8 @@ int main(void)
 #if HD9803_ENABLE
   Hd9803_Init();
   Hd9803_RequestScan();   /* 启动上电发现窗口 */
+#elif VOICE_ENABLE
+  Voice_Init();           /* 语音识别模块（USART0 9600） */
 #endif
 
   TimeStruct t;
@@ -70,6 +73,8 @@ int main(void)
 
 #if HD9803_ENABLE
     Hd9803_Process();         /* 蓝牙授时：解析串口 + 收到新时间则校准 RTC */
+#elif VOICE_ENABLE
+    Voice_Process();          /* 语音模块：收帧解析（命令词/通知） */
 #endif
 
     /* 每轮取最新时间快照：

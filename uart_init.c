@@ -21,6 +21,7 @@
  ************************************************************************************************************/
 //-----------------------------------------------------------------------------
 #include "uart_init.h"
+#include "hd9803.h"    /* HD9803_ENABLE：蓝牙启用时 printf 调试口让位 */
 
 //-----------------------------------------------------------------------------
 /**
@@ -39,45 +40,35 @@ void UART0_Configuration(void)
 {
   CKCU_PeripClockConfig_TypeDef CKCUClock = {{0}};
   USART_InitTypeDef USART_InitStructure;
-  
-  /* 使能GPIOB、UART0和AFIO外设时钟 */
-  /* GPIOB用于UART0的TX/RX引脚（PB7=TX, PB8=RX） */
-  /* UART0外设需要时钟才能工作 */
-  /* AFIO时钟必须使能，否则访问AFIO寄存器会导致HardFault */
-  CKCUClock.Bit.PB     = 1;    // 使能GPIOB时钟
-  CKCUClock.Bit.UART0  = 1;    // 使能UART0时钟
-  CKCUClock.Bit.AFIO   = 1;    // 使能AFIO时钟（必须！否则AFIO_GPxConfig会HardFault）
+
+#if !HD9803_ENABLE
+  /* ========== printf 调试口 ==========
+     USART0(PC4/PC5) @115200 —— 原蓝牙口。蓝牙(HD9803)禁用时作为串口调试打印；
+     蓝牙启用时(HD9803_ENABLE=1) USART0 归蓝牙，printf 无口（调试与蓝牙二选一），
+     此时此函数不初始化 USART0，防与蓝牙冲突。 */
+  CKCUClock.Bit.PC      = 1;    // 使能GPIOC时钟
+  CKCUClock.Bit.USART0  = 1;    // 使能USART0时钟
+  CKCUClock.Bit.AFIO    = 1;    // 使能AFIO时钟（必须！否则AFIO_GPxConfig会HardFault）
   CKCU_PeripClockConfig(CKCUClock, ENABLE);
-  
-  /* 配置PB7为UART0_TX功能 */
-  /* AFIO_FUN_USART_UART = AFIO_MODE_6，用于USART/UART功能 */
-  /* PB7是UART0的替代TX引脚（QFN32封装无PB6，使用PB7替代） */
-  AFIO_GPxConfig(GPIO_PB, AFIO_PIN_7, AFIO_FUN_USART_UART);
-  
-  /* 配置PB8为UART0_RX功能 */
-  /* PB8是UART0的替代RX引脚 */
-  AFIO_GPxConfig(GPIO_PB, AFIO_PIN_8, AFIO_FUN_USART_UART);
-  
-  /* 配置UART0参数 */
-  /* 系统时钟 CK_AHB = 48MHz（HSI 8MHz × PLL_NF2 6），115200 分频 48M/115200≈417 */
-  USART_InitStructure.USART_BaudRate = 115200;        // 波特率115200
-  USART_InitStructure.USART_WordLength = USART_WORDLENGTH_8B;  // 8位数据位
-  USART_InitStructure.USART_StopBits = USART_STOPBITS_1;      // 1位停止位
-  USART_InitStructure.USART_Parity = USART_PARITY_NO;         // 无校验位
-  USART_InitStructure.USART_Mode = USART_MODE_NORMAL;         // 正常模式
-  
-  /* 初始化UART0 */
-  USART_Init(HT_UART0, &USART_InitStructure);
-  
-  /* 使能UART0发送 */
-  USART_TxCmd(HT_UART0, ENABLE);
-  
-  /* 使能UART0接收 */
-  USART_RxCmd(HT_UART0, ENABLE);
-  
-  /* 调用RETARGET配置，设置printf重定向 */
-  /* RETARGET_Configuration()会配置fputc/fgetc指向UART0 */
-  /* 底层通过SERIAL_PutChar()/SERIAL_GetChar()实现 */
+
+  AFIO_GPxConfig(GPIO_PC, AFIO_PIN_4, AFIO_FUN_USART_UART);   /* PC4 = USART_TX */
+  AFIO_GPxConfig(GPIO_PC, AFIO_PIN_5, AFIO_FUN_USART_UART);   /* PC5 = USART_RX */
+
+  USART_InitStructure.USART_BaudRate = 115200;
+  USART_InitStructure.USART_WordLength = USART_WORDLENGTH_8B;
+  USART_InitStructure.USART_StopBits = USART_STOPBITS_1;
+  USART_InitStructure.USART_Parity = USART_PARITY_NO;
+  USART_InitStructure.USART_Mode = USART_MODE_NORMAL;
+  USART_Init(HT_USART0, &USART_InitStructure);
+
+  USART_TxCmd(HT_USART0, ENABLE);
+  USART_RxCmd(HT_USART0, ENABLE);
+
+  /* RETARGET_PORT=12 已指向 USART0（conf.h），fputc 经 SERIAL_PutChar 发 USART0 */
   RETARGET_Configuration();
+#else
+  /* 蓝牙启用：printf 调试口让位，不初始化任何串口 */
+  (void)CKCUClock; (void)USART_InitStructure;
+#endif
 }
 //-----------------------------------------------------------------------------
