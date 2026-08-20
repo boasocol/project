@@ -7,6 +7,7 @@
  ************************************************************************************************************/
 #include "voice.h"
 #include "hd9803.h"   /* 取 HD9803_ENABLE，与蓝牙互斥占 USART0 */
+#include "BFTM0.h"    /* bftm0_ct：1ms 计数器，诊断打印用 */
 #include <stdio.h>
 
 #if VOICE_ENABLE && !HD9803_ENABLE
@@ -38,6 +39,12 @@ static u8    g_vcs = 0;            /* 本地累加和 */
 static VoiceFrame g_vresult;
 static u8 g_vnew = 0;
 
+/* ---- 诊断：统计收字节/成功帧，并保留最近 16 个原始字节 ---- */
+static u32 g_rx_total = 0;
+static u8  g_rx_last[16];
+static u8  g_rx_last_n = 0;
+static u32 g_frames_ok = 0;
+
 /* ------------------------------------------------------------------
  * 接收中断：一个字节入环形缓冲
  * ------------------------------------------------------------------ */
@@ -52,6 +59,9 @@ void VOICE_UART_IRQHandler(void)
       g_vrx_buf[g_vrx_head] = d;
       g_vrx_head = n;
     }
+    g_rx_total++;
+    g_rx_last[g_rx_last_n] = d;
+    g_rx_last_n = (u8)((g_rx_last_n + 1) % 16);
   }
 }
 
@@ -197,8 +207,32 @@ void Voice_Process(void)
     VoiceFrame f;
     if (Voice_GetFrame(&f))
     {
+      g_frames_ok++;
       printf("[VOICE] cmd=0x%02X d0=0x%02X d1=0x%02X d2=0x%02X d3=0x%02X\r\n",
              f.cmd, f.d0, f.d1, f.d2, f.d3);
+    }
+  }
+
+  /* [诊断] 每 2 秒打印接收统计：rx=收字节总数 frames=成功帧数 last=最近16字节hex
+     帮助区分：rx=0 -> 硬件无信号（接线/供电/波特率）；rx>0 frames=0 -> 协议/校验；
+     frames>0 -> 通讯正常。 */
+  {
+    static u32 t_diag = 0;
+    u32 now = (u32)bftm0_ct;
+    if (now - t_diag >= 2000u)
+    {
+      t_diag = now;
+      printf("[VOICE] diag: rx=%u frames=%u last=", (unsigned)g_rx_total, (unsigned)g_frames_ok);
+      if (g_rx_total)
+      {
+        u8 i = g_rx_last_n;                    /* 最早字节在 last_n */
+        for (u8 k = 0; k < 16; k++)
+        {
+          printf("%02X ", g_rx_last[i]);
+          i = (u8)((i + 1) % 16);
+        }
+      }
+      printf("\r\n");
     }
   }
 }
