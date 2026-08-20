@@ -25,7 +25,7 @@
 #define VOICE_UART            HT_UART0        /* UART0 @ 0x40001000 */
 #define VOICE_UART_IRQn       UART0_IRQn      /* 中断号 25 */
 #define VOICE_UART_IRQHandler UART0_IRQHandler
-#define VOICE_BAUDRATE        9600u           /* 模块默认 9600 */
+#define VOICE_BAUDRATE        19200u          /* 实测疑似 19200：9600 收 5B=10B 帧 2:1 错位（确定性乱码） */
 
 /* ---- 帧协议常量（语音时钟 V10） ---- */
 #define VOICE_FRM_HEAD_A0     0xA5u           /* 帧头变体 A：A5 FA */
