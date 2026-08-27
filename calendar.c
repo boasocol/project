@@ -115,9 +115,13 @@ static void draw_colon(int x, int on)
   UI_DrawGlyphRect(x, YF(CLK_Y, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
 
-/* 秒：16x22 小数字（DG_SMALL，变宽字形）青色 #40C4FF，画主卡右下，2 位块中心 (286,100) */
+/* 秒：16x22 小数字（DG_SMALL，变宽字形）青色 #40C4FF，画主卡右下，2 位块中心 (286,100)。
+   画前先清固定显示区（两位最大宽 ~24px + 边距 → x[270..300]，高 22）——变宽字形居中，
+   秒数变化（如 09→10）总宽/起点平移会残留旧墨点（2026-08 用户反馈，同日期卡处理）。 */
 static void draw_seconds(u8 s)
 {
+  UI_DrawGlyphRect(270, YF(SEC_Y, 22), 31, 22, 0xFFFFFFFFu, 0);   /* 清秒区 x[270..300] 背景 */
+
   char b[3];
   b[0] = (char)('0' + s / 10);
   b[1] = (char)('0' + s % 10);
