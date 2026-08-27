@@ -60,6 +60,7 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* �
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
 void UI_DrawGlyphs(const u32 *codes, int n, int x, int y, int cell_w, int cell_h, u16 color); /* 直接传 Unicode 码点数组（避免源文件中文字面量） */
 void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base); /* 数字串按变体 code 段绘制(1:1，base 区分尺寸) */
+int  UI_GlyphWidth(u32 code); /* 查字形实际宽度 px（变宽字形按实际笔画宽；找不到返回 0） */
 void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，尺寸动态（容器头），透明像素填面板色 UI_C_PANEL */
 void UI_DrawMascotCentered(void);   /* 读 MSCT 尺寸自动按 72x72 区定位绘制（与 CANI 动画同区对齐，尺寸无关） */
 

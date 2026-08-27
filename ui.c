@@ -188,6 +188,14 @@ static const u8 *ui_get_glyph(u32 code)
   return NULL;
 }
 
+/* UI_GlyphWidth：查字形实际宽度 px（变宽字形：日期数字 '1' 窄 '8' 宽，按实际笔画宽推进）。
+   找不到返回 0。calendar.c 画日期串/秒用（按实际宽居中）。 */
+int UI_GlyphWidth(u32 code)
+{
+  (void)ui_get_glyph(code);
+  return (int)g_cur_w;
+}
+
 /* ============ 整屏上传 UI 背景（小端 RGB565 -> 高字节先 + 软件转置横屏） ============ */
 /* ------------------------------------------------------------------
  * UI_UploadBackground：把 Flash 中的 UI 背景图整屏上传到屏幕（上电一次）。

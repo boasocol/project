@@ -101,7 +101,6 @@ static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 #define CLK_X_COL 153
 #define CLK_X_M1  170
 #define CLK_X_M2  216
-#define SEC_X     270
 #define SEC_Y     89
 
 /* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y） */
@@ -116,30 +115,39 @@ static void draw_colon(int x, int on)
   UI_DrawGlyphRect(x, YF(CLK_Y, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
 
-/* 秒：16x22 小数字（DG_SMALL）青色 #40C4FF，画主卡右下（2 位，块中心 286,100） */
+/* 秒：16x22 小数字（DG_SMALL，变宽字形）青色 #40C4FF，画主卡右下，2 位块中心 (286,100) */
 static void draw_seconds(u8 s)
 {
   char b[3];
   b[0] = (char)('0' + s / 10);
   b[1] = (char)('0' + s % 10);
   b[2] = 0;
-  UI_DrawVarDigits(b, SEC_X, YF(SEC_Y, 22), UI_RGB(64, 196, 255), DG_SMALL);
+  int w = UI_GlyphWidth(0xE000u + (u32)(b[0] - '0')) + UI_GlyphWidth(0xE000u + (u32)(b[1] - '0'));
+  UI_DrawVarDigits(b, 286 - w / 2, YF(SEC_Y, 22), UI_RGB(64, 196, 255), DG_SMALL);
 }
 
-/* 日期串 "YYYY.M.D"（月/日不补前导零）：16x22 白字数字(0xE000+d) + 4x22 点号(0xE202)，
-   按实际串宽以 cx 为中心画（概念B 日期卡，中心 x=82，文字顶部 y=130）。 */
+/* 日期串 "YYYY.M.D"（月/日不补前导零）：白字数字(0xE000+d，可变宽按实际笔画宽) + 4x22 点号(0xE202)，
+   按实际串宽以 cx 为中心画（概念B 日期卡，中心 x=82，文字顶部 y=130）。数字自然紧凑（'1' 窄 '8' 宽）。 */
 static void draw_date_string(const char *s, int cx, int y)
 {
   int w = 0;
-  for (const char *p = s; *p; p++) w += (*p == '.') ? 4 : 16;
+  for (const char *p = s; *p; p++)
+    w += (*p == '.') ? 4 : UI_GlyphWidth(0xE000u + (u32)(*p - '0'));
   int x = cx - w / 2;
   for (const char *p = s; *p; p++)
   {
     if (*p == '.')
+    {
       UI_DrawGlyphRect(x, YF(y, 22), 4, 22, 0xE202u, UI_C_WHITE);
+      x += 4;
+    }
     else
-      UI_DrawGlyphRect(x, YF(y, 22), 16, 22, (u32)(0xE000u + (*p - '0')), UI_C_WHITE);
-    x += (*p == '.') ? 4 : 16;
+    {
+      u32 code = 0xE000u + (u32)(*p - '0');
+      int gw = UI_GlyphWidth(code);
+      UI_DrawGlyphRect(x, YF(y, 22), gw, 22, code, UI_C_WHITE);
+      x += gw;
+    }
   }
 }
 
