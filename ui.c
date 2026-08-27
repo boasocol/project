@@ -295,11 +295,11 @@ void UI_DrawMascot(int rx, int ry)
       {
         u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
       }
-      for (u32 xx = 0; xx < w; xx++)                          /* 透明像素写黑（背景恒黑） */
+      for (u32 xx = 0; xx < w; xx++)                          /* 透明像素填面板色（=人物所在面板 #1B2336，ui-design-system §6.7） */
       {
         if (!((msk[xx >> 3] >> (7 - (xx & 7))) & 1u))
         {
-          g_line[xx * 2u] = 0; g_line[xx * 2u + 1] = 0;
+          g_line[xx * 2u] = HI8(UI_C_PANEL); g_line[xx * 2u + 1] = LO8(UI_C_PANEL);
         }
       }
       SPI_LCD_Select();
@@ -434,7 +434,7 @@ static void cani_pos(int w, int h, int *rx, int *ry)
   *ry = 239 - (UI_ZONE_Y + h) + 1;
 }
 
-/* 画第 frame 帧（全帧流式：Flash 行读 -> GRAM 行写，透明像素写黑） */
+/* 画第 frame 帧（全帧流式：Flash 行读 -> GRAM 行写，透明像素填面板色 UI_C_PANEL） */
 static void cani_draw_frame(u16 frame)
 {
   int rx, ry;
@@ -454,11 +454,11 @@ static void cani_draw_frame(u16 frame)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
     }
-    for (u32 xx = 0; xx < g_cani.w; xx++)           /* 透明像素写黑（背景恒黑） */
+    for (u32 xx = 0; xx < g_cani.w; xx++)           /* 透明像素填面板色（=人物所在面板 #1B2336，ui-design-system §6.7） */
     {
       if (!((msk[xx >> 3] >> (7 - (xx & 7))) & 1u))
       {
-        g_line[xx * 2u] = 0; g_line[xx * 2u + 1] = 0;
+        g_line[xx * 2u] = HI8(UI_C_PANEL); g_line[xx * 2u + 1] = LO8(UI_C_PANEL);
       }
     }
     SPI_LCD_Select();

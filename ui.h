@@ -20,6 +20,7 @@
 #define UI_C_COLON   UI_RGB(0xe0,0xe0,0xe0)   /* 冒号 #e0e0e0   */
 #define UI_C_WHITE   0xFFFF                    /* 白字           */
 #define UI_C_BLACK   0x0000                    /* 黑字           */
+#define UI_C_PANEL   0x1906u                   /* 面板 #1B2336（人物/MSCOT/CANI 动画透明像素填充色，ui-design-system §6.7，2026-08-26 由纯黑改） */
 
 /* 翻页动画区（位于 Reserved 0x110000，详见 build_flash.py build_anim） */
 #define UI_ANIM_OFF      0x110000u
@@ -59,7 +60,7 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* �
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
 void UI_DrawGlyphs(const u32 *codes, int n, int x, int y, int cell_w, int cell_h, u16 color); /* 直接传 Unicode 码点数组（避免源文件中文字面量） */
 void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base); /* 数字串按变体 code 段绘制(1:1，base 区分尺寸) */
-void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，尺寸动态（容器头），透明像素写黑（背景恒黑） */
+void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，尺寸动态（容器头），透明像素填面板色 UI_C_PANEL */
 void UI_DrawMascotCentered(void);   /* 读 MSCT 尺寸自动按 72x72 区定位绘制（与 CANI 动画同区对齐，尺寸无关） */
 
 /* ---- 语音助手 状态动画（CANI） ----
