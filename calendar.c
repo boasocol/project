@@ -5,21 +5,18 @@
  * @note    本模块不程序化绘制背景，而是在 Flash 中的 UI 背景图（ui_320x240.bin，
  *          由 gen_ui.py 生成）上用 Flash 字库（ui.c）按坐标叠加动态文字。
  *
- *          界面各区块逻辑坐标（x, y 起点，y 为设计坐标，见 YF 宏）：
- *            - 时钟数字：6 张卡片 40x84，x=[13,59,117,163,221,267]，y=14
- *            - 日期徽章：y=116（年 19 / 月 95 / 日 139 / 星期 180 / 农历 240）
- *            - 蓝牙状态：x[180..189] 蓝牙符文 + x[190..203] 勾/叉图标（无药丸），
- *              竖向居中于温湿度区域 y[154..223]
- *            - 温湿度格：一上一下两块（温度 y=154、湿度 y=190，各高 34，
- *              横跨 x[206..303]，对齐星期框左边缘 x=180），12x30 加大版数字
+ *          界面各区块逻辑坐标（x, y 起点，y 为设计坐标，见 YF 宏）——概念B 卡片仪表盘：
+ *            - 时钟：主卡内 HH:MM 大数字 40x84 白，x=[64,110,170,216]，y=32；
+ *              冒号 x=153；秒 16x22 青（x=270,y=89）
+ *            - 日期三卡：日期串(中心 x=82)/星期(164)/农历(232)，y=130
+ *            - 蓝牙勾/叉：底部条右上 中心(290,170)
+ *            - 温湿度：两张迷你卡内 12x30 白字（温度[128..196]、湿度[232..300]，y≈197）
  *
  *          核心机制：
  *            1. Calendar_Refresh()：每秒由 main 调用，逐区块比较“上次绘制值 c_*”
- *               vs 当前时间，只重绘变化区块（增量刷新）；时钟变化位交给翻页动画。
- *            2. Calendar_FlipTick()：每 12ms 由 main 按 BFTM0 计数调用，双卡并行
- *               推进翻页动画（最多同时翻 2 张卡，每张帧率同为 12ms/帧，与单卡一致）。
- *            3. 动画数据 ANI2 在 Flash @0x110000，由 build_flash.py 生成；
- *               本文件只按数据头的帧数/亮度表播放，不硬编码帧数。
+ *               vs 当前时间，只重绘变化区块（增量刷新）；时钟为纯静态直绘。
+ *            2. 翻页动画（ANI2）数据保留但已停用（g_anim_ok=0），概念B 布局不再使用；
+ *               旧翻页队列代码保留为死代码。
  *
  *          设备显示约定：设备对 GRAM 做垂直镜像，背景与字模均已 FV 预补偿，
  *          动画帧表也已按设备镜像构建（见 build_flash.py build_anim）。
@@ -92,20 +89,58 @@ static u8  c_mo = 0xFF, c_dd = 0xFF, c_wd = 0xFF;
 static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 
 /* ------------------------------------------------------------------
- * draw_clock_digit：把单个时钟大数字静态画到卡片上（无动画）。
- * 参数: x=卡片左边界逻辑 x；d=数字 0..9。
- * 用途: 动画不可用 / 强制静态刷新（上电首刷、蓝牙授时跳变）时直绘。
+ * 概念B 布局常量（ui-design-system.md §3 时间主卡）：
+ *   大数字 HH:MM 白色 40x84 画主卡内、块水平居中 x[64..255]；
+ *   冒号 14 宽居中于 H2 与 M1 之间 x=153；秒 16x22 青色画主卡右下 (270,89)。
+ *   注：文档写大数字 y=36，但 84 高会压到 y116-117 的 2px 主蓝强调线，
+ *       故取 y=32（数字 32..115 正好在主卡 [32..120] 的强调线之上）。
  * ------------------------------------------------------------------ */
+#define CLK_Y     32
+#define CLK_X_H1  64
+#define CLK_X_H2  110
+#define CLK_X_COL 153
+#define CLK_X_M1  170
+#define CLK_X_M2  216
+#define SEC_X     270
+#define SEC_Y     89
+
+/* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y） */
 static void draw_clock_digit(int x, int d)
 {
-  UI_DrawGlyphRect(x, YF(14, 84), 40, 84, (u32)('0' + d), UI_C_DIGIT);
+  UI_DrawGlyphRect(x, YF(CLK_Y, 84), 40, 84, (u32)('0' + d), UI_C_DIGIT);
 }
 
-/* ---- 冒号：14x84 区域（组间 18 间隙中居中，左右各 2px 呼吸）；on=0 时用空格字模 ----
-   冒号闪烁恢复启用（翻页动画停用，见 g_anim_ok）。背景图未画冒号，由 MCU 绘制。 */
+/* ---- 冒号：14x84，画主卡 H2 与 M1 之间（x=153）；on=0 用空格字模清背景 ---- */
 static void draw_colon(int x, int on)
 {
-  UI_DrawGlyphRect(x, YF(14, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
+  UI_DrawGlyphRect(x, YF(CLK_Y, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
+}
+
+/* 秒：16x22 小数字（DG_SMALL）青色 #40C4FF，画主卡右下（2 位，块中心 286,100） */
+static void draw_seconds(u8 s)
+{
+  char b[3];
+  b[0] = (char)('0' + s / 10);
+  b[1] = (char)('0' + s % 10);
+  b[2] = 0;
+  UI_DrawVarDigits(b, SEC_X, YF(SEC_Y, 22), UI_RGB(64, 196, 255), DG_SMALL);
+}
+
+/* 日期串 "YYYY.M.D"（月/日不补前导零）：16x22 白字数字(0xE000+d) + 4x22 点号(0xE202)，
+   按实际串宽以 cx 为中心画（概念B 日期卡，中心 x=82，文字顶部 y=130）。 */
+static void draw_date_string(const char *s, int cx, int y)
+{
+  int w = 0;
+  for (const char *p = s; *p; p++) w += (*p == '.') ? 4 : 16;
+  int x = cx - w / 2;
+  for (const char *p = s; *p; p++)
+  {
+    if (*p == '.')
+      UI_DrawGlyphRect(x, YF(y, 22), 4, 22, 0xE202u, UI_C_WHITE);
+    else
+      UI_DrawGlyphRect(x, YF(y, 22), 16, 22, (u32)(0xE000u + (*p - '0')), UI_C_WHITE);
+    x += (*p == '.') ? 4 : 16;
+  }
 }
 
 /* ==================================================================
@@ -154,23 +189,9 @@ static u8  g_pending[6];
 static u8  g_pend_old[6], g_pend_new[6];
 static u8  g_disp[6];
 
-/* ------------------------------------------------------------------
- * flip_start：登记一次翻页任务（排队，不立即播放）。
- * 参数: slot=槽下标(0..5)；old_digit=起始数字；new_digit=目标数字。
- * 说明: 一律记录目标并置 g_pending。即使该位正在翻页/已排队，也更新目标，
- *       避免“翻到一半来了新变化”时把这次翻转弄丢（旧逻辑会导致跳数字）。
- *       old_digit>9（如 0xFF）表示首次无旧值，退化用 new 当起点。
- * ------------------------------------------------------------------ */
-static void flip_start(int slot, u8 old_digit, u8 new_digit)
-{
-  if (old_digit > 9) old_digit = new_digit;   /* 首次无旧值：退化为静态刷新 */
-  g_pend_old[slot] = old_digit;
-  g_pend_new[slot] = new_digit;
-  g_pending[slot]  = 1;
-}
-
 /* g_anim_ok：动画区是否可用（Calendar_Init 时记录 UI_Anim_Ready() 结果）。
-   0=不可用（Flash 未烧新 ANIM 区等），时钟变化位直接静态直绘。 */
+   0=不可用（Flash 未烧新 ANIM 区等），时钟变化位直接静态直绘。
+   概念B 起翻页动画停用（g_anim_ok 恒 0），下方翻页队列/flip_start 已无调用方（保留 ANI2 数据）。 */
 static u8 g_anim_ok = 0;
 /* g_static_next：蓝牙授时等大幅跳变标志。置位后下一次 Refresh 强制静态刷新
    （不做逐位连翻动画），Refresh 读到即清零。 */
@@ -390,8 +411,8 @@ void Calendar_ClearStaticDeferred(void)
 static void draw_bt_state(int connected)
 {
   u32 icon = connected ? 0xE300u : 0xE301u;   /* 对勾 / 叉 */
-  /* 蓝牙图标已左移（中心 x=183，占 x[170..196]），勾/叉在其右侧 x=198..211 */
-  UI_DrawGlyphRect(198, YF(173, 30), 14, 30, icon, UI_RGB(239, 68, 68));  /* 危险红 #EF4444（ui-design-system danger-red） */
+  /* 概念B：底部状态条右上，勾/叉 14x30 中心(290,170) -> 左上(283,155)，危险红 #EF4444 */
+  UI_DrawGlyphRect(283, YF(155, 30), 14, 30, icon, UI_RGB(239, 68, 68));
 }
 
 static u8 s_bt_connected = 0xFF;            /* 上次绘制状态（0xFF=未画过，强制首画） */
@@ -440,9 +461,8 @@ void Calendar_Init(void)
   g_active_a = -1;
   g_active_b = -1;
 
-  /* 初始冒号：亮起（冒号闪烁已恢复） */
-  draw_colon(101, 1);
-  draw_colon(205, 1);
+  /* 初始冒号：亮起（概念B 单冒号 x=153；冒号闪烁已恢复） */
+  draw_colon(CLK_X_COL, 1);
 
   /* 语音助手小女孩：按 MSCT 尺寸自动定位（72x72 区，尺寸无关，与动画同区对齐） */
   UI_DrawMascotCentered();
@@ -500,52 +520,16 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
     for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; }
   }
 
-  /* ---- 时钟数字（6 位独立变化检测，只翻真正变化的那一位） ----
-     动画可用且非强制静态：变化位启动翻页（Calendar_FlipTick 推进帧）；
-     否则直接画静态字模并更新 g_disp（保证后续翻页起始数字正确）：
-     覆盖上电首刷、蓝牙授时跳变、Flash 无 ANIM 区等场景。 */
-  /* slot 0：时十位，卡片 x=13。
-     小时变化=多位进位（时分秒可能同时翻），动画可能占满两个半秒 ->
-     置 g_static_defer 让本秒后半秒的静态刷新顺延到下一秒。 */
-  if ((t->hour / 10) != (c_hh / 10))
-  {
-    if (g_anim_ok && !force_static) { flip_start(0, c_hh / 10, t->hour / 10); g_static_defer = 1; }
-    else                            { draw_clock_digit(13, t->hour / 10); g_disp[0] = (u8)(t->hour / 10); }
-  }
-  /* slot 1：时个位，卡片 x=59 */
-  if ((t->hour % 10) != (c_hh % 10))
-  {
-    if (g_anim_ok && !force_static) { flip_start(1, c_hh % 10, t->hour % 10); g_static_defer = 1; }
-    else                            { draw_clock_digit(59, t->hour % 10); g_disp[1] = (u8)(t->hour % 10); }
-  }
+  /* ---- 时钟 HH:MM 大数字 + 秒（概念B 主卡；翻页动画停用 g_anim_ok=0，纯静态直绘） ----
+     4 个大数字白色 40x84 画主卡内（x[64,110,170,216]、y=CLK_Y=32），块水平居中；
+     秒 16x22 青色画主卡右下（x=270,y=89）。变化位才重绘（增量）。 */
+  if ((t->hour / 10) != (c_hh / 10)) draw_clock_digit(CLK_X_H1, t->hour / 10);
+  if ((t->hour % 10) != (c_hh % 10)) draw_clock_digit(CLK_X_H2, t->hour % 10);
   c_hh = t->hour;
-
-  /* slot 2：分十位，卡片 x=117 */
-  if ((t->minute / 10) != (c_mm / 10))
-  {
-    if (g_anim_ok && !force_static) flip_start(2, c_mm / 10, t->minute / 10);
-    else                            { draw_clock_digit(117, t->minute / 10); g_disp[2] = (u8)(t->minute / 10); }
-  }
-  /* slot 3：分个位，卡片 x=163 */
-  if ((t->minute % 10) != (c_mm % 10))
-  {
-    if (g_anim_ok && !force_static) flip_start(3, c_mm % 10, t->minute % 10);
-    else                            { draw_clock_digit(163, t->minute % 10); g_disp[3] = (u8)(t->minute % 10); }
-  }
+  if ((t->minute / 10) != (c_mm / 10)) draw_clock_digit(CLK_X_M1, t->minute / 10);
+  if ((t->minute % 10) != (c_mm % 10)) draw_clock_digit(CLK_X_M2, t->minute % 10);
   c_mm = t->minute;
-
-  /* slot 4：秒十位，卡片 x=221 */
-  if ((t->second / 10) != (c_ss / 10))
-  {
-    if (g_anim_ok && !force_static) flip_start(4, c_ss / 10, t->second / 10);
-    else                            { draw_clock_digit(221, t->second / 10); g_disp[4] = (u8)(t->second / 10); }
-  }
-  /* slot 5：秒个位，卡片 x=267 */
-  if ((t->second % 10) != (c_ss % 10))
-  {
-    if (g_anim_ok && !force_static) flip_start(5, c_ss % 10, t->second % 10);
-    else                            { draw_clock_digit(267, t->second % 10); g_disp[5] = (u8)(t->second % 10); }
-  }
+  if (t->second != c_ss) draw_seconds(t->second);
   c_ss = t->second;
 
   /* 强制静态刷新（授时/上电）时：时钟位已静态直画，这里顺带把静态区块
@@ -565,23 +549,29 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
 {
   int wd = CalcWeekday(t->year, t->month, t->day);
 
-  /* ---- 日期徽章（y=116, h=22，字高 22，整串在徽章内居中） ----
-     年 4 位小号数字(白)、月 2 位(白)、日 2 位(黑)、星期 3 汉字(白)、农历 4 汉字(白)。
-     任一字段变化即整串重绘。 */
+  /* ---- 日期三卡（概念B，卡 y=126..152 高26，文字顶部 y≈130） ----
+     日期卡[12..152]："2026.8.26" 白 16x22 数字+4x22 点号(0xE202)，中心 x=82；
+     星期卡[160..222]："星期二" 绿 #22C55E，中心 x=191；
+     农历卡[230..306]："八月初八" 青 #40C4FF，中心 x=268。 */
   if (t->year != c_yy || t->month != c_mo || t->day != c_dd || wd != c_wd)
   {
-    char yb[8], mb[4], db[4];
-    int n = 0; int y = t->year;
-    yb[n++] = (char)('0' + y / 1000); yb[n++] = (char)('0' + (y / 100) % 10);
-    yb[n++] = (char)('0' + (y / 10) % 10); yb[n++] = (char)('0' + y % 10); yb[n] = 0;
-    mb[0] = (char)('0' + t->month / 10); mb[1] = (char)('0' + t->month % 10); mb[2] = 0;
-    db[0] = (char)('0' + t->day / 10);   db[1] = (char)('0' + t->day % 10);   db[2] = 0;
+    /* 日期串 "YYYY.M.D"（月/日不补前导零） */
+    char ds[12]; int n = 0;
+    int y = t->year;
+    ds[n++] = (char)('0' + y / 1000); ds[n++] = (char)('0' + (y / 100) % 10);
+    ds[n++] = (char)('0' + (y / 10) % 10); ds[n++] = (char)('0' + y % 10);
+    ds[n++] = '.';
+    if (t->month >= 10) ds[n++] = (char)('0' + t->month / 10);
+    ds[n++] = (char)('0' + t->month % 10);
+    ds[n++] = '.';
+    if (t->day >= 10) ds[n++] = (char)('0' + t->day / 10);
+    ds[n++] = (char)('0' + t->day % 10);
+    ds[n] = 0;
+    draw_date_string(ds, 82, 130);
 
-    UI_DrawVarDigits(yb, 19, YF(116, 22), UI_C_WHITE, DG_SMALL);   /* 年 小号数字 */
-    UI_DrawVarDigits(mb, 95, YF(116, 22), UI_C_WHITE, DG_SMALL);   /* 月 小号数字 */
-    UI_DrawVarDigits(db, 139, YF(116, 22), UI_C_BLACK, DG_SMALL);  /* 日 小号数字(黑) */
-    UI_DrawGlyphs(WD_CN[wd], 3, 180, YF(116, 22), 18, 22, UI_C_WHITE);  /* 星期(3*18=54) */
-    /* 农历 X月XX（4 汉字，如"六月廿五"，4*18=72px）：
+    /* 星期（3 汉字，绿 #22C55E） */
+    UI_DrawGlyphs(WD_CN[wd], 3, 164, YF(130, 22), 18, 22, UI_RGB(34, 197, 94));
+    /* 农历 X月XX（4 汉字，青 #40C4FF）：
        月份用中文月名表 + "月"，日期按初一/初十/廿X/三十 规则转两字。 */
     { LunarDate ld;
       if (TimeModule_GetLunar(t->year, t->month, t->day, &ld) == 0)
@@ -600,25 +590,21 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
         else if (ld2 < 10)  { b[2] = 0x521D; b[3] = N01[ld2 - 1]; }  /* 初X */
         else if (ld2 < 20)  { b[2] = 0x5341; b[3] = N01[ld2 - 11]; } /* 十X */
         else                { b[2] = 0x5EFF; b[3] = N01[ld2 - 21]; } /* 廿X */
-        UI_DrawGlyphs(b, 4, 240, YF(116, 22), 18, 22, UI_C_WHITE);
+        UI_DrawGlyphs(b, 4, 232, YF(130, 22), 18, 22, UI_RGB(64, 196, 255));
       }
       else
       {
         /* 年份超出 2000-2099：显示"数据越界"占位，避免空白 */
         static const u32 err[4] = {0x6570, 0x636E, 0x8D8A, 0x754C};   /* 数据越界 */
-        UI_DrawGlyphs(err, 4, 240, YF(116, 22), 18, 22, UI_C_WHITE);
+        UI_DrawGlyphs(err, 4, 232, YF(130, 22), 18, 22, UI_RGB(64, 196, 255));
       }
     }
     c_yy = t->year; c_mo = t->month; c_dd = t->day; c_wd = (u8)wd;
   }
 
   /* ---- 温湿度数值（一位小数；值单位 0.1，如 temp=255 -> "25.5"） ----
-     一上一下两块：温度格 y=154、湿度格 y=190，各横跨 x[206..303]（宽 98）。
-     每格内【图标 + 12x30 数字】整体居中：
-       温度图标在 x=210（宽 8，右缘 ~218），数字串居中于 [218..303]
-       湿度图标在 x=210（宽 12，右缘 ~222），数字串居中于 [222..303]
-     数字 12 宽 + 小数点 4 宽，按实际串宽居中，任何位数都不超界。
-     数值垂直居中于 34px 高格内（数字高 30 -> 顶部 y=格y+2）。 */
+     概念B 两张迷你卡：温度卡[100..198]、湿度卡[204..304]（图标 26x26 @113/217,212 已入背景），
+     数字 12x30 白字分别居中于卡内图标右侧（温度[128..196]、湿度[232..300]），y≈197。 */
   if (temp != c_temp)                    /* 温度变化才重绘 */
   {
     char tb[8]; int n = 0;
@@ -630,10 +616,9 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     tb[n++] = (char)('0' + ti % 10);
     tb[n++] = '.';
     tb[n++] = (char)('0' + tf); tb[n] = 0;
-    /* 温度格：图标右缘 ~218 到格右缘 303，数字居中；y=154+2=156（高30居中于高34格） */
     int nw = 0; for (char *q = tb; *q; q++) nw += (*q == '.') ? 4 : 12;
-    int tx = 218 + (303 - 218 - nw) / 2;
-    UI_DrawVarDigits(tb, tx, YF(156, 30), UI_C_WHITE, DG_TH);
+    int tx = 128 + (196 - 128 - nw) / 2;
+    UI_DrawVarDigits(tb, tx, YF(197, 30), UI_C_WHITE, DG_TH);
     c_temp = temp;
   }
   if (humi != c_humi)                    /* 湿度变化才重绘 */
@@ -645,10 +630,9 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     hb[n++] = (char)('0' + hi % 10);
     hb[n++] = '.';
     hb[n++] = (char)('0' + hf); hb[n] = 0;
-    /* 湿度格：图标右缘 ~222 到格右缘 303，数字居中；y=190+2=192 */
     int nw = 0; for (char *q = hb; *q; q++) nw += (*q == '.') ? 4 : 12;
-    int hx = 222 + (303 - 222 - nw) / 2;
-    UI_DrawVarDigits(hb, hx, YF(192, 30), UI_C_WHITE, DG_TH);
+    int hx = 232 + (300 - 232 - nw) / 2;
+    UI_DrawVarDigits(hb, hx, YF(197, 30), UI_C_WHITE, DG_TH);
     c_humi = humi;
   }
 }
@@ -658,8 +642,7 @@ void Calendar_ColonBlink(void)
 {
   static u8 colon_on = 1;
   colon_on ^= 1;
-  draw_colon(101, colon_on);
-  draw_colon(205, colon_on);
+  draw_colon(CLK_X_COL, colon_on);
 }
 
 /* ------------------------------------------------------------------

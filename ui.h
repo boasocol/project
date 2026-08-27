@@ -16,7 +16,7 @@
 /* RGB565 颜色宏（与 ui_spec.md 一致） */
 #define UI_RGB(r,g,b)  ( (u16)( ( ((u16)(r)>>3) << 11 ) | ( ((u16)(g)>>2) << 5 ) | ( (u16)(b)>>3 ) ) )
 
-#define UI_C_DIGIT   UI_RGB(0x1a,0x1a,0x1a)   /* 时钟数字 #1a1a1a */
+#define UI_C_DIGIT   0xFFDFu                  /* 时钟大数字 白 #F8FAFC（概念B 主卡深底白字，ui-design-system text-primary） */
 #define UI_C_COLON   UI_RGB(0xe0,0xe0,0xe0)   /* 冒号 #e0e0e0   */
 #define UI_C_WHITE   0xFFFF                    /* 白字           */
 #define UI_C_BLACK   0x0000                    /* 黑字           */
@@ -29,8 +29,8 @@
 #define UI_MASCOT_OFF    0x140000u
 /* 语音助手 状态动画（CANI 容器：build_flash.py build_canim / gen_canim.py；帧图 default_girl_1..48） */
 #define UI_CANI_OFF      0x150000u
-/* 72x72 人物区（与 build_all.py ZONE_* 一致；帧 ≤72 居中放入，右侧文字 x=80、屏底 233） */
-#define UI_ZONE_X        6
+/* 72x72 人物区（与 build_all.py ZONE_* 一致；概念B 底部状态条内人物窗 x=16，右侧语音文字 x=100） */
+#define UI_ZONE_X        16
 #define UI_ZONE_Y        156
 #define UI_ZONE_W        72
 #define UI_ZONE_H        72
