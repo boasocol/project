@@ -391,7 +391,7 @@ static void draw_bt_state(int connected)
 {
   u32 icon = connected ? 0xE300u : 0xE301u;   /* 对勾 / 叉 */
   /* 蓝牙图标已左移（中心 x=183，占 x[170..196]），勾/叉在其右侧 x=198..211 */
-  UI_DrawGlyphRect(198, YF(173, 30), 14, 30, icon, UI_RGB(255, 60, 60));
+  UI_DrawGlyphRect(198, YF(173, 30), 14, 30, icon, UI_RGB(239, 68, 68));  /* 危险红 #EF4444（ui-design-system danger-red） */
 }
 
 static u8 s_bt_connected = 0xFF;            /* 上次绘制状态（0xFF=未画过，强制首画） */
