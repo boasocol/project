@@ -14,7 +14,7 @@
  *
  *          数据对应（build_flash.py 生成）：
  *            - UI 背景图  @g_ui_base   （=0x001000，逻辑行连续存储）
- *            - 字库容器   @g_font_base （=0x030000，索引表+1bpp 位图）
+ *            - 字库容器   @g_font_base （动态读分区头，当前 =0x0A0800：UI 区扩 450K 后后移）
  *            - 翻页动画   @UI_ANIM_OFF （=0x110000，ANI2 帧表）
  ************************************************************************************************************/
 #include "ui.h"
@@ -152,6 +152,15 @@ int UI_LoadConfig(void)
 
 const ui_cfg_t *UI_GetConfig(void) { return &g_cfg; }
 
+/* UI_SetAlarm：写运行时闹钟配置（仅内存，不写 Flash）。
+   语音"设置闹钟"命令写入；响铃状态机接入后在此读取触发。 */
+void UI_SetAlarm(u8 on, u8 hour, u8 min)
+{
+  g_cfg.alarm_on   = on;
+  g_cfg.alarm_hour = hour;
+  g_cfg.alarm_min  = min;
+}
+
 /* ============ 查字形位图（二分，code 升序） ============ */
 /* ------------------------------------------------------------------
  * ui_get_glyph：按 code 在索引中二分查找字形，并读取其位图到 g_glyph。
@@ -255,7 +264,7 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
     SPI_LCD_Deselect();
   }
 }
-/* ============ 语音助手小女孩形象（MASCOT 容器，56x52 RGB565 + 1bpp 掩码） ============ */
+/* ============ 语音助手小女孩形象（MASCOT 容器，尺寸动态 RGB565 + 1bpp 掩码） ============ */
 /* 资源布局（build_flash.py build_mascot）：
    [0..4) 'MSCT' | [4..8) ver | [8..12) w | [12..16) h |
    [16..20) pixel_off | [20..24) mask_off | [24..256) 保留 |
@@ -303,6 +312,256 @@ void UI_DrawMascot(int rx, int ry)
       SPI_LCD_WriteData(g_line, w * 2u);
       SPI_LCD_Deselect();
     }
+  }
+}
+
+/* 读 MSCT 尺寸，按 72x72 区公式自动定位绘制（与 CANI 动画同区对齐，帧尺寸变化不硬编码）。
+   修复：UI_DrawMascot(6,15) 硬编码只对 69x69 正确，改尺寸后会与动画错位残留。 */
+void UI_DrawMascotCentered(void)
+{
+  u8 hdr[24];
+  u32 w, h;
+  int rx, ry;
+  Flash_Read(UI_MASCOT_OFF, hdr, 24);
+  if (!(hdr[0] == 'M' && hdr[1] == 'S' && hdr[2] == 'C' && hdr[3] == 'T'))
+    return;
+  w = (u32)hdr[8]  | ((u32)hdr[9]  << 8) | ((u32)hdr[10] << 16) | ((u32)hdr[11] << 24);
+  h = (u32)hdr[12] | ((u32)hdr[13] << 8) | ((u32)hdr[14] << 16) | ((u32)hdr[15] << 24);
+  if (w == 0 || h == 0 || w > 80 || h > 80)
+    return;
+  rx = UI_ZONE_X + (UI_ZONE_W - (int)w) / 2;
+  ry = 239 - (UI_ZONE_Y + (int)h) + 1;
+  UI_DrawMascot(rx, ry);
+}
+
+
+/* ============ 语音助手 状态动画（CANI 容器 @0x150000，帧图 default_girl_1..48） ============ */
+/* 容器布局（build_flash.py build_canim）：
+   [0..256) 'CANI'|ver|w|h|nstates|nframes|状态表{start:u32,count:u32}...|pad
+   [256..)  帧区：第 k 帧偏移 = 256 + k*(w*h*2 + ceil(w/8)*h)；
+            每帧 = 像素(w*h*2 小端 RGB565) + 掩码(ceil(w/8)*h 1bpp)，垂直预翻转(行0=人物底部)。
+   位置：按帧 w/h 在 72x72 人物区居中（UI_ZONE_*，与静态 mascot 同一区，方向一致）。 */
+ui_cani_t g_cani;
+static u8  g_cani_enable = 0;   /* 动画播放开关（calendar.c Enable(1) 开启，0=静态帧） */
+
+int UI_CharAnim_Init(void)
+{
+  u8 hdr[256];
+  u32 v;
+  memset(&g_cani, 0, sizeof(g_cani));
+  Flash_Read(UI_CANI_OFF, hdr, 24);
+  if (!(hdr[0] == 'C' && hdr[1] == 'A' && hdr[2] == 'N' && hdr[3] == 'I'))
+    return -1;                                   /* 旧镜像无 CANI：保持停用 */
+  v = (u32)hdr[8]  | ((u32)hdr[9]  << 8) | ((u32)hdr[10] << 16) | ((u32)hdr[11] << 24);
+  g_cani.w = (u16)v;
+  v = (u32)hdr[12] | ((u32)hdr[13] << 8) | ((u32)hdr[14] << 16) | ((u32)hdr[15] << 24);
+  g_cani.h = (u16)v;
+  v = (u32)hdr[16] | ((u32)hdr[17] << 8) | ((u32)hdr[18] << 16) | ((u32)hdr[19] << 24);
+  g_cani.nstates = (u8)v;
+  v = (u32)hdr[20] | ((u32)hdr[21] << 8) | ((u32)hdr[22] << 16) | ((u32)hdr[23] << 24);
+  g_cani.nframes = (u8)v;
+  if (g_cani.w == 0 || g_cani.h == 0 || g_cani.w > 80 || g_cani.h > 80)
+    return -1;
+  if (g_cani.nstates > UI_CANI_MAX_STATE)
+    g_cani.nstates = UI_CANI_MAX_STATE;
+  for (u8 i = 0; i < g_cani.nstates; i++)
+  {
+    u8 e[8];
+    Flash_Read(UI_CANI_OFF + 24u + (u32)i * 8u, e, 8);
+    g_cani.state_start[i] = (u16)((u32)e[0] | ((u32)e[1] << 8) | ((u32)e[2] << 16) | ((u32)e[3] << 24));
+    g_cani.state_count[i] = (u16)((u32)e[4] | ((u32)e[5] << 8) | ((u32)e[6] << 16) | ((u32)e[7] << 24));
+  }
+  g_cani.ok = (g_cani.nframes > 0) ? 1 : 0;
+  g_cani.last_tick = bftm0_ct;
+  return g_cani.ok ? 0 : -1;
+}
+
+int UI_CharAnim_Ready(void) { return g_cani.ok ? 1 : 0; }
+
+void UI_CharAnim_Enable(int en) { g_cani_enable = en ? 1 : 0; }
+
+int UI_CharAnim_SetState(int st)
+{
+  if (!g_cani.ok) return -1;
+  if (st < 0 || st >= (int)g_cani.nstates) return -1;
+  if (g_cani.state_count[st] == 0) return -1;
+  g_cani.one_shot = 0;              /* 新 SetState 打断进行中的一次性响应动画 */
+  if (st == g_cani.cur_state && !g_cani.trans)
+  {
+    g_cani.cur_frame = 0;            /* 同状态：重播循环 */
+    return 0;
+  }
+  /* 状态编号宏见 ui.h UI_CANI_STATE_*（IDLE=0 / WAKE=1 / ALARM=2）。
+     切到 WAKE/ALARM 走过渡（当前状态循环前 4 帧 -> 变化 4 帧 -> 目标状态循环）；
+     切回 IDLE / 同状态 直切（无过渡帧定义）。 */
+  if (st == UI_CANI_STATE_WAKE || st == UI_CANI_STATE_ALARM)
+  {
+    g_cani.trans        = 1;
+    g_cani.trans_target = (u8)st;
+    g_cani.trans_phase  = 0;         /* 阶段0：重播当前循环前 4 帧 */
+    g_cani.trans_step   = 0;
+  }
+  else
+  {
+    g_cani.cur_state = (u8)st;
+    g_cani.cur_frame = 0;
+    g_cani.trans     = 0;
+  }
+  return 0;
+}
+
+/* 一次性响应动画（如"修改成功"）：切到 st 状态播完一遍后自动回到原状态。
+   适合 4~8 帧短动画（如 UI_CANI_STATE_OK）；该状态无帧图时返回 -1 保持原状态。
+   已在一次性动画中再次触发时：只重启动画本身，保留最初的返回状态。 */
+int UI_CharAnim_PlayOnce(int state)
+{
+  if (!g_cani.ok) return -1;
+  if (state < 0 || state >= (int)g_cani.nstates) return -1;
+  if (g_cani.state_count[state] == 0) return -1;
+  if (!g_cani.one_shot)
+    g_cani.return_state = g_cani.cur_state;   /* 记录返回目标（仅首次） */
+  g_cani.cur_state = (u8)state;
+  g_cani.cur_frame = 0;
+  g_cani.trans     = 0;              /* 打断过渡 */
+  g_cani.one_shot  = 1;
+  return 0;
+}
+
+/* 帧 w/h 在 72x72 人物区居中 -> GRAM 左上 (rx,ry)（与静态 mascot 同一区/同公式） */
+static void cani_pos(int w, int h, int *rx, int *ry)
+{
+  *rx = UI_ZONE_X + (UI_ZONE_W - w) / 2;
+  *ry = 239 - (UI_ZONE_Y + h) + 1;
+}
+
+/* 画第 frame 帧（全帧流式：Flash 行读 -> GRAM 行写，透明像素写黑） */
+static void cani_draw_frame(u16 frame)
+{
+  int rx, ry;
+  u32 mrow   = ((u32)g_cani.w + 7u) / 8u;
+  u32 stride = (u32)g_cani.w * g_cani.h * 2u + mrow * g_cani.h;
+  u32 base   = UI_CANI_OFF + 256u + (u32)frame * stride;
+  u32 t0 = (u32)bftm0_ct;                       /* [调试] 绘制开始（1ms 分辨率） */
+
+  cani_pos(g_cani.w, g_cani.h, &rx, &ry);
+  for (u32 yy = 0; yy < g_cani.h; yy++)
+  {
+    int  ly = ry + (int)yy;
+    u8   msk[10];
+    Flash_Read(base + yy * g_cani.w * 2u, g_line, g_cani.w * 2u);
+    Flash_Read(base + (u32)g_cani.w * g_cani.h * 2u + yy * mrow, msk, mrow);
+    for (u32 i = 0; i < g_cani.w * 2u; i += 2)      /* 小端 -> 高字节先 */
+    {
+      u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
+    }
+    for (u32 xx = 0; xx < g_cani.w; xx++)           /* 透明像素写黑（背景恒黑） */
+    {
+      if (!((msk[xx >> 3] >> (7 - (xx & 7))) & 1u))
+      {
+        g_line[xx * 2u] = 0; g_line[xx * 2u + 1] = 0;
+      }
+    }
+    SPI_LCD_Select();
+    SPI_LCD_WriteCmd(ST7789_CASET);
+    { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RASET);
+    { u8 d[4] = {HI8((u16)rx), LO8((u16)rx), HI8((u16)(rx + (int)g_cani.w - 1)), LO8((u16)(rx + (int)g_cani.w - 1))};
+      SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RAMWR);
+    SPI_LCD_WriteData(g_line, g_cani.w * 2u);
+    SPI_LCD_Deselect();
+  }
+  /* [调试] 打印本帧实际绘制耗时（Flash 读 + SPI 写屏）。1ms 分辨率；调完可删。 */
+  printf("[CANI] frame %u 绘制 %lu ms（@%lu）\r\n",
+         (unsigned)frame, (unsigned long)((u32)bftm0_ct - t0), (unsigned long)t0);
+}
+
+/* 画某状态的某帧（帧号越界则跳过不画） */
+static void cani_draw_state_frame(int state, u16 fidx)
+{
+  u16 g;
+  if (state < 0 || state >= (int)g_cani.nstates) return;
+  if (fidx >= g_cani.state_count[state]) return;
+  g = (u16)(g_cani.state_start[state] + fidx);
+  if (g >= g_cani.nframes) return;
+  cani_draw_frame(g);
+}
+
+/* 目标状态的变化帧槽位：16 帧布局 = [0-8)循环 + [8-12)变化到唤醒 + [12-16)变化到闹铃。
+   目标相对 WAKE 每高一档 +TRANS_CNT 帧：WAKE->8、ALARM->12。 */
+static u16 cani_trans_slot(u8 target)
+{
+  return (u16)(UI_CANI_LOOP_CNT + ((u16)target - UI_CANI_STATE_WAKE) * UI_CANI_TRANS_CNT);
+}
+
+static u8 s_idle_hold = 0;   /* 待机停留帧计数（到 UI_CANI_IDLE_HOLD_INTERVALS 放行一次） */
+
+void UI_CharAnim_Tick(void)
+{
+  if (!g_cani_enable) return;              /* 关闭时保持当前画面 */
+  if (!g_cani.ok) return;
+  if ((u32)(bftm0_ct - g_cani.last_tick) < UI_CANI_MS_PER_FRAME) return;  /* 0.125s/帧 */
+  g_cani.last_tick = bftm0_ct;
+
+  if (g_cani.trans)
+  {
+    /* 过渡：阶段0 = 当前状态循环前 4 帧；阶段1 = 变化帧（目标唤醒[8..12)，目标闹铃[12..16)） */
+    if (g_cani.trans_phase == 0)
+    {
+      cani_draw_state_frame(g_cani.cur_state, (u16)g_cani.trans_step);   /* 循环[0..3] */
+      g_cani.trans_step++;
+      if (g_cani.trans_step >= UI_CANI_TRANS_PRE)
+      {
+        g_cani.trans_phase = 1;
+        g_cani.trans_step  = 0;
+      }
+    }
+    else
+    {
+      /* 变化帧槽位：WAKE->[8-12)，ALARM->[12-16)（见 cani_trans_slot） */
+      u16 slot = cani_trans_slot(g_cani.trans_target);
+      cani_draw_state_frame(g_cani.cur_state, (u16)(slot + g_cani.trans_step));
+      g_cani.trans_step++;
+      if (g_cani.trans_step >= UI_CANI_TRANS_CNT)
+      {
+        /* 过渡完成：切到目标状态的正常循环 */
+        g_cani.cur_state = g_cani.trans_target;
+        g_cani.cur_frame = 0;
+        g_cani.trans     = 0;
+      }
+    }
+  }
+  else
+  {
+    /* 正常循环：只播每状态前 8 帧；不足 8 帧按实际帧数（如当前 idle 2 帧 -> 0,1 交替），
+       避免帧号越界被跳过导致画面卡死静止。 */
+
+    u16 nloop = g_cani.state_count[g_cani.cur_state];
+    if (nloop > UI_CANI_LOOP_CNT) nloop = UI_CANI_LOOP_CNT;
+
+    /* 用户需求：待机循环在指定帧停留 N 个帧间隔（1 帧间隔 = MS_PER_FRAME=125ms）。
+       停留期间不换帧（保持当前画面），计数到 HOLD_INTERVALS 后清零放行。 */
+    if (g_cani.cur_state == UI_CANI_STATE_IDLE &&
+        g_cani.cur_frame == UI_CANI_IDLE_HOLD_FRAME)
+    {
+      s_idle_hold++;
+      if (s_idle_hold < 16)
+        return;
+      s_idle_hold = 0;
+    }
+    g_cani.cur_frame++;
+    if (g_cani.cur_frame >= nloop)
+    {
+      g_cani.cur_frame = 0;
+      if (g_cani.one_shot)
+      {
+        /* 一次性响应动画播完一遍：回到原状态（下次 Tick 从 0 帧画起） */
+        g_cani.cur_state = g_cani.return_state;
+        g_cani.one_shot  = 0;
+        return;
+      }
+    }
+    cani_draw_state_frame(g_cani.cur_state, g_cani.cur_frame);
   }
 }
 

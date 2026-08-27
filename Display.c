@@ -11,6 +11,7 @@
 #include "yx8320b.h"       /* YX8320B_GetTemp / YX8320B_GetHumi */
 #include "key.h"           /* Key_IsScreenOff */
 #include "hd9803.h"        /* Hd9803_GetState（蓝牙图标，#if HD9803_ENABLE） */
+#include "ui.h"            /* UI_CharAnim_Tick：形象状态动画帧推进 */
 
 /* 软件层方向（与写入硬件的 MADCTL 解耦）：
  * 本模块 MADCTL 硬件旋转实测不生效，故用“软件坐标转置”得到 90° 横屏：
@@ -257,6 +258,8 @@ void Display_DrawPixel(u16 x, u16 y, u16 color)
 void Display_Update(TimeStruct *t)
 {
   Calendar_FlipTick((u32)bftm0_ct);
+
+  UI_CharAnim_Tick();   /* 形象状态动画：0.5s/帧，内部 g_cani.ok 门控（空容器即返回） */
 
   /* 每轮无条件增量刷新：Calendar_Refresh 内部用 c_* 缓存去重，只有时间/温湿度
      真正变化才启动翻页或重绘，开销极小（几十条比较指令）。

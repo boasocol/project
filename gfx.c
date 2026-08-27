@@ -1,13 +1,13 @@
 /************************************************************************************************************
  * @file    gfx.c
- * @brief   Í¼ĞÎ¿â£º5x7 ÎÄ×Ö + Æß¶ÎÊıÂë¹ÜÊı×Ö£¨Ê¸Á¿»æÖÆ£¬ÎŞĞè×Ö¿â£©
- * @note   ËùÓĞ»æÖÆÊ¹ÓÃ¡°Âß¼­×ø±ê¡±£¨ºáÆÁ 320x240£©£¬µ×²ã Display_FillRect ×Ô¶¯×ö MV=1 ×ø±ê½»»»
+ * @brief   å›¾å½¢åº“ï¼š5x7 æ–‡å­— + ä¸ƒæ®µæ•°ç ç®¡æ•°å­—ï¼ˆçŸ¢é‡ç»˜åˆ¶ï¼Œæ— éœ€å­—åº“ï¼‰
+ * @note   æ‰€æœ‰ç»˜åˆ¶ä½¿ç”¨â€œé€»è¾‘åæ ‡â€ï¼ˆæ¨ªå± 320x240ï¼‰ï¼Œåº•å±‚ Display_FillRect è‡ªåŠ¨åš MV=1 åæ ‡äº¤æ¢
  ************************************************************************************************************/
 #include "gfx.h"
 
 /* ------------------------------------------------------------------
- * 5x7 µãÕó×Ö¿â£¨½öº¬ÈÕÀúËùĞè×Ö·û£©
- * Ã¿¸ö×ÖĞÎ 7 ×Ö½Ú£¬ĞĞÓÅÏÈ£»bit4..bit0 ¶ÔÓ¦´Ó×óµ½ÓÒ 5 ÁĞ£¨bit4 Îª×î×ó£©
+ * 5x7 ç‚¹é˜µå­—åº“ï¼ˆä»…å«æ—¥å†æ‰€éœ€å­—ç¬¦ï¼‰
+ * æ¯ä¸ªå­—å½¢ 7 å­—èŠ‚ï¼Œè¡Œä¼˜å…ˆï¼›bit4..bit0 å¯¹åº”ä»å·¦åˆ°å³ 5 åˆ—ï¼ˆbit4 ä¸ºæœ€å·¦ï¼‰
  * ------------------------------------------------------------------ */
 typedef struct
 {
@@ -44,11 +44,11 @@ static const uint8_t* get_glyph(char c)
   {
     if (FONT[i].c == c) return FONT[i].b;
   }
-  return 0;  /* Î´ÊÕÂ¼×Ö·û²»»æÖÆ */
+  return 0;  /* æœªæ”¶å½•å­—ç¬¦ä¸ç»˜åˆ¶ */
 }
 
 /* ------------------------------------------------------------------
- * ÎÄ×Ö»æÖÆ
+ * æ–‡å­—ç»˜åˆ¶
  * ------------------------------------------------------------------ */
 void GFX_DrawChar(char c, int x, int y, int scale, u16 color)
 {
@@ -74,14 +74,14 @@ void GFX_DrawString(const char *s, int x, int y, int scale, u16 color)
   while (*s)
   {
     GFX_DrawChar(*s, cx, y, scale, color);
-    cx += 6 * scale;   /* 5 ÁĞ + 1 ÁĞ¼ä¾à */
+    cx += 6 * scale;   /* 5 åˆ— + 1 åˆ—é—´è· */
     s++;
   }
 }
 
 /* ------------------------------------------------------------------
- * Æß¶ÎÊıÂë¹Ü£¨Ê¸Á¿»æÖÆ£¬ÎŞĞè×Ö¿â£©
- * ¶ÎÎ»¶¨Òå£º a=1,b=2,c=4,d=8,e=16,f=32,g=64
+ * ä¸ƒæ®µæ•°ç ç®¡ï¼ˆçŸ¢é‡ç»˜åˆ¶ï¼Œæ— éœ€å­—åº“ï¼‰
+ * æ®µä½å®šä¹‰ï¼š a=1,b=2,c=4,d=8,e=16,f=32,g=64
  *    aaa
  *   f   b
  *    ggg
@@ -123,7 +123,7 @@ void GFX_DrawNumber7Seg(int x, int y, int cw, int ch, int t,
   for (int i = 0; i < ndigits; i++)
   {
     int cx = x + i * cw;
-    Display_FillRect(cx, y, cw, ch, bg);   /* Çå³ı±¾¸ñ±³¾° */
+    Display_FillRect(cx, y, cw, ch, bg);   /* æ¸…é™¤æœ¬æ ¼èƒŒæ™¯ */
 
     int p = 1;
     for (int k = 0; k < ndigits - 1 - i; k++) p *= 10;
@@ -134,7 +134,7 @@ void GFX_DrawNumber7Seg(int x, int y, int cw, int ch, int t,
 
 void GFX_DrawColon(int x, int y, int cw, int ch, int t, u16 color)
 {
-  int s = t;                       /* Ã°ºÅµã´óĞ¡ */
+  int s = t;                       /* å†’å·ç‚¹å¤§å° */
   int cx = x + cw / 2 - s / 2;
   Display_FillRect(cx, y + ch * 0.25, s, s, color);
   Display_FillRect(cx, y + ch * 0.65, s, s, color);
@@ -143,8 +143,8 @@ void GFX_DrawColon(int x, int y, int cw, int ch, int t, u16 color)
 void GFX_DrawClock(int x, int y, int cw, int ch, int t,
                    int hh, int mm, u16 color, u16 bg)
 {
-  int total_w = 4 * cw + cw / 2;   /* 2Î»Êı + Ã°ºÅ + 2Î»Êı */
-  Display_FillRect(x - 2, y - 2, total_w + 4, ch + 4, bg);   /* Çå³ıÕû¿é */
+  int total_w = 4 * cw + cw / 2;   /* 2ä½æ•° + å†’å· + 2ä½æ•° */
+  Display_FillRect(x - 2, y - 2, total_w + 4, ch + 4, bg);   /* æ¸…é™¤æ•´å— */
 
   GFX_DrawNumber7Seg(x, y, cw, ch, t, hh, 2, color, bg);
   GFX_DrawColon(x + 2 * cw, y, cw, ch, t, color);

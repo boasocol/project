@@ -25,8 +25,16 @@
 #define UI_ANIM_OFF      0x110000u
 /* 动画卡片背景切片（build_flash.py 预提取的连续背景区，一次读 3360B） */
 #define UI_BGSLICE_OFF   0x130000u
-/* 语音助手小女孩形象（MSCT 容器：w/h/像素/掩码，build_flash.py build_mascot） */
+/* 语音助手小女孩形象（MSCT 容器：w/h/像素/掩码，build_flash.py build_mascot；尺寸动态，当前 69x69） */
 #define UI_MASCOT_OFF    0x140000u
+/* 语音助手 状态动画（CANI 容器：build_flash.py build_canim / gen_canim.py；帧图 default_girl_1..48） */
+#define UI_CANI_OFF      0x150000u
+/* 72x72 人物区（与 build_all.py ZONE_* 一致；帧 ≤72 居中放入，右侧文字 x=80、屏底 233） */
+#define UI_ZONE_X        6
+#define UI_ZONE_Y        156
+#define UI_ZONE_W        72
+#define UI_ZONE_H        72
+#define UI_CANI_MAX_STATE 8u
 
 /* 用户配置容器（CONF @config_offset，对应 build_flash.py build_config 的 16B payload） */
 typedef struct {
@@ -44,13 +52,67 @@ typedef struct {
 int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */
 int  UI_LoadConfig(void);   /* 读 CONF 配置容器并校验 CRC。0=成功；-1=magic；-2=CRC */
 const ui_cfg_t *UI_GetConfig(void); /* 访问已加载配置（未加载/失败为全 0） */
+void UI_SetAlarm(u8 on, u8 hour, u8 min); /* 写运行时闹钟配置（仅内存，不写 Flash；响铃状态机接入后使用） */
 void UI_UploadBackground(void); /* 整屏上传 UI 背景图到 ST7789 GRAM（小端->高字节先，软件转置横屏） */
 int  UI_CacheFont(void);    /* 缓存字库索引表（按需二分查找） */
 void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* 在逻辑矩形内画单字（还原背景+叠墨点） */
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
 void UI_DrawGlyphs(const u32 *codes, int n, int x, int y, int cell_w, int cell_h, u16 color); /* 直接传 Unicode 码点数组（避免源文件中文字面量） */
 void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base); /* 数字串按变体 code 段绘制(1:1，base 区分尺寸) */
-void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，56x52，透明像素写黑（背景恒黑） */
+void UI_DrawMascot(int rx, int ry); /* 语音助手形象：GRAM 坐标 rx,ry，尺寸动态（容器头），透明像素写黑（背景恒黑） */
+void UI_DrawMascotCentered(void);   /* 读 MSCT 尺寸自动按 72x72 区定位绘制（与 CANI 动画同区对齐，尺寸无关） */
+
+/* ---- 语音助手 状态动画（CANI） ----
+   帧图放 HT\7\形象图\default_girl_N.png（1..52），gen_canim.py 打包。
+   状态（0 基，见 UI_CANI_STATE_*）：
+     IDLE/WAKE/ALARM 是粘性状态（常驻循环 + 过渡）；
+     OK 是一次性响应动画（4 帧，播完自动回原状态，UI_CharAnim_PlayOnce）。
+   粘性状态每状态 16 帧（容器状态表 count=16）：
+     [0..8)   正常循环帧（8 帧，状态内循环播放）
+     [8..12)  变化到唤醒(WAKE) 帧（4 帧）
+     [12..16) 变化到闹铃(ALARM) 帧（4 帧）
+   状态切换效果：当前状态 循环前 4 帧 -> 变化 4 帧 -> 目标状态循环。
+   帧切换 0.125s/帧（8 次/秒，UI_CANI_MS_PER_FRAME）。 */
+#define UI_CANI_STATE_IDLE   0u  /* 待机 idle   帧 1-16（gen_canim.py 打包） */
+#define UI_CANI_STATE_WAKE   1u  /* 唤醒 wake   帧 17-32 */
+#define UI_CANI_STATE_ALARM  2u  /* 闹铃 alarm  帧 33-48（闹钟未实装，未接线） */
+#define UI_CANI_STATE_OK     3u  /* 修改成功响应  帧 49-52（一次性，PlayOnce 播完自动回原状态） */
+#define UI_CANI_STATE_COUNT  4u  /* 当前状态总数（≤ UI_CANI_MAX_STATE） */
+
+#define UI_CANI_FRAME_PER_STATE 16u  /* 每状态帧数（容器 state_count 应=16） */
+#define UI_CANI_LOOP_CNT        8u   /* 每状态正常循环帧（前 8） */
+#define UI_CANI_TRANS_PRE       4u   /* 过渡先重播当前状态循环前 4 帧 */
+#define UI_CANI_TRANS_CNT       4u   /* 变化帧数 */
+#define UI_CANI_MS_PER_FRAME    125u /* 8 次刷新/秒（0.125s/帧）；单帧绘制 ~30ms 实测 */
+
+/* 待机循环"停留帧"（用户需求）：idle 每次循环在指定帧停 N 个帧间隔再继续，
+   形成"两次循环间停一拍"的呼吸感。帧号为状态内 0 基（6 = 第 7 帧）。 */
+#define UI_CANI_IDLE_HOLD_FRAME     6u  /* 停留帧号（0 基） */
+#define UI_CANI_IDLE_HOLD_INTERVALS 8u  /* 停留帧间隔数（8×125ms≈1s） */
+typedef struct {
+  u16 w, h;                        /* 帧尺寸（容器头读，≤80） */
+  u8  nstates;                     /* 状态数 */
+  u8  nframes;                     /* 总帧数 */
+  u8  ok;                          /* 1=容器有效且有帧（可播） */
+  u8  cur_state;                   /* 当前状态（UI_CANI_STATE_*） */
+  u16 cur_frame;                   /* 当前状态内帧序号（循环段 0..LOOP_CNT-1） */
+  u8  trans;                       /* 1=过渡中（SetState 触发） */
+  u8  trans_target;                /* 过渡目标状态 */
+  u8  one_shot;                    /* 1=一次性响应动画播放中（PlayOnce，播完回 return_state） */
+  u8  return_state;                /* 一次性动画播完的返回状态 */
+  u8  trans_phase;                 /* 过渡阶段：0=重播循环前 4 帧，1=播变化帧 */
+  u8  trans_step;                  /* 过渡步进（0..3） */
+  u16 state_start[UI_CANI_MAX_STATE];  /* 每状态起始全局帧 */
+  u16 state_count[UI_CANI_MAX_STATE];  /* 每状态帧数（=16） */
+  u32 last_tick;                   /* 上次换帧 bftm0_ct */
+} ui_cani_t;
+extern ui_cani_t g_cani;
+int  UI_CharAnim_Init(void);       /* 读 CANI 头+状态表；0=可播，-1=无容器/空/非法 */
+int  UI_CharAnim_Ready(void);      /* 1=可播（ok 且有帧） */
+void UI_CharAnim_Enable(int en);   /* 开启动画播放（1=播放；0=静态帧） */
+int  UI_CharAnim_SetState(int st); /* 切状态：目标 WAKE/ALARM 走过渡（前4帧+变化4帧），目标 IDLE/同状态直切 */
+int  UI_CharAnim_PlayOnce(int st); /* 一次性响应动画：播完 st 状态一遍后自动回原状态（如 OK 短动画） */
+void UI_CharAnim_Tick(void);       /* 0.125s 换帧并重绘（内部 g_cani.ok 与 Enable 门控） */
 
 /* 翻页动画 API（ANI2 双位面折叠模型）：
    half_idx: 0=物理下半（阶段 B 新数字展开），1=物理上半（阶段 A 旧数字折叠）。

@@ -444,8 +444,14 @@ void Calendar_Init(void)
   draw_colon(101, 1);
   draw_colon(205, 1);
 
-  /* 语音助手小女孩：画布 (18,156) 56x52 -> GRAM 顶行 239-(156+52)+1=32 */
-  UI_DrawMascot(18, 32);
+  /* 语音助手小女孩：按 MSCT 尺寸自动定位（72x72 区，尺寸无关，与动画同区对齐） */
+  UI_DrawMascotCentered();
+
+  /* 形象状态动画（CANI）：帧图=形象图\default_girl_1..48.png（101+ 编号为暂存不入脚本）。
+     每状态 16 帧（8 循环 + 4 变化到2 + 4 变化到3），0.125s/帧（8 次/秒）。
+     要恢复静态只显示第 1 帧：改回 UI_CharAnim_Enable(0)。 */
+  (void)UI_CharAnim_Init();
+  UI_CharAnim_Enable(1);
 
   /* 强制首帧重绘所有动态块 */
   c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;

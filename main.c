@@ -20,6 +20,12 @@
 int main(void)
 {
   UART0_Configuration();
+#if VOICE_ENABLE && !HD9803_ENABLE
+  /* 语音模块 UART0 RX 尽早使能：抢在模块"上电完成"帧(0xEF)之前接收。
+     显示/Flash 初始化（整屏上传 153KB）较慢，若 Voice_Init 排在最后会漏掉这帧
+     （模块上电约几百 ms 后发 0xEF，调试助手能抓到、MCU 抓不到就是这个原因）。 */
+  Voice_Init();
+#endif
   BFTM0_Configuration();
   TimeModule_Init();   /* RTC 现同时提供 1s 时间节拍与 0.5s 冒号闪烁节拍 */
 
@@ -28,9 +34,9 @@ int main(void)
   Flash_Init();
 
   Display_Init();
-  Display_on();        /* 先开启显示，再上传背景防止花屏 */
-  Calendar_Init();     /* 画静态标签(TEMP/HUMI) + 从 Flash 整屏上传背景 */
 
+  Calendar_Init();     /* 画静态标签(TEMP/HUMI) + 从 Flash 整屏上传背景 */
+  Display_on();
   /* 温湿度传感器（软件 I2C：PB0=SCL, PB1=SDA，读数单位 0.1） */
   YX8320B_Init();
   {
@@ -45,8 +51,14 @@ int main(void)
 #if HD9803_ENABLE
   Hd9803_Init();
   Hd9803_RequestScan();   /* 启动上电发现窗口 */
-#elif VOICE_ENABLE
-  Voice_Init();           /* 语音识别模块（USART0 9600） */
+#endif
+
+#if VOICE_ENABLE && !HD9803_ENABLE
+  /* 开机播报：MCU 每次复位无条件让模块播"欢迎使用xx语音闹钟"。
+     不依赖模块 0xEF——debug 仿真时模块全程不断电、MCU 复位不会重发 0xEF。
+     若冷启动时模块尚未 boot 完（~几百 ms）此帧可能丢失，属可接受场景。 */
+  Voice_Send(VOICE_TX_BOOT, 0, 0, 0, 0);
+  printf("[VOICE] 开机播报已发送\r\n");
 #endif
 
   TimeStruct t;
