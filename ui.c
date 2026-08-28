@@ -669,21 +669,20 @@ static const ui_slot_t g_slot[UI_SLOT_COUNT] = {
  * UI_Show：统一显示入口。只输入 起点坐标 + 内容 + 档位宏 + 颜色。
  * 参数: x,y=区域左上角逻辑坐标；s=UTF-8 串（数字/点号/汉字）；
  *       slot=UI_SLOT_*（查 g_slot 得字模段/字高/格宽/清除宽/对齐）；color=墨色。
- * 流程: 1) 清固定区域（clear_w × h，还原背景，防残留）
- *       2) 算串宽（数字按格宽、点号按固定宽、汉字按格宽）
- *       3) 按 align 对齐定起点（居中 = x + (clear_w - w)/2）
- *       4) 逐字形 UI_DrawGlyphRect 写入（数字 base+d、点号 dot、汉字直接码点）
- * 说明: 时钟大数字/秒/温湿度/日期逐位共用本函数；日期"先清整卡再逐位"见 calendar.c。
+ * 流程: 1) 算串宽
+ *       2) 按 align 对齐定内容起点（居中 = x + (clear_w - w)/2）
+ *       3) **整块合成直接覆盖**（2026-08 优化，取代"先清再逐字形画"）：
+ *          逐行 读背景(clear_w) -> 把所有字形本行墨点叠进缓冲 -> 一次写回整行。
+ *          整块 clear_w×h 全由"背景+新字形"覆盖，旧内容被直接盖掉，无需先清、无残留；
+ *          背景仅读一次、屏仅写一次（原方案：清整块+每字形各读各写，多次读写）。
+ * 说明: 时钟大数字/秒/温湿度/日期 共用本函数；日期=整串一次合成覆盖整卡（calendar.c draw_date_string）。
  * ------------------------------------------------------------------ */
 void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
 {
   if (slot >= UI_SLOT_COUNT) return;
   const ui_slot_t *sp = &g_slot[slot];
 
-  /* 1) 清固定区域（还原背景，防变宽平移残留） */
-  UI_DrawGlyphRect(x, y, sp->clear_w, sp->h, 0xFFFFFFFFu, 0);
-
-  /* 2) 算串宽 */
+  /* 1) 算串宽 */
   int w = 0;
   for (const char *p = s; *p; )
   {
@@ -691,21 +690,60 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
     w += (c == '.') ? UI_DATE_DOT_W : sp->cell_w;
   }
 
-  /* 3) 对齐定起点 */
+  /* 2) 对齐定内容起点 */
   int cx = x;
   if (sp->align == UI_ALIGN_CENTER)
     cx = x + (sp->clear_w - w) / 2;
 
-  /* 4) 逐字形画 */
-  for (const char *p = s; *p; )
+  /* 3) 整块合成：逐行 读背景 -> 叠所有字形本行墨点 -> 写回（直接覆盖旧内容） */
+  for (int yy = 0; yy < sp->h; yy++)
   {
-    u32 c = utf8_next(&p);
-    u32 code; u8 gw;
-    if (c == '.')            { code = sp->dot; gw = UI_DATE_DOT_W; }
-    else if (c >= '0' && c <= '9') { code = sp->base + (c - '0'); gw = sp->cell_w; }
-    else                     { code = c;      gw = sp->cell_w; }
-    UI_DrawGlyphRect(cx, y, gw, sp->h, code, color);
-    cx += gw;
+    int ly = y + yy;
+    Flash_Read(g_ui_base + (u32)ly * 320u * 2u + (u32)x * 2u, g_line, (u32)sp->clear_w * 2u);
+    for (int i = 0; i < sp->clear_w * 2; i += 2)
+    {
+      u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
+    }
+    /* 叠加本行所有字形墨点（1:1，字形顶 = 区域顶，字形高 = sp->h） */
+    int gx = cx - x;                     /* 当前字形在 clear_w 区域内的列偏移 */
+    for (const char *p = s; *p; )
+    {
+      u32 c = utf8_next(&p);
+      u32 code; u8 gw;
+      if (c == '.')            { code = sp->dot; gw = UI_DATE_DOT_W; }
+      else if (c >= '0' && c <= '9') { code = sp->base + (c - '0'); gw = sp->cell_w; }
+      else                     { code = c;      gw = sp->cell_w; }
+      const u8 *g = ui_get_glyph(code);
+      if (g)
+      {
+        int row_bytes = (g_cur_w + 7) / 8;
+        for (int xx = 0; xx < gw; xx++)
+        {
+          int gxi = (g_cur_w > 1) ? xx * g_cur_w / gw : 0;
+          int bit = (g[yy * row_bytes + (gxi >> 3)] >> (7 - (gxi & 7))) & 1;
+          if (bit)
+          {
+            int pos = gx + xx;
+            if (pos >= 0 && pos < sp->clear_w)
+            {
+              g_line[pos * 2] = HI8(color);
+              g_line[pos * 2 + 1] = LO8(color);
+            }
+          }
+        }
+      }
+      gx += gw;
+    }
+    /* 逻辑行 ly -> GRAM 列=ly，行=x..x+clear_w-1 */
+    SPI_LCD_Select();
+    SPI_LCD_WriteCmd(ST7789_CASET);
+    { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RASET);
+    { u8 d[4] = {HI8((u16)x), LO8((u16)x), HI8((u16)(x + sp->clear_w - 1)), LO8((u16)(x + sp->clear_w - 1))};
+      SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RAMWR);
+    SPI_LCD_WriteData(g_line, (u32)sp->clear_w * 2u);
+    SPI_LCD_Deselect();
   }
 }
 

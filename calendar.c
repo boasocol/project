@@ -108,37 +108,23 @@ static void draw_seconds(u8 s)
   UI_Show(270, YF(SEC_Y, 22), b, UI_SLOT_SEC, UI_RGB(64, 196, 255));
 }
 
-/* 日期 "YYYY.M.D"（月/日不补前导零）：先清整卡，再【逐位】调用 UI_Show（UI_SLOT_DIGIT
-   每数字一格12px / UI_SLOT_DOT 点号4px），月 <10/>=10 由位数决定布局位置。
-   2026-08 架构重构：数字统一格宽 + 先全清再逐位，长宽区域一致、无变宽平移残留；
-   日期一天一变，逐位多次调用的开销可忽略。 */
-static void draw_date_string(u16 yy, u8 mo, u8 da, int cx, int y)
+/* 日期 "YYYY.M.D"（月/日不补前导零）：白字数字(0xE000+d，统一12px格) + 4px 点号(0xE202)，
+   2026-08 架构重构：整串一次 UI_Show(UI_SLOT_DATE：格12/清141/居中) ——
+   UI_Show 内部"背景+整串字形"合成后直接覆盖整张日期卡 [12..152]x[126..152]，
+   整卡被新内容覆盖（含旧内容位置），无变宽平移残留、无需单独清整卡。 */
+static void draw_date_string(u16 yy, u8 mo, u8 da)
 {
-  /* 先清整张日期卡 [12..152]x[126..152]（还原背景） */
-  UI_DrawGlyphRect(12, YF(126, 26), 141, 26, 0xFFFFFFFFu, 0);
-
-  /* 逐位布局：年4格 + 点 + 月(1|2格) + 点 + 日(1|2格)，总宽按位数 */
-  int mn = (mo >= 10) ? 2 : 1;
-  int dn = (da >= 10) ? 2 : 1;
-  int w = 4 * UI_DATE_DIGIT_W + UI_DATE_DOT_W + mn * UI_DATE_DIGIT_W
-        + UI_DATE_DOT_W + dn * UI_DATE_DIGIT_W;
-  int x = cx - w / 2;
-
-  char b[2] = { 0, 0 };
-  b[0] = (char)('0' + (yy / 1000) % 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
-  b[0] = (char)('0' + (yy / 100) % 10);  UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
-  b[0] = (char)('0' + (yy / 10) % 10);   UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
-  b[0] = (char)('0' + yy % 10);          UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
-
-  UI_Show(x, YF(y, 22), ".", UI_SLOT_DOT, UI_C_WHITE); x += UI_DATE_DOT_W;
-
-  if (mn == 2) { b[0] = (char)('0' + mo / 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W; }
-  b[0] = (char)('0' + mo % 10);                UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
-
-  UI_Show(x, YF(y, 22), ".", UI_SLOT_DOT, UI_C_WHITE); x += UI_DATE_DOT_W;
-
-  if (dn == 2) { b[0] = (char)('0' + da / 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W; }
-  b[0] = (char)('0' + da % 10);                UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+  char ds[12]; int n = 0;
+  ds[n++] = (char)('0' + (yy / 1000) % 10); ds[n++] = (char)('0' + (yy / 100) % 10);
+  ds[n++] = (char)('0' + (yy / 10) % 10);  ds[n++] = (char)('0' + yy % 10);
+  ds[n++] = '.';
+  if (mo >= 10) ds[n++] = (char)('0' + mo / 10);
+  ds[n++] = (char)('0' + mo % 10);
+  ds[n++] = '.';
+  if (da >= 10) ds[n++] = (char)('0' + da / 10);
+  ds[n++] = (char)('0' + da % 10);
+  ds[n] = 0;
+  UI_Show(12, YF(126, 26), ds, UI_SLOT_DATE, UI_C_WHITE);
 }
 
 /* ==================================================================
@@ -554,8 +540,8 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
   if (t->year != c_yy || t->month != c_mo || t->day != c_dd || wd != c_wd)
   {
     /* 日期串 "YYYY.M.D"（月/日不补前导零） */
-    /* 日期：先清整卡再逐位 UI_Show（draw_date_string 内部处理，2026-08 架构重构） */
-    draw_date_string((u16)t->year, t->month, t->day, 82, 130);
+    /* 日期：整串一次 UI_Show(UI_SLOT_DATE) 合成覆盖整卡（draw_date_string 内部处理） */
+    draw_date_string((u16)t->year, t->month, t->day);
 
     /* 星期（3 汉字，绿 #22C55E，UI_SLOT_WEEK 档位：18px 格、清54、居中）
        卡中心 x=191 -> 区域起点 = 191 - 54/2 = 164 */
