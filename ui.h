@@ -52,10 +52,12 @@ typedef struct {
 /* ==================== UI_Show 统一显示入口 ====================
  * 2026-08 架构重构：大部分显示更新收敛为一个函数
  *   UI_Show(x, y, s, slot, color) —— 只输入 起点坐标 + 内容 + 档位宏 + 颜色。
+ * 坐标约定：x、y 都是【设计坐标】（顶原点，y=文字顶部设计 y，0 在顶）。
+ *   UI_Show 内部按档位 h 逐行换算 GRAM 列 = 239 - 设计行（设备 GRAM 垂直镜像），
+ *   调用方无需再算 YF；x 无镜像，直接为 GRAM 行。该约定与背景/MSCOT/CANI 一致。
  * 档位宏（slot）查 g_slot 表得到该元素的 {字模段, 字高, 统一格宽, 清除宽, 对齐}：
  *   - 数字统一格宽（UI_SLOT_DIGIT/SEC/DATE/TH 为 12px），每个数字长宽区域一致；
- *   - 画前先清该元素固定区域（clear_w × h）→ 变宽/平移不再残留；
- *   - 日期一天一变：先清整卡再逐位 UI_Show（月 <10 / >=10 由调用方算位置）。
+ *   - 整块合成直接覆盖（clear_w × h），旧内容被新内容盖掉，无残留、背景只读一次。
  */
 #define UI_ALIGN_LEFT    0u
 #define UI_ALIGN_CENTER  1u
@@ -77,7 +79,7 @@ enum {
   UI_SLOT_COUNT
 };
 
-void UI_Show(int x, int y, const char *s, u8 slot, u16 color); /* 统一显示入口：查档位→清固定区→对齐→逐字形画 */
+void UI_Show(int x, int y, const char *s, u8 slot, u16 color); /* 统一显示入口：查档位→对齐→整块合成覆盖；x,y=设计坐标（y=文字顶部） */
 
 /* ==================== API ==================== */
 int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */

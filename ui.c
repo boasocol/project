@@ -641,8 +641,8 @@ void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base)
 /* ============ UI_Show 统一显示入口（2026-08 架构重构） ============ */
 /* ------------------------------------------------------------------
  * 档位表（元素 -> {数字字模段基址, 点号 code, 字高, 统一格宽, 画前清除宽, 对齐}）。
- * 每个显示元素固定一块区域：UI_Show 先清该区域（clear_w × h，用 0xFFFFFFFF
- * 找不到字形 → 仅还原背景），再算串宽对齐写入——变宽/平移不再残留。
+ * 每个显示元素固定一块 clear_w × h 区域：UI_Show 整块"背景+新字形"合成直接覆盖
+ * （clear_w 覆盖该元素最大内容，找不到字形 → 该行仅还原背景）。
  * 与 ui.h UI_SLOT_* 枚举一一对应；数字统一格宽（日期/秒 12px、温湿度 12px）。
  * ------------------------------------------------------------------ */
 typedef struct {
@@ -667,7 +667,8 @@ static const ui_slot_t g_slot[UI_SLOT_COUNT] = {
 
 /* ------------------------------------------------------------------
  * UI_Show：统一显示入口。只输入 起点坐标 + 内容 + 档位宏 + 颜色。
- * 参数: x,y=区域左上角逻辑坐标；s=UTF-8 串（数字/点号/汉字）；
+ * 参数: x,y=设计坐标（顶原点；x 无镜像=GRAM 行，y=文字顶部设计 y，UI_Show 内部换算）；
+ *       s=UTF-8 串（数字/点号/汉字）；
  *       slot=UI_SLOT_*（查 g_slot 得字模段/字高/格宽/清除宽/对齐）；color=墨色。
  * 流程: 1) 算串宽
  *       2) 按 align 对齐定内容起点（居中 = x + (clear_w - w)/2）
@@ -675,6 +676,9 @@ static const ui_slot_t g_slot[UI_SLOT_COUNT] = {
  *          逐行 读背景(clear_w) -> 把所有字形本行墨点叠进缓冲 -> 一次写回整行。
  *          整块 clear_w×h 全由"背景+新字形"覆盖，旧内容被直接盖掉，无需先清、无残留；
  *          背景仅读一次、屏仅写一次（原方案：清整块+每字形各读各写，多次读写）。
+ * 绘制方向: 从设计行 y（顶）往下逐行，GRAM 列 = 239 - 设计行（设备 GRAM 垂直镜像），
+ *           字模已预翻转（存储行 0=字符底部），该设计行对应字模行 = (h-1)-yy。
+ *           与背景(设计行 r -> 239-r)、MSCOT/CANI(239-(top+h)+1) 约定一致，像素级对齐。
  * 说明: 时钟大数字/秒/温湿度/日期 共用本函数；日期=整串一次合成覆盖整卡（calendar.c draw_date_string）。
  * ------------------------------------------------------------------ */
 void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
@@ -698,7 +702,8 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
   /* 3) 整块合成：逐行 读背景 -> 叠所有字形本行墨点 -> 写回（直接覆盖旧内容） */
   for (int yy = 0; yy < sp->h; yy++)
   {
-    int ly = y + yy;
+    int  ly  = 239 - (y + yy);   /* 设计行 (y+yy) -> GRAM 列（设备垂直镜像：GRAM 列 = 239 - 设计行） */
+    int  gyy = sp->h - 1 - yy;   /* 该设计行对应的字模存储行（字模已预翻转：存储行 0 = 字符底部） */
     Flash_Read(g_ui_base + (u32)ly * 320u * 2u + (u32)x * 2u, g_line, (u32)sp->clear_w * 2u);
     for (int i = 0; i < sp->clear_w * 2; i += 2)
     {
@@ -720,7 +725,7 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
         for (int xx = 0; xx < gw; xx++)
         {
           int gxi = (g_cur_w > 1) ? xx * g_cur_w / gw : 0;
-          int bit = (g[yy * row_bytes + (gxi >> 3)] >> (7 - (gxi & 7))) & 1;
+          int bit = (g[gyy * row_bytes + (gxi >> 3)] >> (7 - (gxi & 7))) & 1;
           if (bit)
           {
             int pos = gx + xx;
@@ -734,7 +739,7 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
       }
       gx += gw;
     }
-    /* 逻辑行 ly -> GRAM 列=ly，行=x..x+clear_w-1 */
+    /* GRAM 列=ly（=239-设计行），行=x..x+clear_w-1 */
     SPI_LCD_Select();
     SPI_LCD_WriteCmd(ST7789_CASET);
     { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }

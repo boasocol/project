@@ -5,7 +5,7 @@
  * @note    本模块不程序化绘制背景，而是在 Flash 中的 UI 背景图（ui_320x240.bin，
  *          由 gen_ui.py 生成）上用 Flash 字库（ui.c）按坐标叠加动态文字。
  *
- *          界面各区块逻辑坐标（x, y 起点，y 为设计坐标，见 YF 宏）——概念B 卡片仪表盘：
+ *          界面各区块逻辑坐标（x, y 起点，y 为设计坐标顶原点，UI_Show 内部换算 GRAM）——概念B 卡片仪表盘：
  *            - 时钟：主卡内 HH:MM 大数字 40x84 白，x=[64,110,170,216]，y=32；
  *              冒号 x=153；秒 16x22 青（x=270,y=89）
  *            - 日期三卡：日期串(中心 x=82)/星期(164)/农历(232)，y=130
@@ -27,14 +27,17 @@
 #include "BFTM0.h"   /* bftm0_ct（1ms 计数，调试测帧耗时） */
 
 /* ------------------------------------------------------------------
- * YF(y, h)：设计坐标 -> GRAM 行换算宏。
- * 设备对 GRAM 做垂直镜像，逻辑(设计)坐标 y（0 在顶）需换算为 GRAM 行：
- *   GRAM 行 = 239 - y - h   （x 不变）
- * 背景 bin 与字库字形均已做同样预补偿，二者一致文字才能落在正确位置。
+ * YF(y, h)：设计坐标 -> GRAM 列换算宏（仅低层原语 UI_DrawGlyphRect 用）。
+ * 设备对 GRAM 做垂直镜像：GRAM 列 = 239 - 设计行。一个高 h 的块（设计行
+ * y..y+h-1）的"起始 GRAM 列" = 239 - (y) - (h) + 1（对应 GRAM 列 239-y-h+1..239-y）。
+ * 2026-08 改为带 +1，与 MSCOT/CANI 的 239-(top+h)+1 一致——文字/人物/背景像素级对齐
+ * （原 239-y-h 少 1，文字比背景低 1px）。
+ * 注意: UI_Show 已内部按"逐行 239-设计行"换算，调用方直接传设计坐标（y=文字顶部），
+ *       勿再对 UI_Show 的 y 用 YF；此处只给 UI_DrawGlyphRect（冒号/蓝牙图标）这类原语用。
  * 参数: y=区块顶部的设计 y，h=区块高度。
- * 返回: 区块顶部对应的 GRAM 行。
+ * 返回: 区块起始 GRAM 列。
  * ------------------------------------------------------------------ */
-#define YF(y, h) (239 - (y) - (h))
+#define YF(y, h) (239 - (y) - (h) + 1)
 
 /* ------------------------------------------------------------------
  * CalcWeekday：由年月日算星期（蔡勒公式 Zeller）。
@@ -82,12 +85,13 @@ static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 #define CLK_X_M2  216
 #define SEC_Y     89
 
-/* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y）
-   2026-08 架构重构：统一走 UI_Show（UI_SLOT_CLOCK 档位：格宽40、清40、左对齐）。 */
+/* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y=32）
+   2026-08 架构重构：统一走 UI_Show（UI_SLOT_CLOCK 档位：格宽40、清40、左对齐）；
+   y 直接传设计顶部 CLK_Y，UI_Show 内部换算 GRAM。 */
 static void draw_clock_digit(int x, int d)
 {
   char b[2] = { (char)('0' + d), 0 };
-  UI_Show(x, YF(CLK_Y, 84), b, UI_SLOT_CLOCK, UI_C_DIGIT);
+  UI_Show(x, CLK_Y, b, UI_SLOT_CLOCK, UI_C_DIGIT);
 }
 
 /* ---- 冒号：14x84，画主卡 H2 与 M1 之间（x=153）；on=0 用空格字模清背景 ---- */
@@ -98,20 +102,21 @@ static void draw_colon(int x, int on)
 
 /* 秒：数字统一格宽 12px 青 #40C4FF，画主卡右下，2 位块中心 (286,100)。
    2026-08 架构重构：统一走 UI_Show（UI_SLOT_SEC 档位：格12、清31、居中），
-   内部先清固定区 x[270..300] 再写，秒数变化（09→10）不再残留。 */
+   内部整块合成覆盖 x[270..300]，秒数变化（09→10）不再残留。y=SEC_Y=89（设计顶部）。 */
 static void draw_seconds(u8 s)
 {
   char b[3];
   b[0] = (char)('0' + s / 10);
   b[1] = (char)('0' + s % 10);
   b[2] = 0;
-  UI_Show(270, YF(SEC_Y, 22), b, UI_SLOT_SEC, UI_RGB(64, 196, 255));
+  UI_Show(270, SEC_Y, b, UI_SLOT_SEC, UI_RGB(64, 196, 255));
 }
 
 /* 日期 "YYYY.M.D"（月/日不补前导零）：白字数字(0xE000+d，统一12px格) + 4px 点号(0xE202)，
    2026-08 架构重构：整串一次 UI_Show(UI_SLOT_DATE：格12/清141/居中) ——
    UI_Show 内部"背景+整串字形"合成后直接覆盖整张日期卡 [12..152]x[126..152]，
-   整卡被新内容覆盖（含旧内容位置），无变宽平移残留、无需单独清整卡。 */
+   整卡被新内容覆盖（含旧内容位置），无变宽平移残留、无需单独清整卡。
+   y 传 130（文字顶部，卡 y=126..152 内），UI_Show 内部换算 GRAM。 */
 static void draw_date_string(u16 yy, u8 mo, u8 da)
 {
   char ds[12]; int n = 0;
@@ -124,7 +129,7 @@ static void draw_date_string(u16 yy, u8 mo, u8 da)
   if (da >= 10) ds[n++] = (char)('0' + da / 10);
   ds[n++] = (char)('0' + da % 10);
   ds[n] = 0;
-  UI_Show(12, YF(126, 26), ds, UI_SLOT_DATE, UI_C_WHITE);
+  UI_Show(12, 130, ds, UI_SLOT_DATE, UI_C_WHITE);
 }
 
 /* ==================================================================
@@ -151,9 +156,9 @@ typedef struct
 static FlipState g_flip[6];                 /* 6 个槽各自的翻页状态 */
 static const int g_card_x[6] = {13, 59, 117, 163, 221, 267};   /* 各卡片左边界 x */
 
-/* 卡片上下半的 GRAM 行：整卡 GRAM 起始 = YF(14,84)=141。
-   上半 = 141 起始，下半 = 141+42 = 183 起始。 */
-#define FLIP_CARD_Y0     (YF(14, 84))     /* 整卡 GRAM 起始行（=141） */
+/* 卡片上下半的 GRAM 行：整卡 GRAM 起始 = YF(14,84)=142（2026-08 YF 改 +1 后）。
+   上半 = 142 起始，下半 = 142+42 = 184 起始。（翻页动画已停用，本块为死代码。） */
+#define FLIP_CARD_Y0     (YF(14, 84))     /* 整卡 GRAM 起始行（=142） */
 #define FLIP_HALF_H      42               /* 半幅高（整卡 84 / 2） */
 
 /* ------------------------------------------------------------------
@@ -549,7 +554,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
       static const char *WDSTR[7] = { "星期一","星期二","星期三","星期四","星期五","星期六","星期日" };
       const char *q = WDSTR[wd]; while (*q) wb[wn++] = *q++;
       wb[wn] = 0;
-      UI_Show(164, YF(130, 22), wb, UI_SLOT_WEEK, UI_RGB(34, 197, 94));
+      UI_Show(164, 130, wb, UI_SLOT_WEEK, UI_RGB(34, 197, 94));
     }
     /* 农历 X月XX（4 汉字，青 #40C4FF，UI_SLOT_LUNAR 档位：18px 格、清72、居中）
        卡中心 x=268 -> 区域起点 = 268 - 72/2 = 232：
@@ -576,12 +581,12 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
                                       q = N01[ld.lunarDay - 21]; }
         while (*q) lb[ln++] = *q++;
         lb[ln] = 0;
-        UI_Show(232, YF(130, 22), lb, UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
+        UI_Show(232, 130, lb, UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
       }
       else
       {
         /* 年份超出 2000-2099：显示"数据越界"占位，避免空白 */
-        UI_Show(232, YF(130, 22), "数据越界", UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
+        UI_Show(232, 130, "数据越界", UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
       }
     }
     c_yy = t->year; c_mo = t->month; c_dd = t->day; c_wd = (u8)wd;
@@ -602,7 +607,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     tb[n++] = (char)('0' + ti % 10);
     tb[n++] = '.';
     tb[n++] = (char)('0' + tf); tb[n] = 0;
-    UI_Show(128, YF(197, 30), tb, UI_SLOT_TH, UI_C_WHITE);
+    UI_Show(128, 197, tb, UI_SLOT_TH, UI_C_WHITE);
     c_temp = temp;
   }
   if (humi != c_humi)                    /* 湿度变化才重绘 */
@@ -614,7 +619,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     hb[n++] = (char)('0' + hi % 10);
     hb[n++] = '.';
     hb[n++] = (char)('0' + hf); hb[n] = 0;
-    UI_Show(232, YF(197, 30), hb, UI_SLOT_TH, UI_C_WHITE);
+    UI_Show(232, 197, hb, UI_SLOT_TH, UI_C_WHITE);
     c_humi = humi;
   }
 }
