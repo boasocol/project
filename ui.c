@@ -212,26 +212,22 @@ int UI_GlyphWidth(u32 code)
 /* ------------------------------------------------------------------
  * UI_UploadBackground：把 Flash 中的某屏背景整屏上传到屏幕。
  * 参数: screen=UI_SCREEN_*（0 主界面 / 1 倒计时 / 2 闹钟）；背景偏移 = g_ui_base + 屏号×153600。
- * 流程（整屏窗口一次设置 + RAMWR 连续流式写，2026-08-28 优化）：
- *   CASET=列0..239、RASET=行0..319（整屏一次）-> RAMWR 后 ST7789 地址指针自动递增，
- *   每写满一行(320px) 自动跳下一行行首；循环 240 次：
- *     从 Flash 读一行(640B，SPI1) -> 字节交换(小端转高字节先) -> 写屏(SPI0)。
- *   中途不重设窗口、不重拉片选（Select 一次包整段，Deselect 的 WaitDone 兜底）。
- * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2；
- *       逻辑列 y -> GRAM 列、逻辑行 x -> GRAM 行（lcd_map 软件转置）。
+ * 流程（每行窗口 + 一次片选，2026-08-28 修正）：
+ *   必须每行重设窗口（CASET=单列 y、RASET=行 0..319）：软件转置下 GRAM 列=逻辑 y、
+ *   行=逻辑 x，而 ST7789 RAMWR 连续写的地址是【列优先】递增（MADCTL=0 时先走满 CASET
+ *   列再推进 RASET 行）——整屏一次窗口 + 流式写会按"逻辑列"消费数据，与 Flash 行连续
+ *   存储（逻辑行 y 连续）顺序错位，背景显示乱掉。锁单列窗口则写满 320px 正好填满该列，
+ *   与递增方向无关，故正确。
+ *   Select 只拉一次包整段（省 240 次片选拉放 + Deselect 的 WaitDone 停顿）：
+ *     循环 240 次：读 Flash 一行(SPI1) -> 字节交换 -> CASET/RASET/RAMWR -> 写屏(SPI0)。
+ * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2。
  * ------------------------------------------------------------------ */
 void UI_UploadBackground(int screen)
 {
   if (screen < 0 || screen >= UI_SCREEN_COUNT) screen = UI_SCREEN_MAIN;
   u32 base = g_ui_base + (u32)screen * UI_SCREEN_BYTES;
 
-  SPI_LCD_Select();
-  /* 整屏窗口：列 0..239（逻辑 y）、行 0..319（逻辑 x） */
-  SPI_LCD_WriteCmd(ST7789_CASET);
-  { u8 d[4] = {0, 0, 0, 239}; SPI_LCD_WriteData(d, 4); }
-  SPI_LCD_WriteCmd(ST7789_RASET);
-  { u8 d[4] = {0, 0, HI8(319), LO8(319)}; SPI_LCD_WriteData(d, 4); }
-  SPI_LCD_WriteCmd(ST7789_RAMWR);
+  SPI_LCD_Select();   /* 一次 Select 包整段；中途 Flash_Read 走独立 SPI1，不影响 SPI0 片选 */
   for (int y = 0; y < 240; y++)
   {
     Flash_Read(base + (u32)y * 320u * 2u, g_line, 320u * 2u);
@@ -240,7 +236,12 @@ void UI_UploadBackground(int screen)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
     }
-    /* RAMWR 地址自动递增：写完 320px 自动到下一行行首，无需重设窗口 */
+    /* 窗口锁单列：列=逻辑 y（固定本行），行=逻辑 x 0..319 */
+    SPI_LCD_WriteCmd(ST7789_CASET);
+    { u8 d[4] = {0, (u8)y, 0, (u8)y}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RASET);
+    { u8 d[4] = {0, 0, HI8(319), LO8(319)}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RAMWR);
     SPI_LCD_WriteData(g_line, 320u * 2u);
   }
   SPI_LCD_Deselect();
