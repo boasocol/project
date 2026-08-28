@@ -212,14 +212,26 @@ int UI_GlyphWidth(u32 code)
 /* ------------------------------------------------------------------
  * UI_UploadBackground：把 Flash 中的某屏背景整屏上传到屏幕。
  * 参数: screen=UI_SCREEN_*（0 主界面 / 1 倒计时 / 2 闹钟）；背景偏移 = g_ui_base + 屏号×153600。
- * 逐行处理：Flash 读一行(640B) -> 字节交换(小端转高字节先) ->
- * CASET=逻辑行y、RASET=0..319 -> RAMWR 写一行。
- * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2。
+ * 流程（整屏窗口一次设置 + RAMWR 连续流式写，2026-08-28 优化）：
+ *   CASET=列0..239、RASET=行0..319（整屏一次）-> RAMWR 后 ST7789 地址指针自动递增，
+ *   每写满一行(320px) 自动跳下一行行首；循环 240 次：
+ *     从 Flash 读一行(640B，SPI1) -> 字节交换(小端转高字节先) -> 写屏(SPI0)。
+ *   中途不重设窗口、不重拉片选（Select 一次包整段，Deselect 的 WaitDone 兜底）。
+ * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2；
+ *       逻辑列 y -> GRAM 列、逻辑行 x -> GRAM 行（lcd_map 软件转置）。
  * ------------------------------------------------------------------ */
 void UI_UploadBackground(int screen)
 {
   if (screen < 0 || screen >= UI_SCREEN_COUNT) screen = UI_SCREEN_MAIN;
   u32 base = g_ui_base + (u32)screen * UI_SCREEN_BYTES;
+
+  SPI_LCD_Select();
+  /* 整屏窗口：列 0..239（逻辑 y）、行 0..319（逻辑 x） */
+  SPI_LCD_WriteCmd(ST7789_CASET);
+  { u8 d[4] = {0, 0, 0, 239}; SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RASET);
+  { u8 d[4] = {0, 0, HI8(319), LO8(319)}; SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RAMWR);
   for (int y = 0; y < 240; y++)
   {
     Flash_Read(base + (u32)y * 320u * 2u, g_line, 320u * 2u);
@@ -228,16 +240,10 @@ void UI_UploadBackground(int screen)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
     }
-    /* 逻辑行 y 对应 GRAM 列=y、行=0..319（lcd_map: col=y,row=x） */
-    SPI_LCD_Select();
-    SPI_LCD_WriteCmd(ST7789_CASET);
-    { u8 d[4] = {0, (u8)y, 0, (u8)y}; SPI_LCD_WriteData(d, 4); }
-    SPI_LCD_WriteCmd(ST7789_RASET);
-    { u8 d[4] = {0, 0, HI8(319), LO8(319)}; SPI_LCD_WriteData(d, 4); }
-    SPI_LCD_WriteCmd(ST7789_RAMWR);
+    /* RAMWR 地址自动递增：写完 320px 自动到下一行行首，无需重设窗口 */
     SPI_LCD_WriteData(g_line, 320u * 2u);
-    SPI_LCD_Deselect();
   }
+  SPI_LCD_Deselect();
 }
 
 /* ------------------------------------------------------------------
