@@ -299,26 +299,30 @@ static void vcmd_tell_time(const VoiceFrame *f)
   Voice_Send(VOICE_TX_TELL_TIME, t.hour, t.minute, 0, 0);
 }
 
-/* 设置闹钟 0x8A：d0=闹钟号(1-3) d1=时 d2=分；设备仅单闹钟槽，存配置（响铃状态机未实现） */
+/* 设置闹钟 0x8A：d0=闹钟号(1-3) d1=时 d2=分；设备仅单闹钟槽。
+   2026-08-28 改为【只要收到 0x8A 就切闹钟屏】：
+     - 时间合法（d1<=23 d2<=59）→ 更新闹钟时间并切屏
+     - 时间未识别/非法（d1/d2=0xFF 或越界）→ 保留当前闹钟时间，仅切闹钟屏查看当前配置
+   这样"设置闹钟1"即使模块没接上具体时间也能看到闹钟屏。 */
 static void vcmd_set_alarm(const VoiceFrame *f)
 {
   u8 n = f->d0, hh = f->d1, mm = f->d2;
-  if (n < 1 || n > 3)
-  {
-    printf("[VOICE] 闹钟号非法 %u\r\n", (unsigned)n);
-    Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
-    return;
-  }
+  printf("[VOICE] 设闹钟原始 d0=%u d1=%u d2=%u\r\n", (unsigned)n, (unsigned)hh, (unsigned)mm);
   if (hh == 24) hh = 0;
-  if (hh > 23 || mm > 59)
+  if (n >= 1 && n <= 3 && hh <= 23 && mm <= 59)
   {
-    printf("[VOICE] 闹钟时间非法 %u:%u\r\n", (unsigned)hh, (unsigned)mm);
-    Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
-    return;
+    Screen_AlarmSet(hh, mm);   /* 写闹钟配置 + 切到闹钟屏显示新时间 */
+    printf("[VOICE] 设置闹钟%u -> %02u:%02u\r\n", (unsigned)n, (unsigned)hh, (unsigned)mm);
+    Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
   }
-  Screen_AlarmSet(hh, mm);   /* 写闹钟配置 + 切到闹钟屏显示新时间（2026-08-27） */
-  printf("[VOICE] 设置闹钟%u -> %02u:%02u\r\n", (unsigned)n, (unsigned)hh, (unsigned)mm);
-  Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
+  else
+  {
+    /* 时间没识别/非法：保留当前配置，仍切到闹钟屏查看（方便二次确认） */
+    printf("[VOICE] 设闹钟参数不完整/非法（n=%u hh=%u mm=%u）-> 仅切闹钟屏查看当前配置\r\n",
+           (unsigned)n, (unsigned)hh, (unsigned)mm);
+    UI_SetScreen(UI_SCREEN_ALARM);
+    Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败"（时间未识别属正常，需再说一次时间） */
+  }
   (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK); /* 播放"修改成功"响应动画 */
 }
 
