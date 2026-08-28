@@ -11,7 +11,8 @@
 #include "ht32l5xxxx_pwrcu.h"  /* PWRCU_DeepSleep1 / PWRCU_SLEEP_ENTRY_WFI */
 #include "key.h"
 #include "spi_lcd.h"     /* 背光控制脚 PB4 */
-#include "st7789.h"      /* DISPON / DISPOFF / SLPIN / SLPOUT 命令 */
+#include "Display.h"     /* Display_Off/Display_On（关屏/唤醒开屏，同步显示点亮状态） */
+#include "st7789.h"      /* SLPIN / SLPOUT 命令 */
 #include "calendar.h"    /* Calendar_SetStaticNext */
 #include "hd9803.h"      /* Hd9803_SetPower */
 #include "flash_read.h"  /* Flash_PowerDown / Flash_ReleasePowerDown */
@@ -177,10 +178,9 @@ void Key_ClearWakeup(void)
 static void key_screen_off(void)
 {
   /* 关显示：DISPOFF 后等 ~10 帧（120ms），背光灭，再进睡眠。
-     Delay 依赖 BFTM0，必须在下方 BFTM_IntConfig(DISABLE) 之前完成。 */
-  SPI_LCD_Select();
-  SPI_LCD_WriteCmd(ST7789_DISPOFF);   /* 关显示 */
-  SPI_LCD_Deselect();
+     Delay 依赖 BFTM0，必须在下方 BFTM_IntConfig(DISABLE) 之前完成。
+     Display_Off() 同时清显示点亮状态（整屏刷新保护据此判断）。 */
+  Display_Off();
   Delay(120);
 
   GPIO_SetOutBits(SPI_LCD_BL_GPIO, SPI_LCD_BL_PIN);   /* 背光灭（高电平关） */
@@ -287,9 +287,8 @@ static void key_screen_on(void)
   SPI_LCD_Deselect();
   Delay(120);
 
-  SPI_LCD_Select();
-  SPI_LCD_WriteCmd(ST7789_DISPON);    /* 开显示 */
-  SPI_LCD_Deselect();
+  /* 开显示：Display_On() 同时置显示点亮状态（整屏刷新保护据此判断）。 */
+  Display_On();
 
   Calendar_SetStaticNext();           /* 下一整秒强制全量重绘（不翻动画） */
 

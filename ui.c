@@ -215,9 +215,12 @@ int UI_GlyphWidth(u32 code)
  * 逐行处理：Flash 读一行(640B) -> 字节交换(小端转高字节先) ->
  * CASET=逻辑行y、RASET=0..319 -> RAMWR 写一行。
  * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2。
- * ------------------------------------------------------------------ */
+ * 整屏刷新保护（2026-08-28 规则）：整屏上传无法瞬时完成（逐行刷屏可见"一排排刷过去"），
+ * 故显示已点亮时【先关显示 -> 上传完 -> 再开显示】。上电/关屏态（显示未点亮）不开关，
+ * 保持"上电最后 Display_on() 统一点亮"的设计。Display_RefreshBegin/End 见 Display.h。 */
 void UI_UploadBackground(int screen)
 {
+  int began = Display_RefreshBegin();   /* 已点亮则先关显示（避免看到逐行刷屏） */
   if (screen < 0 || screen >= UI_SCREEN_COUNT) screen = UI_SCREEN_MAIN;
   u32 base = g_ui_base + (u32)screen * UI_SCREEN_BYTES;
   for (int y = 0; y < 240; y++)
@@ -238,6 +241,7 @@ void UI_UploadBackground(int screen)
     SPI_LCD_WriteData(g_line, 320u * 2u);
     SPI_LCD_Deselect();
   }
+  Display_RefreshEnd(began);   /* 若已关显示则重新点亮 */
 }
 
 /* ------------------------------------------------------------------

@@ -123,22 +123,65 @@ void Display_Init(void)
   Delay(50);*/
 }
 
+/* 显示点亮状态：Display_On/Display_on 置 1、Display_Off/Display_off 置 0。
+   整屏刷新（UI_UploadBackground）据此判断是否需"先关后刷再开"：
+   仅已点亮时开关（避免运行中切屏看到一排排刷过去），上电/关屏态保持原样
+   （上电流程依赖 Display_Init 后不亮、最后 main 的 Display_on() 统一点亮）。 */
+static u8 g_disp_on = 0;
+
+/* 底层开/关显示（只发命令 + 更新状态，无 1s 延时）。
+   注意：ST7789 DISPOFF 后 RAM 内容保留，DISPON 即恢复画面。
+   key.c 关屏/唤醒开屏、整屏刷新保护都走这里，避免各自直发命令绕过状态标志。 */
+void Display_On(void)
+{
+  g_disp_on = 1;
+  SPI_LCD_Select();
+  SPI_LCD_WriteCmd(ST7789_DISPON);
+  SPI_LCD_Deselect();
+}
+
+void Display_Off(void)
+{
+  g_disp_on = 0;
+  SPI_LCD_Select();
+  SPI_LCD_WriteCmd(ST7789_DISPOFF);
+  SPI_LCD_Deselect();
+}
+
 void Display_on(void)
 {
-	SPI_LCD_Select();
-	SPI_LCD_WriteCmd(ST7789_DISPON);
-	SPI_LCD_Deselect();
-	Delay(1000);
+  Display_On();
+  Delay(1000);
 }
 
 /* 关显示：ST7789 DISPOFF（0x28）。用于关屏低功耗前，配合背光灭、蓝牙断电。
    注意：ST7789 在 DISPOFF 后 RAM 内容保留，重新 DISPON 即恢复画面。 */
 void Display_off(void)
 {
-	SPI_LCD_Select();
-	SPI_LCD_WriteCmd(ST7789_DISPOFF);
-	SPI_LCD_Deselect();
-	Delay(1000);
+  Display_Off();
+  Delay(1000);
+}
+
+/* 显示是否已点亮（Display_On/on 后为 1，Display_Off/off 后为 0）。UI_UploadBackground 用。 */
+int Display_IsOn(void)
+{
+  return (int)g_disp_on;
+}
+
+/* 整屏刷新保护：显示已点亮时"先关显示"，避免背景逐行上传被看到（一排排刷过去）。
+   返回 1=本次已关显示（配对调用 Display_RefreshEnd），0=本就没亮（无需开关）。 */
+int Display_RefreshBegin(void)
+{
+  if (!g_disp_on) return 0;
+  Display_Off();
+  return 1;
+}
+
+/* 整屏刷新保护：若 Begin 关了显示则重新点亮。 */
+void Display_RefreshEnd(int began)
+{
+  if (!began) return;
+  Display_On();
 }
 
 
