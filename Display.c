@@ -12,6 +12,7 @@
 #include "key.h"           /* Key_IsScreenOff */
 #include "hd9803.h"        /* Hd9803_GetState（蓝牙图标，#if HD9803_ENABLE） */
 #include "ui.h"            /* UI_CharAnim_Tick：形象状态动画帧推进 */
+#include "screen.h"        /* Screen_Draw：多屏增量绘制（2026-08-27） */
 
 /* 软件层方向（与写入硬件的 MADCTL 解耦）：
  * 本模块 MADCTL 硬件旋转实测不生效，故用“软件坐标转置”得到 90° 横屏：
@@ -261,22 +262,30 @@ void Display_Update(TimeStruct *t)
 
   UI_CharAnim_Tick();   /* 形象状态动画：0.5s/帧，内部 g_cani.ok 门控（空容器即返回） */
 
-  /* 每轮无条件增量刷新：Calendar_Refresh 内部用 c_* 缓存去重，只有时间/温湿度
-     真正变化才启动翻页或重绘，开销极小（几十条比较指令）。
-     不能用 g_time_update_flag 门控——它是单 bit，主循环若在采样分支(YX8320B 读取
-     /HD9803 轮询)被阻塞超过整秒，flag 多次置位会被合并成一次消费，整秒被吞，
-     表现为"5 秒等两秒才翻页成 7 秒"。每轮对比最新 t 则永不丢秒。 */
-  Calendar_Refresh(t, YX8320B_GetTemp(), YX8320B_GetHumi());
-
-  /* 后半秒时隙：静态区块刷新（日期/温湿度/蓝牙），需动画空闲且未关屏 */
-  if (g_half_phase == 1 && !Calendar_AnimBusy() && !Calendar_StaticDeferred() && !Key_IsScreenOff())
+  /* 多屏分发（2026-08-27）：主屏走 calendar 增量刷新；倒计时/闹钟屏走 screen.c */
+  if (UI_GetScreen() == UI_SCREEN_MAIN)
   {
-    Calendar_RefreshStatic(t, YX8320B_GetTemp(), YX8320B_GetHumi());
+    /* 每轮无条件增量刷新：Calendar_Refresh 内部用 c_* 缓存去重，只有时间/温湿度
+       真正变化才启动翻页或重绘，开销极小（几十条比较指令）。
+       不能用 g_time_update_flag 门控——它是单 bit，主循环若在采样分支(YX8320B 读取
+       /HD9803 轮询)被阻塞超过整秒，flag 多次置位会被合并成一次消费，整秒被吞，
+       表现为"5 秒等两秒才翻页成 7 秒"。每轮对比最新 t 则永不丢秒。 */
+    Calendar_Refresh(t, YX8320B_GetTemp(), YX8320B_GetHumi());
+
+    /* 后半秒时隙：静态区块刷新（日期/温湿度/蓝牙），需动画空闲且未关屏 */
+    if (g_half_phase == 1 && !Calendar_AnimBusy() && !Calendar_StaticDeferred() && !Key_IsScreenOff())
+    {
+      Calendar_RefreshStatic(t, YX8320B_GetTemp(), YX8320B_GetHumi());
 #if HD9803_ENABLE
-    Calendar_SetBtState(Hd9803_GetState() == HD9803_ST_CONNECTED);
+      Calendar_SetBtState(Hd9803_GetState() == HD9803_ST_CONNECTED);
 #else
-    Calendar_SetBtState(0);
+      Calendar_SetBtState(0);
 #endif
+    }
+  }
+  else
+  {
+    Screen_Draw(t);   /* 倒计时/闹钟屏增量绘制 */
   }
 }
 

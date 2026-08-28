@@ -12,6 +12,7 @@
 #include "BFTM0.h"    /* bftm0_ct：1ms 计数器，诊断打印用 */
 #include "time_module.h"  /* TimeModule_SetTime/GetTime：语音设时钟/日期/报时 */
 #include "ui.h"           /* UI_SetAlarm：语音设闹钟 */
+#include "screen.h"       /* Screen_AlarmSet：设闹钟切闹钟屏（2026-08-27 多屏） */
 #include <stdio.h>
 
 #if VOICE_ENABLE && !HD9803_ENABLE
@@ -315,9 +316,8 @@ static void vcmd_set_alarm(const VoiceFrame *f)
     Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
     return;
   }
-  UI_SetAlarm(1, hh, mm);
-  printf("[VOICE] 设置闹钟%u -> %02u:%02u（响铃状态机未实现，已存配置）\r\n",
-         (unsigned)n, (unsigned)hh, (unsigned)mm);
+  Screen_AlarmSet(hh, mm);   /* 写闹钟配置 + 切到闹钟屏显示新时间（2026-08-27） */
+  printf("[VOICE] 设置闹钟%u -> %02u:%02u\r\n", (unsigned)n, (unsigned)hh, (unsigned)mm);
   Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
   (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK); /* 播放"修改成功"响应动画 */
 }
@@ -333,8 +333,9 @@ static void vcmd_state(const VoiceFrame *f)
          f->d0 == VOICE_ST_D0_TIMEOUT ? "15s无命令" : "未知");
   if (f->d0 == VOICE_ST_D0_TIMEOUT)
   {
-    printf("[VOICE] 15s无命令 -> 动画切回待机\r\n");
+    printf("[VOICE] 15s无命令 -> 动画回待机 + 回主屏（倒计时运行中除外）\r\n");
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);
+    Screen_ReturnMain();   /* 2026-08-27：15s 无命令回主屏 */
   }
 }
 
@@ -349,6 +350,16 @@ static void voice_handle_frame(const VoiceFrame *f)
 {
   printf("[VOICE] FAF1 cmd=0x%02X d0=%02X d1=%02X d2=%02X d3=%02X\r\n",
          f->cmd, f->d0, f->d1, f->d2, f->d3);
+
+  /* 倒计时/闹钟/切屏命令（2026-08-27 多屏）：screen.c 处理，成功回 OK + ok 动画 */
+  if (Screen_HandleVoice(f))
+  {
+    printf("[VOICE] screen cmd 0x%02X handled\r\n", f->cmd);
+    Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
+    (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK);
+    return;
+  }
+
   switch (f->cmd)
   {
     case VOICE_CMD_WAKE:      vcmd_wake(f);      break;
@@ -359,7 +370,7 @@ static void voice_handle_frame(const VoiceFrame *f)
     case VOICE_CMD_STATE:     vcmd_state(f);     break;
     case VOICE_CMD_VOLUME:    vcmd_volume(f);    break;
     default:
-      printf("[VOICE] 未实现 cmd=0x%02X（倒计时/番茄/闹钟开关/显示开关等，待下一批）\r\n", f->cmd);
+      printf("[VOICE] 未实现 cmd=0x%02X（天数倒计时/显示开关等，待下一批）\r\n", f->cmd);
       Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败，请重试" */
       break;
   }

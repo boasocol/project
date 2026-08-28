@@ -25,10 +25,19 @@
 #include <stdio.h>
 
 /* ============ 全局状态 ============ */
-static u32 g_ui_base   = 0;     /* UI 背景图在 Flash 中的偏移（来自分区头） */
+static u32 g_ui_base   = 0;     /* UI 背景图区在 Flash 中的起始偏移（来自分区头） */
+static u32 g_ui_bg     = 0;     /* 当前屏背景基址（= g_ui_base + 屏号×UI_SCREEN_BYTES，2026-08-27 多屏） */
+static u8  g_ui_screen = UI_SCREEN_MAIN;  /* 当前屏号（UI_SCREEN_*，2026-08-27 多屏） */
 static u32 g_font_base = 0;     /* 字库区在 Flash 中的偏移 */
 static u32 g_config_base = 0;   /* 配置区在 Flash 中的偏移（CONF 容器） */
 static u8  g_line[320 * 2];     /* 一行像素临时缓冲（640B，小端数据 + 字节交换后） */
+
+/* 每屏人物区左上角（72x72 人物区，CANI/MSCOT 定位；2026-08-27 多屏，gen_ui.py 各屏 paste_girl 位置一致） */
+static const u8 g_zone[UI_SCREEN_COUNT][2] = {
+  [UI_SCREEN_MAIN]  = {UI_ZONE_X, UI_ZONE_Y},  /* 主屏：底部状态条人物窗 (16,156) */
+  [UI_SCREEN_CNT]   = {224, 156},              /* 倒计时：底部区右下（gen_ui draw_screen1 paste_girl 224,156） */
+  [UI_SCREEN_ALARM] = {212, 12},               /* 闹钟：右上人物窗（gen_ui draw_screen2 paste_girl 212,12） */
+};
 
 /* 字库索引缓存：build_flash.py 生成 {u32 code, u32 off, u16 w, u16 h} 表，按 code 升序 */
 typedef struct { u32 code; u32 off; u16 w; u16 h; } font_idx_t;
@@ -75,6 +84,8 @@ int UI_LoadHeader(void)
   g_ui_base     = (u32)buf[8]  | ((u32)buf[9]  << 8) | ((u32)buf[10] << 16) | ((u32)buf[11] << 24);
   g_font_base   = (u32)buf[16] | ((u32)buf[17] << 8) | ((u32)buf[18] << 16) | ((u32)buf[19] << 24);
   g_config_base = (u32)buf[24] | ((u32)buf[25] << 8) | ((u32)buf[26] << 16) | ((u32)buf[27] << 24);
+  g_ui_bg       = g_ui_base;   /* 默认屏0 主界面背景基址 */
+  g_ui_screen   = UI_SCREEN_MAIN;
   return 0;
 }
 
@@ -198,16 +209,19 @@ int UI_GlyphWidth(u32 code)
 
 /* ============ 整屏上传 UI 背景（小端 RGB565 -> 高字节先 + 软件转置横屏） ============ */
 /* ------------------------------------------------------------------
- * UI_UploadBackground：把 Flash 中的 UI 背景图整屏上传到屏幕（上电一次）。
+ * UI_UploadBackground：把 Flash 中的某屏背景整屏上传到屏幕。
+ * 参数: screen=UI_SCREEN_*（0 主界面 / 1 倒计时 / 2 闹钟）；背景偏移 = g_ui_base + 屏号×153600。
  * 逐行处理：Flash 读一行(640B) -> 字节交换(小端转高字节先) ->
  * CASET=逻辑行y、RASET=0..319 -> RAMWR 写一行。
  * 说明: 逻辑行 y 在 Flash 中连续存储，偏移 = (y*320 + x)*2。
  * ------------------------------------------------------------------ */
-void UI_UploadBackground(void)
+void UI_UploadBackground(int screen)
 {
+  if (screen < 0 || screen >= UI_SCREEN_COUNT) screen = UI_SCREEN_MAIN;
+  u32 base = g_ui_base + (u32)screen * UI_SCREEN_BYTES;
   for (int y = 0; y < 240; y++)
   {
-    Flash_Read(g_ui_base + (u32)y * 320u * 2u, g_line, 320u * 2u);
+    Flash_Read(base + (u32)y * 320u * 2u, g_line, 320u * 2u);
     /* 小端 -> 高字节先（ST7789 收数顺序） */
     for (int i = 0; i < 320 * 2; i += 2)
     {
@@ -224,6 +238,24 @@ void UI_UploadBackground(void)
     SPI_LCD_Deselect();
   }
 }
+
+/* ------------------------------------------------------------------
+ * UI_SetScreen：切屏。设当前屏号（决定背景基址 g_ui_bg 与人物区 g_zone）+ 上传该屏背景。
+ * 参数: screen=UI_SCREEN_*。返回: 0=成功，-1=非法屏。
+ * 说明: 调用方应在切屏后重画该屏动态元素（见 screen.c Screen_Draw）；
+ *       UI_CharAnim 每帧按 g_zone[当前屏] 重画，本函数再调 UI_CharAnim_Redraw 消除旧位置残留。
+ * ------------------------------------------------------------------ */
+int UI_SetScreen(int screen)
+{
+  if (screen < 0 || screen >= UI_SCREEN_COUNT) return -1;
+  g_ui_screen = (u8)screen;
+  g_ui_bg     = g_ui_base + (u32)screen * UI_SCREEN_BYTES;
+  UI_UploadBackground(screen);
+  UI_CharAnim_Redraw();   /* 人物区随屏变，重画当前帧到新位置 */
+  return 0;
+}
+
+int UI_GetScreen(void) { return (int)g_ui_screen; }
 
 /* ============ 在逻辑矩形内画单字（先还原该区域背景，再叠加墨点） ============ */
 /* ------------------------------------------------------------------
@@ -246,8 +278,8 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
   for (int yy = 0; yy < rh; yy++)
   {
     int ly = ry + yy;
-    /* 读该逻辑行的背景段（连续） */
-    Flash_Read(g_ui_base + (u32)ly * 320u * 2u + (u32)rx * 2u, g_line, (u32)rw * 2u);
+    /* 读该逻辑行的背景段（连续）——当前屏背景基址 g_ui_bg（2026-08-27 多屏） */
+    Flash_Read(g_ui_bg + (u32)ly * 320u * 2u + (u32)rx * 2u, g_line, (u32)rw * 2u);
     for (int i = 0; i < rw * 2; i += 2)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
@@ -323,13 +355,14 @@ void UI_DrawMascot(int rx, int ry)
   }
 }
 
-/* 读 MSCT 尺寸，按 72x72 区公式自动定位绘制（与 CANI 动画同区对齐，帧尺寸变化不硬编码）。
+/* 读 MSCT 尺寸，按当前屏 72x72 人物区公式自动定位绘制（2026-08-27 多屏：人物区随屏）。
    修复：UI_DrawMascot(6,15) 硬编码只对 69x69 正确，改尺寸后会与动画错位残留。 */
 void UI_DrawMascotCentered(void)
 {
   u8 hdr[24];
   u32 w, h;
   int rx, ry;
+  int zx = g_zone[g_ui_screen][0], zy = g_zone[g_ui_screen][1];
   Flash_Read(UI_MASCOT_OFF, hdr, 24);
   if (!(hdr[0] == 'M' && hdr[1] == 'S' && hdr[2] == 'C' && hdr[3] == 'T'))
     return;
@@ -337,8 +370,8 @@ void UI_DrawMascotCentered(void)
   h = (u32)hdr[12] | ((u32)hdr[13] << 8) | ((u32)hdr[14] << 16) | ((u32)hdr[15] << 24);
   if (w == 0 || h == 0 || w > 80 || h > 80)
     return;
-  rx = UI_ZONE_X + (UI_ZONE_W - (int)w) / 2;
-  ry = 239 - (UI_ZONE_Y + (int)h) + 1;
+  rx = zx + (UI_ZONE_W - (int)w) / 2;
+  ry = 239 - (zy + (int)h) + 1;
   UI_DrawMascot(rx, ry);
 }
 
@@ -435,11 +468,12 @@ int UI_CharAnim_PlayOnce(int state)
   return 0;
 }
 
-/* 帧 w/h 在 72x72 人物区居中 -> GRAM 左上 (rx,ry)（与静态 mascot 同一区/同公式） */
+/* 帧 w/h 在 当前屏 72x72 人物区居中 -> GRAM 左上 (rx,ry)（2026-08-27 多屏：人物区随屏） */
 static void cani_pos(int w, int h, int *rx, int *ry)
 {
-  *rx = UI_ZONE_X + (UI_ZONE_W - w) / 2;
-  *ry = 239 - (UI_ZONE_Y + h) + 1;
+  int zx = g_zone[g_ui_screen][0], zy = g_zone[g_ui_screen][1];
+  *rx = zx + (UI_ZONE_W - w) / 2;
+  *ry = 239 - (zy + h) + 1;
 }
 
 /* 画第 frame 帧（全帧流式：Flash 行读 -> GRAM 行写，透明像素填面板色 UI_C_PANEL） */
@@ -493,6 +527,14 @@ static void cani_draw_state_frame(int state, u16 fidx)
   g = (u16)(g_cani.state_start[state] + fidx);
   if (g >= g_cani.nframes) return;
   cani_draw_frame(g);
+}
+
+/* 按当前屏人物区重画当前帧（切屏后旧位置残留由新位置覆盖；未启用/无容器则返回 -1）。 */
+int UI_CharAnim_Redraw(void)
+{
+  if (!g_cani.ok || !g_cani_enable) return -1;
+  cani_draw_state_frame(g_cani.cur_state, g_cani.cur_frame);
+  return 0;
 }
 
 /* 目标状态的变化帧槽位：16 帧布局 = [0-8)循环 + [8-12)变化到唤醒 + [12-16)变化到闹铃。
@@ -663,6 +705,7 @@ static const ui_slot_t g_slot[UI_SLOT_COUNT] = {
   [UI_SLOT_WEEK]  = {0,      0,      22, 18,              54, UI_ALIGN_CENTER},
   [UI_SLOT_LUNAR] = {0,      0,      22, 18,              72, UI_ALIGN_CENTER},
   [UI_SLOT_CLOCK] = {0x30,   0,      84, 40,              40, UI_ALIGN_LEFT},
+  [UI_SLOT_CHAR]  = {0,      0,      22, 18,              18, UI_ALIGN_LEFT},
 };
 
 /* ------------------------------------------------------------------
@@ -704,7 +747,7 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
   {
     int  ly  = 239 - (y + yy);   /* 设计行 (y+yy) -> GRAM 列（设备垂直镜像：GRAM 列 = 239 - 设计行） */
     int  gyy = sp->h - 1 - yy;   /* 该设计行对应的字模存储行（字模已预翻转：存储行 0 = 字符底部） */
-    Flash_Read(g_ui_base + (u32)ly * 320u * 2u + (u32)x * 2u, g_line, (u32)sp->clear_w * 2u);
+    Flash_Read(g_ui_bg + (u32)ly * 320u * 2u + (u32)x * 2u, g_line, (u32)sp->clear_w * 2u);
     for (int i = 0; i < sp->clear_w * 2; i += 2)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
@@ -749,6 +792,67 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
     SPI_LCD_WriteCmd(ST7789_RAMWR);
     SPI_LCD_WriteData(g_line, (u32)sp->clear_w * 2u);
     SPI_LCD_Deselect();
+  }
+}
+
+/* 在 GRAM 列=ly、行=x0..x1 写一段纯色（chip 填底后的墨点行用） */
+static void ui_run(int ly, int x0, int x1, u16 color)
+{
+  if (x0 > x1) return;
+  SPI_LCD_Select();
+  SPI_LCD_WriteCmd(ST7789_CASET);
+  { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RASET);
+  { u8 d[4] = {HI8((u16)x0), LO8((u16)x0), HI8((u16)x1), LO8((u16)x1)};
+    SPI_LCD_WriteData(d, 4); }
+  SPI_LCD_WriteCmd(ST7789_RAMWR);
+  for (int i = x0; i <= x1; i++)
+  {
+    SPI_LCD_WriteDataByte(HI8(color));
+    SPI_LCD_WriteDataByte(LO8(color));
+  }
+  SPI_LCD_Deselect();
+}
+
+/* ------------------------------------------------------------------
+ * UI_DrawTextInk：仅叠墨点（不清背景、不读 Flash 背景）。
+ * 用途：倒计时/闹钟屏的 chip 文字——先 Display_FillRect 填 chip 底色，再本函数把字形墨点
+ *       画上去（字形空白行不写，chip 内的底色不被覆盖）。1:1 无缩放，'.' 用 slot 点号。
+ * 参数: x,y=文字左上角设计坐标；s=UTF-8；slot=UI_SLOT_*（用 cell_w 推进，h 约束行数）；
+ *       color=墨色。2026-08-27 多屏 chip。
+ * ------------------------------------------------------------------ */
+void UI_DrawTextInk(int x, int y, const char *s, u8 slot, u16 color)
+{
+  if (slot >= UI_SLOT_COUNT) return;
+  const ui_slot_t *sp = &g_slot[slot];
+  int gx = x;
+  for (const char *p = s; *p; )
+  {
+    u32 c = utf8_next(&p);
+    u32 code; u8 gw;
+    if (c == '.')            { code = sp->dot; gw = UI_DATE_DOT_W; }
+    else if (c >= '0' && c <= '9') { code = sp->base + (c - '0'); gw = sp->cell_w; }
+    else                     { code = c;      gw = sp->cell_w; }
+    const u8 *g = ui_get_glyph(code);
+    if (g)
+    {
+      int row_bytes = (g_cur_w + 7) / 8;
+      int gh = (sp->h < g_cur_h) ? sp->h : (int)g_cur_h;
+      for (int yy = 0; yy < gh; yy++)
+      {
+        int ly = 239 - (y + yy);           /* 设计行 -> GRAM 列（垂直镜像） */
+        int run0 = -1;
+        for (int xx = 0; xx < gw && xx < (int)g_cur_w; xx++)
+        {
+          int gxi = (g_cur_w > 1) ? xx * g_cur_w / gw : 0;
+          int bit = (g[yy * row_bytes + (gxi >> 3)] >> (7 - (gxi & 7))) & 1;
+          if (bit) { if (run0 < 0) run0 = gx + xx; }
+          else if (run0 >= 0) { ui_run(ly, run0, gx + xx - 1, color); run0 = -1; }
+        }
+        if (run0 >= 0) ui_run(ly, run0, gx + gw - 1, color);
+      }
+    }
+    gx += gw;
   }
 }
 

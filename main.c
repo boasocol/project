@@ -16,6 +16,8 @@
 #include "hd9803.h"   /* 无条件包含；HD9803_ENABLE 宏在 hd9803.h 内部定义 */
 #include "voice.h"   /* 语音模块（USART0，HD9803_ENABLE=0 时占用） */
 #include "key.h"      /* PB12 按键：关屏/低功耗/唤醒 */
+#include "screen.h"   /* 多屏状态机：倒计时/闹钟（2026-08-27） */
+#include "ui.h"       /* UI_GetScreen：冒号闪烁仅主屏 */
 
 int main(void)
 {
@@ -36,6 +38,7 @@ int main(void)
   Display_Init();
 
   Calendar_Init();     /* 画静态标签(TEMP/HUMI) + 从 Flash 整屏上传背景 */
+  Screen_Init();       /* 多屏状态机初始化：回主屏（2026-08-27） */
   Display_on();
   /* 温湿度传感器（软件 I2C：PB0=SCL, PB1=SDA，读数单位 0.1） */
   YX8320B_Init();
@@ -102,6 +105,7 @@ int main(void)
     {
       g_time_update_flag = 0;
       YX8320B_Task();             /* 每秒读一次温湿度（失败保留上次值） */
+      Screen_OnSecond(&t);        /* 多屏：倒计时推进 + 闹钟到点判定（2026-08-27） */
 #if HD9803_ENABLE
       Hd9803_OnSecondTick(&t);    /* 蓝牙状态机推进 + 每日 8/18 点回连校准 */
 #endif
@@ -109,8 +113,8 @@ int main(void)
 
     Display_Update(&t);       /* 翻页动画 + 时钟/静态区块刷新（集中界面渲染） */
 
-    /* 冒号闪烁：消费 RTC 0.5s 中断置位的 g_colon_blink_flag，每半秒翻转冒号 */
-    if (g_colon_blink_flag)
+    /* 冒号闪烁：消费 RTC 0.5s 中断置位的 g_colon_blink_flag，每半秒翻转冒号（仅主屏） */
+    if (g_colon_blink_flag && UI_GetScreen() == UI_SCREEN_MAIN)
     {
       g_colon_blink_flag = 0;
       Calendar_ColonBlink();

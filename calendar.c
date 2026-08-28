@@ -437,7 +437,7 @@ void Calendar_Init(void)
     Display_Fill_Color(0xFF94);   /* 分区头损坏：回退淡黄底，至少屏有显示 */
     return;
   }
-  UI_UploadBackground();          /* 整屏上传 Flash 中的新 UI 背景图 */
+  UI_SetScreen(UI_SCREEN_MAIN);   /* 切主屏：上传 Flash 屏0 背景 + 设背景基址/人物区（2026-08-27 多屏） */
   UI_CacheFont();                 /* 缓存字库索引表 */
   UI_LoadConfig();                /* 读 CONF 配置容器（亮度/时区/闹钟/蓝牙） */
   /* 翻页动画停用（语音开发期，省开销）：数字走静态直画、冒号恢复闪烁。

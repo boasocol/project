@@ -37,6 +37,20 @@
 #define UI_ZONE_H        72
 #define UI_CANI_MAX_STATE 8u
 
+/* ==================== 多屏（2026-08-27 倒计时/闹钟） ====================
+ * 背景区 UI_OFF.. 每屏 150KB（320x240 RGB565），屏偏移 = UI_OFF + 屏号×153600。
+ * 屏0=主界面 / 屏1=倒计时 / 屏2=闹钟 / 屏3 预留（与 build_flash.py UI_SCREEN_FILES 一致）。 */
+#define UI_SCREEN_MAIN    0u
+#define UI_SCREEN_CNT     1u
+#define UI_SCREEN_ALARM   2u
+#define UI_SCREEN_COUNT   3u
+#define UI_SCREEN_BYTES   153600u   /* 每屏背景字节（320x240x2） */
+
+void UI_UploadBackground(int screen);  /* 上传指定屏背景到 ST7789 GRAM（小端->高字节先，软件转置横屏） */
+int  UI_SetScreen(int screen);         /* 切屏：设当前屏（背景基址/人物区随屏）+ 上传背景；0=ok,-1=非法屏 */
+int  UI_GetScreen(void);               /* 当前屏号（UI_SCREEN_*） */
+int  UI_CharAnim_Redraw(void);         /* 按当前屏人物区重画当前帧（切屏后消除旧位置残留） */
+
 /* 用户配置容器（CONF @config_offset，对应 build_flash.py build_config 的 16B payload） */
 typedef struct {
   u8 brightness;   /* 亮度 %（默认 80） */
@@ -76,17 +90,18 @@ enum {
   UI_SLOT_WEEK,     /* 星期汉字：18x22 清54 居中 */
   UI_SLOT_LUNAR,    /* 农历汉字：18x22 清72 居中 */
   UI_SLOT_CLOCK,    /* 时钟大数字：40x84 清40 左 */
+  UI_SLOT_CHAR,     /* 单汉字（闹钟星期chip）：18x22 清18 左（2026-08-27） */
   UI_SLOT_COUNT
 };
 
 void UI_Show(int x, int y, const char *s, u8 slot, u16 color); /* 统一显示入口：查档位→对齐→整块合成覆盖；x,y=设计坐标（y=文字顶部） */
+void UI_DrawTextInk(int x, int y, const char *s, u8 slot, u16 color); /* 仅叠墨点（不清背景/不读 Flash）：chip 文字配合 Display_FillRect 填底用（2026-08-27） */
 
 /* ==================== API ==================== */
 int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */
 int  UI_LoadConfig(void);   /* 读 CONF 配置容器并校验 CRC。0=成功；-1=magic；-2=CRC */
 const ui_cfg_t *UI_GetConfig(void); /* 访问已加载配置（未加载/失败为全 0） */
 void UI_SetAlarm(u8 on, u8 hour, u8 min); /* 写运行时闹钟配置（仅内存，不写 Flash；响铃状态机接入后使用） */
-void UI_UploadBackground(void); /* 整屏上传 UI 背景图到 ST7789 GRAM（小端->高字节先，软件转置横屏） */
 int  UI_CacheFont(void);    /* 缓存字库索引表（按需二分查找） */
 void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* 在逻辑矩形内画单字（还原背景+叠墨点） */
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
