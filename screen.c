@@ -69,6 +69,16 @@ static u8  c_alm_h1 = 0xFF, c_alm_h2 = 0xFF, c_alm_m1 = 0xFF, c_alm_m2 = 0xFF;
 static u8  c_alm_on = 0xFF, c_alm_loop = 0xFF, c_alm_ring = 0xFF;
 
 /* ==================== 小工具 ==================== */
+
+/* 回主屏统一入口：切屏上传干净主屏背景后，必须重置 calendar 增量缓存，
+   否则 Calendar_Refresh 判定"没变化"不重绘 -> 数字/日期/小数点消失。
+   2026-08-28 修复（回主屏所有路径都走这里）。 */
+static void goto_main(void)
+{
+  UI_SetScreen(UI_SCREEN_MAIN);
+  Calendar_ForceRedraw();
+}
+
 static void draw_digit_at(int x, int y, u8 d, u16 color)
 {
   char b[2] = { (char)('0' + d), 0 };
@@ -223,7 +233,7 @@ void Screen_AlarmRingStop(void)
     g_alm.ringing = 0;
     Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);   /* 停播铃声 */
   }
-  UI_SetScreen(UI_SCREEN_MAIN);
+  goto_main();
 }
 
 /* 闹钟每秒判定（Screen_OnSecond 调） */
@@ -302,6 +312,7 @@ static void draw_alarm(TimeStruct *t)
 }
 
 /* ==================== 屏静态元素（进入屏时画一次） ==================== */
+
 static void draw_screen_static(int scr)
 {
   if (scr == UI_SCREEN_CNT)
@@ -332,7 +343,7 @@ void Screen_Init(void)
   g_alm.snooze   = 0;
   (void)cfg;
   c_drawn_screen = 0xFF;
-  UI_SetScreen(UI_SCREEN_MAIN);
+  goto_main();
 }
 
 /* 每帧：按当前屏增量绘制 */
@@ -352,7 +363,7 @@ void Screen_Draw(TimeStruct *t)
   if (g_cnt == CNT_DONE && g_cnt_ret_ms && (u32)(bftm0_ct - g_cnt_ret_ms) < 0x80000000u)
   {
     g_cnt = CNT_STOP; g_cnt_ret_ms = 0;
-    UI_SetScreen(UI_SCREEN_MAIN);
+    goto_main();
   }
 }
 
@@ -367,7 +378,7 @@ void Screen_OnSecond(TimeStruct *t)
 void Screen_ReturnMain(void)
 {
   if (Screen_CntActive()) return;
-  UI_SetScreen(UI_SCREEN_MAIN);
+  goto_main();
 }
 
 /* ==================== 语音命令分发（voice.c 调；返回 1=已处理） ==================== */
@@ -403,7 +414,7 @@ int Screen_HandleVoice(const VoiceFrame *f)
       nm += 10;
       if (nm >= 60) { nm -= 60; nh = (nh + 1) % 24; }
       UI_SetAlarm(1, nh, nm);
-      UI_SetScreen(UI_SCREEN_MAIN);
+      goto_main();
       return 1;
     }
     case VOICE_CMD_ALARM_OFF:  /* 0xB1 别响了 */

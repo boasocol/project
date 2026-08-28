@@ -641,3 +641,20 @@ void Calendar_SetStaticNext(void)
 {
   g_static_next = 1;
 }
+
+/* ------------------------------------------------------------------
+ * Calendar_ForceRedraw：切屏回主屏后调用——主屏背景已由 UI_SetScreen 重新上传
+ * （背景上无任何动态文字），必须重置全部增量缓存（c_* 设非法值）+ 置 g_static_next，
+ * 让下一次 Calendar_Refresh 把时钟/日期/温湿度/蓝牙 全量重绘。
+ * 若不重置：Calendar_Refresh 用 c_* 与当前值比较判定"没变化"，切屏期间缓存仍等于
+ * 当前时间 -> 回主屏后数字/日期/小数点不重绘（消失）、温湿度因数值波动只部分重绘。
+ * 2026-08-28 修复。
+ * ------------------------------------------------------------------ */
+void Calendar_ForceRedraw(void)
+{
+  c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;
+  c_hh = c_mm = c_ss = 0xFF;
+  c_temp = c_humi = 0x7FFF;
+  s_bt_connected = 0xFF;
+  g_static_next   = 1;
+}

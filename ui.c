@@ -41,8 +41,9 @@ static const u8 g_zone[UI_SCREEN_COUNT][2] = {
 
 /* 字库索引缓存：build_flash.py 生成 {u32 code, u32 off, u16 w, u16 h} 表，按 code 升序 */
 typedef struct { u32 code; u32 off; u16 w; u16 h; } font_idx_t;
-/* build_flash.py 实际仅生成 50 个字模，缓存 64 个已留足余量（原 200 浪费 1800B RAM） */
-#define MAX_FONT_IDX 64
+/* 当前字库 76 个字模（8/28 新增 20 汉字后超出原 64 上限，导致主屏温湿度数字 2-9、
+   小数点 0xE200/0xE202、蓝牙图标 0xE300/0xE301 查不到——2026-08-28 修复，提至 96）。 */
+#define MAX_FONT_IDX 96
 static font_idx_t g_idx[MAX_FONT_IDX];   /* 字库索引缓存（二分查找用） */
 static u32 g_font_count = 0;             /* 字库字符个数 */
 static u8  g_glyph[640];                 /* 单个字形位图缓冲（最大 44x84 1bpp = 504B） */
@@ -514,8 +515,8 @@ static void cani_draw_frame(u16 frame)
     SPI_LCD_Deselect();
   }
   /* [调试] 打印本帧实际绘制耗时（Flash 读 + SPI 写屏）。1ms 分辨率；调完可删。 */
-  printf("[CANI] frame %u 绘制 %lu ms（@%lu）\r\n",
-         (unsigned)frame, (unsigned long)((u32)bftm0_ct - t0), (unsigned long)t0);
+ // printf("[CANI] frame %u 绘制 %lu ms（@%lu）\r\n",
+   //      (unsigned)frame, (unsigned long)((u32)bftm0_ct - t0), (unsigned long)t0);
 }
 
 /* 画某状态的某帧（帧号越界则跳过不画） */
