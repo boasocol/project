@@ -638,6 +638,77 @@ void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base)
   }
 }
 
+/* ============ UI_Show 统一显示入口（2026-08 架构重构） ============ */
+/* ------------------------------------------------------------------
+ * 档位表（元素 -> {数字字模段基址, 点号 code, 字高, 统一格宽, 画前清除宽, 对齐}）。
+ * 每个显示元素固定一块区域：UI_Show 先清该区域（clear_w × h，用 0xFFFFFFFF
+ * 找不到字形 → 仅还原背景），再算串宽对齐写入——变宽/平移不再残留。
+ * 与 ui.h UI_SLOT_* 枚举一一对应；数字统一格宽（日期/秒 12px、温湿度 12px）。
+ * ------------------------------------------------------------------ */
+typedef struct {
+  u32 base;    /* 数字字模段基址：0xE000 日期/秒、0xE100 温湿度、0x30 时钟大数字；汉字段用 0（直接码点查） */
+  u16 dot;     /* 点号 code：0xE202 日期点、0xE200 温湿度点；无点号用 0 */
+  u8  h;       /* 字形高 */
+  u8  cell_w;  /* 统一格宽（数字/汉字推进步长） */
+  u8  clear_w; /* 画前清除区域宽（固定，覆盖该元素最大内容） */
+  u8  align;   /* UI_ALIGN_LEFT=0 / UI_ALIGN_CENTER=1 */
+} ui_slot_t;
+
+static const ui_slot_t g_slot[UI_SLOT_COUNT] = {
+  [UI_SLOT_SEC]   = {0xE000, 0xE202, 22, UI_DATE_DIGIT_W, 31, UI_ALIGN_CENTER},
+  [UI_SLOT_DATE]  = {0xE000, 0xE202, 22, UI_DATE_DIGIT_W, 141, UI_ALIGN_CENTER},
+  [UI_SLOT_DIGIT] = {0xE000, 0xE202, 22, UI_DATE_DIGIT_W, UI_DATE_DIGIT_W, UI_ALIGN_LEFT},
+  [UI_SLOT_DOT]   = {0,      0xE202, 22, UI_DATE_DOT_W,   UI_DATE_DOT_W,   UI_ALIGN_LEFT},
+  [UI_SLOT_TH]    = {0xE100, 0xE200, 30, UI_TH_DIGIT_W,  69, UI_ALIGN_CENTER},
+  [UI_SLOT_WEEK]  = {0,      0,      22, 18,              54, UI_ALIGN_CENTER},
+  [UI_SLOT_LUNAR] = {0,      0,      22, 18,              72, UI_ALIGN_CENTER},
+  [UI_SLOT_CLOCK] = {0x30,   0,      84, 40,              40, UI_ALIGN_LEFT},
+};
+
+/* ------------------------------------------------------------------
+ * UI_Show：统一显示入口。只输入 起点坐标 + 内容 + 档位宏 + 颜色。
+ * 参数: x,y=区域左上角逻辑坐标；s=UTF-8 串（数字/点号/汉字）；
+ *       slot=UI_SLOT_*（查 g_slot 得字模段/字高/格宽/清除宽/对齐）；color=墨色。
+ * 流程: 1) 清固定区域（clear_w × h，还原背景，防残留）
+ *       2) 算串宽（数字按格宽、点号按固定宽、汉字按格宽）
+ *       3) 按 align 对齐定起点（居中 = x + (clear_w - w)/2）
+ *       4) 逐字形 UI_DrawGlyphRect 写入（数字 base+d、点号 dot、汉字直接码点）
+ * 说明: 时钟大数字/秒/温湿度/日期逐位共用本函数；日期"先清整卡再逐位"见 calendar.c。
+ * ------------------------------------------------------------------ */
+void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
+{
+  if (slot >= UI_SLOT_COUNT) return;
+  const ui_slot_t *sp = &g_slot[slot];
+
+  /* 1) 清固定区域（还原背景，防变宽平移残留） */
+  UI_DrawGlyphRect(x, y, sp->clear_w, sp->h, 0xFFFFFFFFu, 0);
+
+  /* 2) 算串宽 */
+  int w = 0;
+  for (const char *p = s; *p; )
+  {
+    u32 c = utf8_next(&p);
+    w += (c == '.') ? UI_DATE_DOT_W : sp->cell_w;
+  }
+
+  /* 3) 对齐定起点 */
+  int cx = x;
+  if (sp->align == UI_ALIGN_CENTER)
+    cx = x + (sp->clear_w - w) / 2;
+
+  /* 4) 逐字形画 */
+  for (const char *p = s; *p; )
+  {
+    u32 c = utf8_next(&p);
+    u32 code; u8 gw;
+    if (c == '.')            { code = sp->dot; gw = UI_DATE_DOT_W; }
+    else if (c >= '0' && c <= '9') { code = sp->base + (c - '0'); gw = sp->cell_w; }
+    else                     { code = c;      gw = sp->cell_w; }
+    UI_DrawGlyphRect(cx, y, gw, sp->h, code, color);
+    cx += gw;
+  }
+}
+
 /* ===========================================================================================================
  * 翻页动画（ANI2 区 @ Flash 0x110000）
  *

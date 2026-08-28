@@ -37,16 +37,6 @@
 #define YF(y, h) (239 - (y) - (h))
 
 /* ------------------------------------------------------------------
- * 数字尺寸变体 code 段（与 build_flash.py 的 build_font 一一对应）：
- *   0x30+d       时钟大数字 40x84
- *   0xE000+d     日期小号数字 16x22（DG_SMALL）
- *   0xE100+d     温湿度数字 8x22（DG_TH）
- * 绘制时按 code 段取字模，1:1 不缩放，避免误查别的大号字模被缩放。
- * ------------------------------------------------------------------ */
-#define DG_SMALL 0xE000
-#define DG_TH    0xE100
-
-/* ------------------------------------------------------------------
  * CalcWeekday：由年月日算星期（蔡勒公式 Zeller）。
  * 参数: y=年（如 2026），m=月（1..12），d=日。
  * 返回: 0=周一 .. 6=周日。
@@ -59,20 +49,9 @@ int CalcWeekday(int y, int m, int d)
   return (h + 5) % 7;                                /* 蔡勒默认 0=周日，换算成 0=周一 */
 }
 
-/* ------------------------------------------------------------------
- * WD_CN[7][3]：中文星期表（用 Unicode 码点，避免源文件中文字面量被 gcc 误解析）。
- * 下标 = CalcWeekday 返回值（0=周一）。每项 3 个汉字（“星期一”…“星期日”）。
- * 星=0x661F 期=0x671F 一=0x4E00 二=0x4E8C 三=0x4E09 四=0x56DB 五=0x4E94 六=0x516D 日=0x65E5
- * ------------------------------------------------------------------ */
-static const u32 WD_CN[7][3] = {
-  {0x661F, 0x671F, 0x4E00},
-  {0x661F, 0x671F, 0x4E8C},
-  {0x661F, 0x671F, 0x4E09},
-  {0x661F, 0x671F, 0x56DB},
-  {0x661F, 0x671F, 0x4E94},
-  {0x661F, 0x671F, 0x516D},
-  {0x661F, 0x671F, 0x65E5},
-};
+/* 中文星期表（下标 = CalcWeekday 返回值 0=周一）。2026-08 架构重构：改字符串
+   字面量直接喂 UI_Show（UI_SLOT_WEEK），不再用 Unicode 码点数组。 */
+static const char *WD_CN[7] = { "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日" };
 
 /* ------------------------------------------------------------------
  * 增量刷新缓存：记录“上次已绘制到屏幕”的各值。
@@ -103,10 +82,12 @@ static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 #define CLK_X_M2  216
 #define SEC_Y     89
 
-/* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y） */
+/* 画单个时钟大数字（白色 UI_C_DIGIT=#F8FAFC，40x84，顶部 y=CLK_Y）
+   2026-08 架构重构：统一走 UI_Show（UI_SLOT_CLOCK 档位：格宽40、清40、左对齐）。 */
 static void draw_clock_digit(int x, int d)
 {
-  UI_DrawGlyphRect(x, YF(CLK_Y, 84), 40, 84, (u32)('0' + d), UI_C_DIGIT);
+  char b[2] = { (char)('0' + d), 0 };
+  UI_Show(x, YF(CLK_Y, 84), b, UI_SLOT_CLOCK, UI_C_DIGIT);
 }
 
 /* ---- 冒号：14x84，画主卡 H2 与 M1 之间（x=153）；on=0 用空格字模清背景 ---- */
@@ -115,48 +96,49 @@ static void draw_colon(int x, int on)
   UI_DrawGlyphRect(x, YF(CLK_Y, 84), 14, 84, on ? (u32)':' : (u32)' ', UI_C_COLON);
 }
 
-/* 秒：16x22 小数字（DG_SMALL，变宽字形）青色 #40C4FF，画主卡右下，2 位块中心 (286,100)。
-   画前先清固定显示区（两位最大宽 ~24px + 边距 → x[270..300]，高 22）——变宽字形居中，
-   秒数变化（如 09→10）总宽/起点平移会残留旧墨点（2026-08 用户反馈，同日期卡处理）。 */
+/* 秒：数字统一格宽 12px 青 #40C4FF，画主卡右下，2 位块中心 (286,100)。
+   2026-08 架构重构：统一走 UI_Show（UI_SLOT_SEC 档位：格12、清31、居中），
+   内部先清固定区 x[270..300] 再写，秒数变化（09→10）不再残留。 */
 static void draw_seconds(u8 s)
 {
-  UI_DrawGlyphRect(270, YF(SEC_Y, 22), 31, 22, 0xFFFFFFFFu, 0);   /* 清秒区 x[270..300] 背景 */
-
   char b[3];
   b[0] = (char)('0' + s / 10);
   b[1] = (char)('0' + s % 10);
   b[2] = 0;
-  int w = UI_GlyphWidth(0xE000u + (u32)(b[0] - '0')) + UI_GlyphWidth(0xE000u + (u32)(b[1] - '0'));
-  UI_DrawVarDigits(b, 286 - w / 2, YF(SEC_Y, 22), UI_RGB(64, 196, 255), DG_SMALL);
+  UI_Show(270, YF(SEC_Y, 22), b, UI_SLOT_SEC, UI_RGB(64, 196, 255));
 }
 
-/* 日期串 "YYYY.M.D"（月/日不补前导零）：白字数字(0xE000+d，可变宽按实际笔画宽) + 4x22 点号(0xE202)，
-   按实际串宽以 cx 为中心画（概念B 日期卡，中心 x=82，文字顶部 y=130）。数字自然紧凑（'1' 窄 '8' 宽）。
-   画前先清整张日期卡（y=126..152 高 26）——串可变宽/中心对齐，日期变化时旧位置墨点会残留
-   （2026-08 用户反馈），故先还原整卡背景再画新串。 */
-static void draw_date_string(const char *s, int cx, int y)
+/* 日期 "YYYY.M.D"（月/日不补前导零）：先清整卡，再【逐位】调用 UI_Show（UI_SLOT_DIGIT
+   每数字一格12px / UI_SLOT_DOT 点号4px），月 <10/>=10 由位数决定布局位置。
+   2026-08 架构重构：数字统一格宽 + 先全清再逐位，长宽区域一致、无变宽平移残留；
+   日期一天一变，逐位多次调用的开销可忽略。 */
+static void draw_date_string(u16 yy, u8 mo, u8 da, int cx, int y)
 {
-  UI_DrawGlyphRect(12, YF(126, 26), 141, 26, 0xFFFFFFFFu, 0);   /* 清日期卡 [12..152]x[126..152] 背景 */
+  /* 先清整张日期卡 [12..152]x[126..152]（还原背景） */
+  UI_DrawGlyphRect(12, YF(126, 26), 141, 26, 0xFFFFFFFFu, 0);
 
-  int w = 0;
-  for (const char *p = s; *p; p++)
-    w += (*p == '.') ? 4 : UI_GlyphWidth(0xE000u + (u32)(*p - '0'));
+  /* 逐位布局：年4格 + 点 + 月(1|2格) + 点 + 日(1|2格)，总宽按位数 */
+  int mn = (mo >= 10) ? 2 : 1;
+  int dn = (da >= 10) ? 2 : 1;
+  int w = 4 * UI_DATE_DIGIT_W + UI_DATE_DOT_W + mn * UI_DATE_DIGIT_W
+        + UI_DATE_DOT_W + dn * UI_DATE_DIGIT_W;
   int x = cx - w / 2;
-  for (const char *p = s; *p; p++)
-  {
-    if (*p == '.')
-    {
-      UI_DrawGlyphRect(x, YF(y, 22), 4, 22, 0xE202u, UI_C_WHITE);
-      x += 4;
-    }
-    else
-    {
-      u32 code = 0xE000u + (u32)(*p - '0');
-      int gw = UI_GlyphWidth(code);
-      UI_DrawGlyphRect(x, YF(y, 22), gw, 22, code, UI_C_WHITE);
-      x += gw;
-    }
-  }
+
+  char b[2] = { 0, 0 };
+  b[0] = (char)('0' + (yy / 1000) % 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+  b[0] = (char)('0' + (yy / 100) % 10);  UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+  b[0] = (char)('0' + (yy / 10) % 10);   UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+  b[0] = (char)('0' + yy % 10);          UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+
+  UI_Show(x, YF(y, 22), ".", UI_SLOT_DOT, UI_C_WHITE); x += UI_DATE_DOT_W;
+
+  if (mn == 2) { b[0] = (char)('0' + mo / 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W; }
+  b[0] = (char)('0' + mo % 10);                UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
+
+  UI_Show(x, YF(y, 22), ".", UI_SLOT_DOT, UI_C_WHITE); x += UI_DATE_DOT_W;
+
+  if (dn == 2) { b[0] = (char)('0' + da / 10); UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W; }
+  b[0] = (char)('0' + da % 10);                UI_Show(x, YF(y, 22), b, UI_SLOT_DIGIT, UI_C_WHITE); x += UI_DATE_DIGIT_W;
 }
 
 /* ==================================================================
@@ -572,47 +554,48 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
   if (t->year != c_yy || t->month != c_mo || t->day != c_dd || wd != c_wd)
   {
     /* 日期串 "YYYY.M.D"（月/日不补前导零） */
-    char ds[12]; int n = 0;
-    int y = t->year;
-    ds[n++] = (char)('0' + y / 1000); ds[n++] = (char)('0' + (y / 100) % 10);
-    ds[n++] = (char)('0' + (y / 10) % 10); ds[n++] = (char)('0' + y % 10);
-    ds[n++] = '.';
-    if (t->month >= 10) ds[n++] = (char)('0' + t->month / 10);
-    ds[n++] = (char)('0' + t->month % 10);
-    ds[n++] = '.';
-    if (t->day >= 10) ds[n++] = (char)('0' + t->day / 10);
-    ds[n++] = (char)('0' + t->day % 10);
-    ds[n] = 0;
-    draw_date_string(ds, 82, 130);
+    /* 日期：先清整卡再逐位 UI_Show（draw_date_string 内部处理，2026-08 架构重构） */
+    draw_date_string((u16)t->year, t->month, t->day, 82, 130);
 
-    /* 星期（3 汉字，绿 #22C55E） */
-    UI_DrawGlyphs(WD_CN[wd], 3, 164, YF(130, 22), 18, 22, UI_RGB(34, 197, 94));
-    /* 农历 X月XX（4 汉字，青 #40C4FF）：
+    /* 星期（3 汉字，绿 #22C55E，UI_SLOT_WEEK 档位：18px 格、清54、居中）
+       卡中心 x=191 -> 区域起点 = 191 - 54/2 = 164 */
+    { char wb[10]; int wn = 0;
+      static const char *WDSTR[7] = { "星期一","星期二","星期三","星期四","星期五","星期六","星期日" };
+      const char *q = WDSTR[wd]; while (*q) wb[wn++] = *q++;
+      wb[wn] = 0;
+      UI_Show(164, YF(130, 22), wb, UI_SLOT_WEEK, UI_RGB(34, 197, 94));
+    }
+    /* 农历 X月XX（4 汉字，青 #40C4FF，UI_SLOT_LUNAR 档位：18px 格、清72、居中）
+       卡中心 x=268 -> 区域起点 = 268 - 72/2 = 232：
        月份用中文月名表 + "月"，日期按初一/初十/廿X/三十 规则转两字。 */
     { LunarDate ld;
       if (TimeModule_GetLunar(t->year, t->month, t->day, &ld) == 0)
       {
-        static const u32 LUNAR_MONTH[12] = { /* 正 二 三 四 五 六 七 八 九 十 冬 腊 */
-          0x6B63,0x4E8C,0x4E09,0x56DB,0x4E94,0x516D,0x4E03,0x516B,0x4E5D,0x5341,0x51AC,0x814A};
-        static const u32 N01[10] = { /* 一 二 三 四 五 六 七 八 九 十 */
-          0x4E00,0x4E8C,0x4E09,0x56DB,0x4E94,0x516D,0x4E03,0x516B,0x4E5D,0x5341};
-        u32 b[4]; u8 lm = ld.lunarMonth, ld2 = ld.lunarDay;
-        b[0] = LUNAR_MONTH[lm - 1];
-        b[1] = 0x6708;                          /* 月 */
+        static const char *LUNAR_MONTH[12] = { /* 正 二 三 四 五 六 七 八 九 十 冬 腊 */
+          "正","二","三","四","五","六","七","八","九","十","冬","腊"};
+        static const char *N01[10] = { /* 一 二 三 四 五 六 七 八 九 十 */
+          "一","二","三","四","五","六","七","八","九","十"};
+        char lb[12]; int ln = 0;
+        const char *q = LUNAR_MONTH[ld.lunarMonth - 1]; while (*q) lb[ln++] = *q++;
+        q = "月"; while (*q) lb[ln++] = *q++;
         /* 日：初一..初十 -> 初+一..十；十一..十九 -> 十+一..九；
            二十 -> 二十；廿一..廿九 -> 廿+一..九；三十 -> 三十 */
-        if (ld2 == 20)      { b[2] = 0x4E8C; b[3] = 0x5341; }        /* 二十 */
-        else if (ld2 == 30) { b[2] = 0x4E09; b[3] = 0x5341; }        /* 三十 */
-        else if (ld2 < 10)  { b[2] = 0x521D; b[3] = N01[ld2 - 1]; }  /* 初X */
-        else if (ld2 < 20)  { b[2] = 0x5341; b[3] = N01[ld2 - 11]; } /* 十X */
-        else                { b[2] = 0x5EFF; b[3] = N01[ld2 - 21]; } /* 廿X */
-        UI_DrawGlyphs(b, 4, 232, YF(130, 22), 18, 22, UI_RGB(64, 196, 255));
+        if (ld.lunarDay == 20)      { q = "二十"; }
+        else if (ld.lunarDay == 30) { q = "三十"; }
+        else if (ld.lunarDay < 10)  { q = "初"; while (*q) lb[ln++] = *q++;
+                                      q = N01[ld.lunarDay - 1]; }
+        else if (ld.lunarDay < 20)  { q = "十"; while (*q) lb[ln++] = *q++;
+                                      q = N01[ld.lunarDay - 11]; }
+        else                        { q = "廿"; while (*q) lb[ln++] = *q++;
+                                      q = N01[ld.lunarDay - 21]; }
+        while (*q) lb[ln++] = *q++;
+        lb[ln] = 0;
+        UI_Show(232, YF(130, 22), lb, UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
       }
       else
       {
         /* 年份超出 2000-2099：显示"数据越界"占位，避免空白 */
-        static const u32 err[4] = {0x6570, 0x636E, 0x8D8A, 0x754C};   /* 数据越界 */
-        UI_DrawGlyphs(err, 4, 232, YF(130, 22), 18, 22, UI_RGB(64, 196, 255));
+        UI_Show(232, YF(130, 22), "数据越界", UI_SLOT_LUNAR, UI_RGB(64, 196, 255));
       }
     }
     c_yy = t->year; c_mo = t->month; c_dd = t->day; c_wd = (u8)wd;
@@ -620,7 +603,8 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
 
   /* ---- 温湿度数值（一位小数；值单位 0.1，如 temp=255 -> "25.5"） ----
      概念B 两张迷你卡：温度卡[100..198]、湿度卡[204..304]（图标 26x26 @113/217,212 已入背景），
-     数字 12x30 白字分别居中于卡内图标右侧（温度[128..196]、湿度[232..300]），y≈197。 */
+     数字 12x30 白字分别居中于卡内图标右侧（温度[128..196]、湿度[232..300]），y≈197。
+     2026-08 架构重构：统一走 UI_Show（UI_SLOT_TH 档位：格12、清69、居中）。 */
   if (temp != c_temp)                    /* 温度变化才重绘 */
   {
     char tb[8]; int n = 0;
@@ -632,9 +616,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     tb[n++] = (char)('0' + ti % 10);
     tb[n++] = '.';
     tb[n++] = (char)('0' + tf); tb[n] = 0;
-    int nw = 0; for (char *q = tb; *q; q++) nw += (*q == '.') ? 4 : 12;
-    int tx = 128 + (196 - 128 - nw) / 2;
-    UI_DrawVarDigits(tb, tx, YF(197, 30), UI_C_WHITE, DG_TH);
+    UI_Show(128, YF(197, 30), tb, UI_SLOT_TH, UI_C_WHITE);
     c_temp = temp;
   }
   if (humi != c_humi)                    /* 湿度变化才重绘 */
@@ -646,9 +628,7 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     hb[n++] = (char)('0' + hi % 10);
     hb[n++] = '.';
     hb[n++] = (char)('0' + hf); hb[n] = 0;
-    int nw = 0; for (char *q = hb; *q; q++) nw += (*q == '.') ? 4 : 12;
-    int hx = 232 + (300 - 232 - nw) / 2;
-    UI_DrawVarDigits(hb, hx, YF(197, 30), UI_C_WHITE, DG_TH);
+    UI_Show(232, YF(197, 30), hb, UI_SLOT_TH, UI_C_WHITE);
     c_humi = humi;
   }
 }

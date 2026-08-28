@@ -49,6 +49,36 @@ typedef struct {
   u8 reserved[9];  /* 保留 */
 } ui_cfg_t;
 
+/* ==================== UI_Show 统一显示入口 ====================
+ * 2026-08 架构重构：大部分显示更新收敛为一个函数
+ *   UI_Show(x, y, s, slot, color) —— 只输入 起点坐标 + 内容 + 档位宏 + 颜色。
+ * 档位宏（slot）查 g_slot 表得到该元素的 {字模段, 字高, 统一格宽, 清除宽, 对齐}：
+ *   - 数字统一格宽（UI_SLOT_DIGIT/SEC/DATE/TH 为 12px），每个数字长宽区域一致；
+ *   - 画前先清该元素固定区域（clear_w × h）→ 变宽/平移不再残留；
+ *   - 日期一天一变：先清整卡再逐位 UI_Show（月 <10 / >=10 由调用方算位置）。
+ */
+#define UI_ALIGN_LEFT    0u
+#define UI_ALIGN_CENTER  1u
+
+#define UI_DATE_DIGIT_W  12u   /* 日期/秒数字统一格宽（px，与 build_flash.py UI_DATE_DIGIT_W 一致） */
+#define UI_DATE_DOT_W     4u   /* 日期间隔点宽（超小字号，0xE202） */
+#define UI_TH_DIGIT_W    12u   /* 温湿度数字格宽（px，固定 12x30） */
+
+/* UI_Show 档位枚举（元素 -> 查 g_slot 表） */
+enum {
+  UI_SLOT_SEC,      /* 秒：DG_SMALL 22高 格12 清31 居中 */
+  UI_SLOT_DATE,     /* 日期整串：DG_SMALL 22高 格12 清141 居中 */
+  UI_SLOT_DIGIT,    /* 日期单数字：DG_SMALL 22高 格12 清12 左（逐位） */
+  UI_SLOT_DOT,      /* 日期点号：超小 22高 格4 清4 左（0xE202） */
+  UI_SLOT_TH,       /* 温湿度：DG_TH 30高 格12 清69 居中 */
+  UI_SLOT_WEEK,     /* 星期汉字：18x22 清54 居中 */
+  UI_SLOT_LUNAR,    /* 农历汉字：18x22 清72 居中 */
+  UI_SLOT_CLOCK,    /* 时钟大数字：40x84 清40 左 */
+  UI_SLOT_COUNT
+};
+
+void UI_Show(int x, int y, const char *s, u8 slot, u16 color); /* 统一显示入口：查档位→清固定区→对齐→逐字形画 */
+
 /* ==================== API ==================== */
 int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */
 int  UI_LoadConfig(void);   /* 读 CONF 配置容器并校验 CRC。0=成功；-1=magic；-2=CRC */
