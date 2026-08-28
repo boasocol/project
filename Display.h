@@ -75,11 +75,6 @@ void Display_FillRect(u16 x, u16 y, u16 w, u16 h, u16 color);  /* 填充矩形�
 void Display_DrawPixel(u16 x, u16 y, u16 color);              /* 画单点 */
 void Display_on(void);
 void Display_off(void);
-void Display_On(void);                         /* 底层开显示（发命令+置状态，无 1s 延时）；key.c 唤醒开屏/整屏刷新保护用 */
-void Display_Off(void);                        /* 底层关显示（发命令+清状态，无 1s 延时）；key.c 关屏/整屏刷新保护用 */
-int  Display_IsOn(void);                       /* 1=显示已点亮（Display_on 后），0=未点亮 */
-int  Display_RefreshBegin(void);               /* 整屏刷新保护：已点亮则先关显示（避免逐行刷屏可见）；返回 1=已关需配 End 重开 */
-void Display_RefreshEnd(int began);            /* 整屏刷新保护：Begin 返回 1 时重新点亮显示 */
 
 /* 每轮调用：翻页动画 + 时钟/静态区块刷新（集中界面渲染，main 只需调这一行） */
 void Display_Update(TimeStruct *t);
