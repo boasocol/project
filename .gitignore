@@ -1,6 +1,8 @@
 # ===== HT32-IDE 编译产物（必须忽略） =====
 HT32-IDE/HT32/Debug/
 HT32-IDE/HT32/Debug
+HT32-IDE/HT32/Release/
+HT32-IDE/HT32/Release
 
 # ===== IDE 工程配置噪音（可选忽略） =====
 HT32-IDE/HT32/.settings/
@@ -18,3 +20,9 @@ HT32-IDE/HT32/*.launch
 # ===== 系统文件 =====
 Thumbs.db
 Desktop.ini
+
+# ===== 旧代码备份（重构后留档，不入库——历史见 git 提交） =====
+_legacy/
+
+# ===== Windows 快捷方式 =====
+*.lnk

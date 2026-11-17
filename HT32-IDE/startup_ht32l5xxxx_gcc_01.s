@@ -95,7 +95,10 @@
 ; Tailor those values to your application needs
 ;//   <o> Stack Size (in Bytes, must 8 byte aligned) <:8>
 */
-    .equ    Stack_Size, 1024
+    .equ    Stack_Size, 1024   /* 2026-09-05 内存优化：g_blit 分块等释放 ~2KB .bss，栈 1KB->2KB；
+                                   2026-10-28 压回 1KB：新增 s_dma(PDMA staging 512B)+解交织表(512B)后
+                                   RAM 8KB 吃紧（data+bss 6316B + 栈 2048B = 8368B 超 176B）；
+                                   工程无递归、printf 用 nano，1KB 栈够用 */
     .section ".stack", "w"
     .align  3
     .globl  __StackTop

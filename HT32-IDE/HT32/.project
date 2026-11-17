@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
 	<name>0714_17313372_L52231</name>
 	<comment></comment>
@@ -166,79 +166,184 @@
 			<locationURI>PARENT-3-PROJECT_LOC/library/HT32L5xxxx_Driver/src/syscalls.c</locationURI>
 		</link>
 		<link>
-			<name>User/BFTM0.c</name>
+			<name>User/bsp/BFTM0.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/BFTM0.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/bsp/BFTM0.c</locationURI>
 		</link>
 		<link>
-			<name>User/Display.c</name>
+			<name>User/driver/Display.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Display.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/Display.c</locationURI>
 		</link>
 		<link>
-			<name>User/Display.h</name>
+			<name>User/driver/Display.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/Display.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/Display.h</locationURI>
 		</link>
 		<link>
-			<name>User/LED.c</name>
+			<name>User/app/app_render.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/LED.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/app_render.c</locationURI>
 		</link>
 		<link>
-			<name>User/LED.h</name>
+			<name>User/app/app_render.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/LED.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/app_render.h</locationURI>
 		</link>
 		<link>
-			<name>User/hd9803.c</name>
+			<name>User/app/calendar.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hd9803.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/calendar.c</locationURI>
 		</link>
 		<link>
-			<name>User/hd9803.h</name>
+			<name>User/app/calendar.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/hd9803.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/calendar.h</locationURI>
 		</link>
 		<link>
-			<name>User/ht32l5xxxx_01_it.c</name>
+			<name>User/app/dbgcmd.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/ht32l5xxxx_01_it.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/dbgcmd.c</locationURI>
 		</link>
 		<link>
-			<name>User/main.c</name>
+			<name>User/app/dbgcmd.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/main.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/app/dbgcmd.h</locationURI>
 		</link>
 		<link>
-			<name>User/spi_lcd.c</name>
+			<name>User/driver/flash_read.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/spi_lcd.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/flash_read.c</locationURI>
 		</link>
 		<link>
-			<name>User/spi_lcd.h</name>
+			<name>User/driver/flash_read.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/spi_lcd.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/flash_read.h</locationURI>
 		</link>
 		<link>
-			<name>User/time_module.c</name>
+			<name>User/driver/hd9803.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/time_module.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/hd9803.c</locationURI>
 		</link>
 		<link>
-			<name>User/time_module.h</name>
+			<name>User/driver/hd9803.h</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/time_module.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/hd9803.h</locationURI>
 		</link>
 		<link>
-			<name>User/uart_init.c</name>
+			<name>User/driver/ht32l5xxxx_01_it.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/uart_init.c</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/ht32l5xxxx_01_it.c</locationURI>
 		</link>
 		<link>
-			<name>User/uart_init.h</name>
+			<name>User/driver/key.c</name>
 			<type>1</type>
-			<locationURI>PARENT-2-PROJECT_LOC/uart_init.h</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/key.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/key.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/key.h</locationURI>
+		</link>
+		<link>
+			<name>User/app/main.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/main.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/screen.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/screen.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/screen.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/screen.h</locationURI>
+		</link>
+		<link>
+			<name>User/driver/spi_lcd.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/spi_lcd.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/spi_lcd.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/spi_lcd.h</locationURI>
+		</link>
+		<link>
+			<name>User/bsp/bsp_pins.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsp/bsp_pins.h</locationURI>
+		</link>
+		<link>
+			<name>User/bsp/bsp_delay.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsp/bsp_delay.c</locationURI>
+		</link>
+		<link>
+			<name>User/bsp/bsp_delay.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/bsp/bsp_delay.h</locationURI>
+		</link>
+		<link>
+			<name>User/driver/time_module.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/time_module.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/time_module.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/time_module.h</locationURI>
+		</link>
+		<link>
+			<name>User/driver/uart_init.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/uart_init.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/uart_init.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/uart_init.h</locationURI>
+		</link>
+		<link>
+			<name>User/app/ui.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/ui.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/ui.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/ui.h</locationURI>
+		</link>
+		<link>
+			<name>User/driver/voice.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/voice.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/voice.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/voice.h</locationURI>
+		</link>
+		<link>
+			<name>User/app/app_voice.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/app_voice.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/app_voice.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/app_voice.h</locationURI>
+		</link>
+		<link>
+			<name>User/driver/yx8320b.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/yx8320b.c</locationURI>
+		</link>
+		<link>
+			<name>User/driver/yx8320b.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/driver/yx8320b.h</locationURI>
 		</link>
 		<link>
 			<name>Utilities/ht32_board.c</name>

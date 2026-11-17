@@ -62,7 +62,7 @@
 //       <i> Auto Return function adds "\r" before "\n" automatically when print message by Retarget.
 */
 #define _RETARGET            1
-#define RETARGET_PORT        14
+#define RETARGET_PORT        12    /* 12=USART0(PC4/PC5 原蓝牙口)：printf 调试口；UART0(PB7/PB8) 让给语音模块 */
 #define _AUTO_RETURN         0
 
 // <q> Use Standard C Library printf() Implementation of GNU Compiler
@@ -112,7 +112,7 @@
 //  <o5> Tx Buffer Length (in byte)
 // </h>
 */
-#define RETARGET_UxART_BAUDRATE       (9600)
+#define RETARGET_UxART_BAUDRATE       (115200)
 #define RETARGET_UxART_CLKSEL         (0)         // 0 = Default Maximum (LIBCFG_MAX_SPEED), 1 = Manual Input (RETARGET_UxART_CLK_MANUAL)
 #define RETARGET_UxART_CLK_MANUAL     (20000000)  // Only meaningful when RETARGET_UxART_CLKSEL = 1 (Manual Input)
 #define RETARGET_INT_MODE             (0)

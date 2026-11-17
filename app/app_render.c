@@ -1,0 +1,69 @@
+/************************************************************************************************************
+ * @file    app_render.c
+ * @brief   应用层渲染调度（P2 拆自 Display.c，2026-09-03）
+ * @note    原 Display_Update 实为应用层职责（按屏分发渲染），从显示驱动 Display.c 迁出：
+ *          主屏 → calendar.c 增量刷新；倒计时/闹钟屏 → screen.c 增量绘制；
+ *          外加翻页动画推进 + 形象状态动画推进。Display.c 只留纯 ST7789 驱动接口。
+ *          行为与原 Display_Update 完全一致（主循环调用点改名 App_Render）。
+ *          2026-09-05：静态区块（日期/温湿度/蓝牙）随每轮刷新，去掉后半秒时隙门控。
+ ************************************************************************************************************/
+#include "app_render.h"
+#include "BFTM0.h"         /* bftm0_ct：翻页动画时间基准 */
+#include "calendar.h"      /* Calendar_FlipTick / Refresh / RefreshStatic / SetBtState */
+#include "screen.h"        /* Screen_Draw：多屏增量绘制 */
+#include "ui.h"            /* UI_CharAnim_Tick：形象状态动画帧推进 / UI_GetScreen */
+#include "yx8320b.h"       /* YX8320B_GetTemp / GetHumi */
+#include "hd9803.h"        /* Hd9803_GetState（蓝牙图标，#if HD9803_ENABLE） */
+
+/* ------------------------------------------------------------------ */
+/**
+ * @brief  显示刷新调度（主循环每轮调用一次）
+ * @note   集中封装所有“界面渲染”逻辑，让 main 只负责事件分发：
+ *         - 翻页动画帧推进（每轮）
+ *         - 形象状态动画推进（每轮）
+ *         - 每轮刷新时钟 + 静态区块（日期 / 温湿度 / 蓝牙图标，内部 c_* 缓存去重）
+ *         温湿度与蓝牙状态由各自模块提供（YX8320B 与 Hd9803 系列函数），本函数只负责“画”。
+ * @param  t : [输入] 当前时间快照
+ * @retval 无
+ */
+void App_Render(TimeStruct *t)
+{
+  Calendar_FlipTick((u32)bftm0_ct);
+
+  UI_CharAnim_Tick();   /* 形象状态动画：0.5s/帧，内部 g_cani.ok 门控（空容器即返回） */
+
+  /* 多屏分发（2026-08-27）：主屏走 calendar 增量刷新；倒计时/闹钟屏走 screen.c */
+  if (UI_GetScreen() == UI_SCREEN_MAIN)
+  {
+    /* 每轮无条件增量刷新：Calendar_Refresh 内部用 c_* 缓存去重，只有时间/温湿度
+       真正变化才重绘，开销极小（几十条比较指令）。时钟位 + 静态区块（日期/温湿度）
+       均在此完成（RefreshStatic 已并入，2026-09-05 去掉后半秒时隙门控）。
+       不能用 g_time_update_flag 门控——它是单 bit，主循环若在采样分支(YX8320B 读取
+       /HD9803 轮询)被阻塞超过整秒，flag 多次置位会被合并成一次消费，整秒被吞，
+       表现为"5 秒等两秒才翻页成 7 秒"。每轮对比最新 t 则永不丢秒。 */
+    Calendar_Refresh(t, YX8320B_GetTemp(), YX8320B_GetHumi());
+
+    /* 主屏后台计时沙漏闪烁（2026-09-05）：正/倒计时退出按钮回主屏后计时继续跑，
+       主卡右上角 0.5s 亮/灭提示；内部用 c_* 缓存去重，计时停止自动擦除。 */
+    Screen_CntBlink((u32)bftm0_ct);
+
+    /* 主屏状态角标（2026-09-05 坑#71 #1/#2）：整点报时开启时常驻报时符号、
+       贪睡待响时常驻贪睡符号（主卡左上 16x16）；内部 c_* 缓存去重，状态变化才画/擦。 */
+    Screen_StatusIcons();
+
+    /* 按键设置模式黄线（主屏，2026-09-04）：切项时清旧画新，无设置时不动 */
+    Screen_SetupLine();
+
+    /* 蓝牙图标（状态内部去重，变化才重绘）：跟随每轮刷新，
+       不再绑后半秒时隙（2026-09-05）。 */
+#if HD9803_ENABLE
+    Calendar_SetBtState(Hd9803_GetState() == HD9803_ST_CONNECTED);
+#else
+    Calendar_SetBtState(0);
+#endif
+  }
+  else
+  {
+    Screen_Draw(t);   /* 倒计时/闹钟屏增量绘制 */
+  }
+}
