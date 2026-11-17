@@ -40,6 +40,8 @@ Config \
 GNU_ARM \
 Library \
 Retarget \
-User \
+User/app \
+User/bsp \
+User/driver \
 Utilities \
 

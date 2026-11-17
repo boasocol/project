@@ -9,7 +9,9 @@ RM := rm -rf
 # 此处定义了参与生成的所有源
 -include sources.mk
 -include Utilities/subdir.mk
--include User/subdir.mk
+-include User/driver/subdir.mk
+-include User/bsp/subdir.mk
+-include User/app/subdir.mk
 -include Retarget/subdir.mk
 -include Library/subdir.mk
 -include GNU_ARM/subdir.mk
