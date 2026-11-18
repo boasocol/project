@@ -26,3 +26,8 @@ _legacy/
 
 # ===== Windows 快捷方式 =====
 *.lnk
+
+# ===== 命令行编译产物（out/build.ps1 本身要入库，其余忽略）=====
+/out/obj/
+/out/*.log
+/out/*.out

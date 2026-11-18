@@ -246,6 +246,37 @@ static u8  c_alm_h1 = 0xFF, c_alm_h2 = 0xFF, c_alm_m1 = 0xFF, c_alm_m2 = 0xFF;
 static u8  c_alm_on = 0xFF, c_alm_loop = 0xFF, c_alm_ring = 0xFF;
 static u8  c_alm_sel = 0xFF;      /* 已绘制的闹钟槽号（坑#86 粉条「闹钟N」序号增量，原左上 chip） */
 
+/* ==================== 新 UI（像素游戏机）增量缓存（2026-11-17） ====================
+   Px_DrawCnt / Px_DrawAlm 一次重画整屏**动态元素**（精灵 + 变宽字串，约几十~上百次
+   SPI 行事务），不能每轮主循环都跑：下面记录「上次画的内容」，只有内容/背景/气泡变化
+   才重画一次（正常 ≈ 每秒 1 次）。旧 UI 的 c_cnt_* / c_alm_* 缓存保留给 #if 0 的旧绘制。 */
+static u32 c_px_cnt_sec   = 0xFFFFFFFFu;  /* 上次 Px_DrawCnt 的秒值（正计时=已过秒） */
+static u8  c_px_cnt_state = 0xFF;         /* 上次 Px_DrawCnt 的计时状态（CNT_*） */
+static u8  c_px_cnt_up    = 0xFF;         /* 上次 Px_DrawCnt 的模式（0=倒计时 1=正计时） */
+static u16 c_px_cnt_bg    = 0xFFFF;       /* 上次 Px_DrawCnt 的背景版本（g_ui_bg_ver） */
+static u16 c_px_cnt_bub   = 0xFFFF;       /* 上次 Px_DrawCnt 的气泡版本（g_bub_seq） */
+static u8  c_px_cnt_w3    = 0xFF;         /* 上次 Px_DrawCnt 的分钟位数布局（1=3 位 MMM:SS；0=2 位；0xFF=首帧） */
+static u8  c_px_alm_idx   = 0xFF;         /* 上次 Px_DrawAlm 的槽号 */
+static u8  c_px_alm_hh    = 0xFF;         /* 上次 Px_DrawAlm 的时 */
+static u8  c_px_alm_mm    = 0xFF;         /* 上次 Px_DrawAlm 的分 */
+static u8  c_px_alm_on    = 0xFF;         /* 上次 Px_DrawAlm 的开关 */
+static u8  c_px_alm_loop  = 0xFF;         /* 上次 Px_DrawAlm 的循环模式 */
+static u16 c_px_alm_bg    = 0xFFFF;       /* 上次 Px_DrawAlm 的背景版本 */
+static u16 c_px_alm_bub   = 0xFFFF;       /* 上次 Px_DrawAlm 的气泡版本 */
+
+/* ==================== 气泡文本状态（2026-11-17 新 UI，接口见 screen.h） ====================
+   三屏各一条默认文案；语音播报时 Screen_Bubble 临时覆盖，Screen_BubbleTick 8s 后恢复默认。
+   绘制入口在 Px_Draw* 末尾（bubble_draw），按屏各自坐标/字号，闹钟屏窄区自动折行。 */
+#define BUB_TIMEOUT_MS  8000u    /* 临时文案停留时长（8s） */
+#define BUB_TEXT_MAX    64       /* 文案缓冲字节数（UTF-8；最多 60B 文本 + NUL） */
+static char g_bub_text[BUB_TEXT_MAX];   /* 当前临时文案（空 = 用该屏默认文案） */
+static u8   g_bub_on  = 0;              /* 1=显示临时文案（Screen_Bubble 设置） */
+static u32  g_bub_ms  = 0;              /* 临时文案设置时刻（bftm0_ct，超时判定） */
+static u16  g_bub_seq = 0;              /* 文案版本号（每次变更自增，绘制缓存据此重画） */
+static u8   c_bub_scr = 0xFF;           /* 上次绘制气泡的屏号 */
+static u16  c_bub_seq = 0xFFFF;         /* 上次绘制气泡的文案版本 */
+static u16  c_bub_bg  = 0xFFFF;         /* 上次绘制气泡时的背景版本 */
+
 /* ==================== 小工具 ==================== */
 
 static void disp_wake(void);   /* 前置声明：响铃自动亮屏（cnt_pending_ring_play 在定义前调用，防 C89 隐式 extern 与 static 定义冲突） */
@@ -314,7 +345,10 @@ static void alm_snooze_clear(void)
 
 /* 主屏状态角标（坑#71 #1/#2 2026-09-05，App_Render 主屏分支每帧调）：
    整点报时开启时常驻 0xE302 符号、贪睡待响时常驻 0xE303 符号（主卡左上 16x16 白）；
-   用 c_* 缓存去重，状态变化才画/擦，回主屏 goto_main 重置缓存强制重画。 */
+   用 c_* 缓存去重，状态变化才画/擦，回主屏 goto_main 重置缓存强制重画。
+   2026-11-17 新 UI：主屏没有这两个角标的图标位（旧坐标 (44,2)/(64,2) + 米黄擦除色
+   会在新背景上留米黄方块），绘制体 #if 0 停用；状态/缓存维护照旧，将来按新设计
+   补坐标与精灵后打开即可。 */
 void Screen_StatusIcons(void)
 {
   u8 h = g_hourly_on ? 1 : 0;
@@ -322,6 +356,7 @@ void Screen_StatusIcons(void)
      （与后台沙漏同节奏）；非待响恒灭。s=0 的「闪烁灭相」与「无待响」都落到擦除，
      c_* 缓存去重即可。 */
   u8 s = g_alm.snooze ? (u8)((bftm0_ct / 500u) & 1u) : 0;
+#if 0
   if (h != c_ico_hourly)
   {
     if (h)
@@ -352,8 +387,22 @@ void Screen_StatusIcons(void)
     }
     c_ico_snooze = s;
   }
+#else
+  /* 新 UI：不画（状态缓存跟上，避免回退旧 UI 时补画一堆旧角标） */
+  c_ico_hourly = h;
+  c_ico_snooze = s;
+  c_ico_hourly_drawn = 0;
+  c_ico_snooze_drawn = 0;
+#endif
 }
 
+/* ==================== 旧 UI 数字/冒号原语（奶油风，2026-11-17 新 UI 接线后停用） ====================
+   这 4 个原语只被 draw_cnt / draw_alarm / draw_screen_static 里已 #if 0 的旧绘制调用，
+   这里把定义也一起 #if 0（否则 -Wall 报 -Wunused-function）。
+   回退旧 UI 时：把本块和那几处 #if 0 一起打开即可。
+   注：进度条填充 cnt_prog_fill（下方）**保持启用**——它作为「辅助叠加」继续在
+   倒计时屏画计时进度（见 draw_cnt 新 UI 分支）。 */
+#if 0
 static void draw_digit_at(int x, int y, u8 d, u16 color)
 {
   char b[2] = { (char)('0' + d), 0 };
@@ -377,12 +426,15 @@ static void draw_cnt_colon_at(int x, int y)
 {
   UI_DrawGlyphRect(x, 239 - (y + 40) + 1, 12, 40, 0xE304u, SC_C_CNT_INK);
 }
+#endif /* 旧 UI 数字/冒号原语（新 UI 停用） */
 
 /* ==================== 坑#88 进度条胶囊圆头填充（2026-10-12 用户反馈「两侧超界」） ====================
    原直角 Display_FillRect 方角会盖出轨道两端半圆（左端 x57-65 黑弧、右端 x251-260），
    效果图填充实为胶囊：逐列橙行数 [2,9,13,15,17,18,19,20,21,22] 反推 r≈9 圆头。
    本表 = 逐行两端缩进（行 0..21 = y122..143），与效果图左端逐列逐行吻合（右端同表镜像）。
-   2026-10-12 修正「没走到头」后满态 w=204，右圆头随 xr=260 对称于左端。 */
+   2026-10-12 修正「没走到头」后满态 w=204，右圆头随 xr=260 对称于左端。
+   ⚠️ 新 UI（2026-11-17）：坐标仍是旧奶油风轨道位置，作为「辅助叠加」保留（用户要求
+   进度条继续可用）；新背景若无对应轨道，可用 draw_cnt 里的 #if 0 一键关掉。 */
 static const u8 CNT_PROG_INSET[CNT_PROG_H] = {
   9, 7, 5, 4, 3, 2, 2, 1, 1, 1, 0, 0, 1, 1, 1, 1, 2, 2, 3, 4, 6, 8
 };
@@ -445,6 +497,7 @@ void Screen_CntStart(u16 total_s)
   g_cnt_idle_ms = (u32)bftm0_ct;       /* 计时活动：刷新倒计时屏空闲计时（坑#71） */
   if (UI_GetScreen() != UI_SCREEN_CNT) UI_SetScreen(UI_SCREEN_CNT);  /* 已在倒计时屏则不重传背景，改状态由 draw_cnt 增量刷新 */
   Voice_Send(VOICE_TX_CNT_START, 0, 0, 0, 0);   /* 坑#93：倒计时启动播"计时开始"提示音（0x0D） */
+  Screen_Bubble("计时开始");                    /* 新 UI：气泡同步「计时开始」（0x0D 文案） */
 }
 
 /* 0xBA 打开正计时：从 00:00 递增，复用屏1 MM:SS；与倒计时互斥（2026-08-28） */
@@ -462,6 +515,7 @@ void Screen_UpStart(void)
   g_cnt_idle_ms = (u32)bftm0_ct;       /* 计时活动：刷新倒计时屏空闲计时（坑#71） */
   if (UI_GetScreen() != UI_SCREEN_CNT) UI_SetScreen(UI_SCREEN_CNT);  /* 已在倒计时屏则不重传背景 */
   Voice_Send(VOICE_TX_CNT_START, 0, 0, 0, 0);   /* 坑#93：正计时启动播"计时开始"提示音（0x0D） */
+  Screen_Bubble("计时开始");                    /* 新 UI：气泡同步「计时开始」（0x0D 文案） */
 }
 
 void Screen_CntPause(void)
@@ -509,6 +563,9 @@ void Screen_CntBlink(u32 now_ms)
   }
   u8 on = (mode == 2) ? (u8)((now_ms / 500) & 1) : (mode == 1) ? 1 : 0;
   if (on == c_cnt_blink_on && mode == c_cnt_blink_act) return;   /* 无变化：不重画 */
+#if 0
+  /* 2026-11-17 新 UI：主屏无沙漏图标位（旧坐标 (84,2) + 米黄擦除色会在新背景留方块），
+     绘制体 #if 0；状态缓存照旧更新，回退旧 UI 时打开即可。 */
   if (c_cnt_blink_drawn)                            /* 已画过：先擦旧图标 */
   {
     Display_FillRect(CNT_ICO_X, CNT_ICO_Y, CNT_ICO_W, CNT_ICO_H, SC_C_MAIN_BG);
@@ -519,6 +576,10 @@ void Screen_CntBlink(u32 now_ms)
     UI_DrawHourglass(CNT_ICO_X, CNT_ICO_Y);   /* 真彩图标：保留用户 PNG 多色调明暗（ICO1 容器） */
     c_cnt_blink_drawn = 1;
   }
+#else
+  c_cnt_blink_drawn = 0;   /* 新 UI：不画沙漏（计时状态在倒计时屏可见） */
+  (void)on;
+#endif
   c_cnt_blink_on  = on;
   c_cnt_blink_act = mode;
 }
@@ -562,6 +623,7 @@ static void cnt_tick(void)
         disp_wake();                              /* 响铃自动亮屏（显示若已关则开，坑#71 #15） */
         (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);   /* 到点响铃：人物切闹铃动画（2026-09-04 接线） */
         Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);   /* 到点响铃（2026-08-28 由 0x05 滴声改为播铃声） */
+        Screen_Bubble("时间到了");                            /* 新 UI：气泡同步「时间到了」（0x0E 计时结束文案） */
         /* 2026-09-05：倒计时可在后台运行（退出按钮回主屏不停止）——到点须切回倒计时屏
            显示 00:00 + 已结束 + 响铃，否则主屏上只会响铃无画面。
            正处闹钟响铃/任一设置态时不切走（不打断），照常响铃、60s 后自动回主屏。 */
@@ -666,6 +728,7 @@ static void cnt_sel_pause_ok(void)
     g_cnt = CNT_RUN;
     printf("[KEY] 倒计时开始 %02u:%02u\r\n", (unsigned)(g_cnt_remain / 60), (unsigned)(g_cnt_remain % 60));
     Voice_Send(VOICE_TX_CNT_START, 0, 0, 0, 0);   /* 坑#93：按键启动倒计时/正计时也播"计时开始"（0x0D） */
+    Screen_Bubble("计时开始");                    /* 新 UI：气泡同步「计时开始」（0x0D 文案） */
   }
 }
 
@@ -799,10 +862,16 @@ static void cnt_sel_key(const KeyEvent *ke)
   }
 }
 
-/* 倒计时屏每帧增量绘制 */
+/* 倒计时屏每帧增量绘制
+   ==================== 2026-11-17 新 UI 接线 ====================
+   动态元素改由 Px_DrawCnt 画（像素游戏机风：精灵大数字/标题/按钮/机器人 + 气泡）。
+   旧奶油风绘制整块 #if 0 保留便于回退（回退 = 本块 #if 1、上方新 UI 块 #if 0）。
+   旧的光标绘制 cnt_sel_line() 仍在后面叠加（坐标是旧布局，位置可能不美观，
+   但保证能编译、不越界；等新 UI 定稿再按新坐标重做）。 */
 static void draw_cnt(TimeStruct *t)
 {
   (void)t;
+#if 0
   /* 顶部标签内标题：倒计时/正计时（坑#88：18x22 黑字画在粉色标签 x10-75 y9-48 内居中；
      清旧=恢复背景（UI_DrawGlyphRect 0xFFFF，标签内是纯粉渐变非纯色）；g_up 变化重画） */
   if (g_up != c_cnt_title)
@@ -889,12 +958,54 @@ static void draw_cnt(TimeStruct *t)
       UI_DrawGlyphRect(CNT_PROG_X + filled, 239 - (CNT_PROG_Y + CNT_PROG_H) + 1,
                        c_cnt_prog - filled, CNT_PROG_H, 0xFFFFu, 0);
     }
-    if (filled > 0) cnt_prog_fill(filled, bar);   /* 整条胶囊重画（首帧/增长/换色/缩短统一走这） */
+    if (filled > 0) { }   /* 新 UI：进度条在背景里（竖排 8 段），旧橙色横条停用 2026-11-17 */
     c_cnt_prog = filled;
     c_prog_bar = bar;
   }
+#else
+  /* 新 UI：秒值/状态/模式/背景/气泡 任一变化才整屏重画动态元素（≈每秒 1 次） */
+  {
+    u32 sec = g_up ? g_up_sec : (u32)g_cnt_remain;
+    if (sec != c_px_cnt_sec || g_cnt != c_px_cnt_state || g_up != c_px_cnt_up ||
+        g_ui_bg_ver != c_px_cnt_bg || g_bub_seq != c_px_cnt_bub)
+    {
+      c_px_cnt_sec   = sec;
+      c_px_cnt_state = (u8)g_cnt;
+      c_px_cnt_up    = g_up;
+      c_px_cnt_bg    = g_ui_bg_ver;
+      c_px_cnt_bub   = g_bub_seq;
+      Px_DrawCnt();
+    }
+  }
 
-  cnt_sel_line();   /* 选择光标常驻（切项/进出调整/背景重传时清旧画新，2026-09-05） */
+  /* 进度条（辅助叠加，用户要求保留）：沿用旧胶囊填充 cnt_prog_fill + 旧缓存
+     c_cnt_prog/c_prog_bar —— 坐标仍是旧奶油风轨道（x57..260 / y122..143），
+     新背景若无对应轨道会显得位置不对；不需要时把本块 #if 0 即可（不越界：全在屏内）。
+     方向（坑#93）：filled = remain/total（剩余比例），随时间减少=消失；
+     缩短时先把超出尾段恢复背景（UI_DrawGlyphRect 0xFFFF 还原新背景）。 */
+  {
+    int filled = 0;
+    u16 bar = SC_C_CNT_ORANGE;
+    if (!g_up && g_cnt_total > 0)
+    {
+      filled = (int)((u32)g_cnt_remain * CNT_PROG_MAX / g_cnt_total);
+      bar = (g_cnt == CNT_PAUSE) ? SC_C_YELLOW : (g_cnt == CNT_DONE ? SC_C_RED : SC_C_CNT_ORANGE);
+    }
+    if (filled != c_cnt_prog || bar != c_prog_bar)
+    {
+      if (filled < c_cnt_prog && c_cnt_prog >= 0)
+        UI_DrawGlyphRect(CNT_PROG_X + filled, 239 - (CNT_PROG_Y + CNT_PROG_H) + 1,
+                         c_cnt_prog - filled, CNT_PROG_H, 0xFFFFu, 0);
+      if (filled > 0) { }   /* 新 UI：旧橙色横条停用 */
+      c_cnt_prog = filled;
+      c_prog_bar = bar;
+    }
+  }
+#endif
+
+  cnt_sel_line();   /* 选择光标常驻（切项/进出调整/背景重传时清旧画新，2026-09-05）
+                       ⚠️ 新 UI 下坐标仍是旧奶油风布局（y51/111/232），可能压在新背景元素上，
+                       属"先跑通、后调位置"的已知项。 */
 }
 
 /* ==================== 闹钟 ==================== */
@@ -913,6 +1024,7 @@ void Screen_AlarmSet(u8 n, u8 hh, u8 mm)
     g_alm.ringing = 0;
     Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);   /* 响铃中改时间：停响回待机（2026-09-04 闹铃动画） */
+    Screen_Bubble("闹钟已结束");                       /* 新 UI：气泡同步「闹钟已结束」（0x04 文案） */
   }
   /* 已在闹钟屏则不重传背景：配置改动由 draw_alarm 增量刷新（大数字变化即重画），只有从别的屏切过来才整屏切换（2026-08-28） */
   if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
@@ -931,6 +1043,7 @@ void Screen_AlarmRingStop(void)
     g_alm.ringing = 0;
     Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);   /* 停播铃声 */
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);       /* 停响回待机（2026-09-04 闹铃动画结束） */
+    Screen_Bubble("闹钟已结束");                            /* 新 UI：气泡同步「闹钟已结束」（0x04 文案） */
   }
   alm_snooze_clear();   /* 0xB1 别响了/60s 自动停：取消可能待响的贪睡（坑#71 #9） */
   goto_main();   /* 内部已停倒计时响铃 */
@@ -1020,10 +1133,15 @@ static void alarm_tick(TimeStruct *t)
   g_alm.rung = 0;   /* 当前分钟无任何槽命中：允许后续重新判定 */
 }
 
-/* 闹钟屏每帧增量绘制：显示目标槽（响铃中=响铃槽，否则当前选中槽 g_alm_sel） */
+/* 闹钟屏每帧增量绘制：显示目标槽（响铃中=响铃槽，否则当前选中槽 g_alm_sel）
+   ==================== 2026-11-17 新 UI 接线 ====================
+   动态元素改由 Px_DrawAlm 画（像素游戏机风：精灵大数字/开关/星期钮/机器人 + 气泡）。
+   旧奶油风绘制整块 #if 0 保留便于回退。旧的设置黄线 alm_set_line() 仍在后面叠加
+   （坐标是旧布局，位置可能不美观，但保证能编译、不越界）。 */
 static void draw_alarm(TimeStruct *t)
 {
   (void)t;
+#if 0
   u8 idx = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
   u8 hh = g_alm_hour[idx], mm = g_alm_min[idx];
 
@@ -1092,16 +1210,41 @@ static void draw_alarm(TimeStruct *t)
     Display_FillRect(16, 170, 289, 2, g_alm.ringing ? SC_C_RED : SC_C_BLUE);
     c_alm_ring = g_alm.ringing;
   }*/
+#else
+  /* 新 UI：槽号/时间/开关/循环/背景/气泡 任一变化才整屏重画动态元素 */
+  {
+    u8 idx = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
+    u8 hh = g_alm_hour[idx], mm = g_alm_min[idx];
+    u8 on = g_alm_on[idx] ? 1 : 0;
+    u8 loop = g_alm_loop[idx];
+    if (idx != c_px_alm_idx || hh != c_px_alm_hh || mm != c_px_alm_mm || on != c_px_alm_on ||
+        loop != c_px_alm_loop || g_ui_bg_ver != c_px_alm_bg || g_bub_seq != c_px_alm_bub)
+    {
+      c_px_alm_idx  = idx;
+      c_px_alm_hh   = hh;
+      c_px_alm_mm   = mm;
+      c_px_alm_on   = on;
+      c_px_alm_loop = loop;
+      c_px_alm_bg   = g_ui_bg_ver;
+      c_px_alm_bub  = g_bub_seq;
+      Px_DrawAlm();
+    }
+  }
+#endif
 
-  alm_set_line();   /* 闹钟设置黄线（仅设置态画；切项/背景重传时清旧画新，2026-09-05） */
+  alm_set_line();   /* 闹钟设置黄线（仅设置态画；切项/背景重传时清旧画新，2026-09-05）
+                      ⚠️ 新 UI 下坐标仍是旧奶油风布局（y80/144/100/211），可能压在新背景元素上，
+                      属"先跑通、后调位置"的已知项。 */
 }
 
-/* ==================== 屏静态元素（进入屏时画一次） ==================== */
-
+/* ==================== 屏静态元素（进入屏时画一次） ====================
+   2026-11-17 新 UI：新背景已含全部静态装饰，旧 UI 的冒号/进度条残留处理全部 #if 0；
+   这里只做「缓存失效」——强制下一帧 Px_Draw* 整屏重画动态元素（背景刚重传，屏上空白）。 */
 static void draw_screen_static(int scr)
 {
   if (scr == UI_SCREEN_CNT)
   {
+#if 0
     /* 坑#88：背景（ui_screen1.png 奶油风）已含按钮/装饰/进度条轨道/标签，静态只画冒号（12x40 黑）。
        坑#93：冒号位置随分钟位数——分钟<100（百位为 0 不显示）2 位布局冒号 154，≥100 3 位布局冒号 164 */
     draw_cnt_colon_at((g_cnt_remain / 6000) ? CNT_COL_LEFT : 154, CNT_DIG_Y);
@@ -1111,14 +1254,41 @@ static void draw_screen_static(int scr)
       UI_DrawGlyphRect(CNT_PROG_X, 239 - (CNT_PROG_Y + CNT_PROG_H) + 1, c_cnt_prog, CNT_PROG_H, 0xFFFFu, 0);
     c_cnt_state = 0xFF; c_cnt_prog = -1; c_prog_bar = 0;
     c_cnt_title = 0xFF;   /* 背景重传后强制重画顶部标题（倒计时/正计时，坑#88 标签内） */
+#else
+    /* 新 UI：背景已重传 -> 强制 Px_DrawCnt 下一帧整屏重画（旧 c_* 一并复位，便于回退） */
+    c_cnt_m3 = c_cnt_m2 = c_cnt_m1 = c_cnt_s1 = c_cnt_s2 = 0xFF;
+    c_cnt_w3 = 0xFF;
+    c_cnt_state = 0xFF; c_cnt_prog = -1; c_prog_bar = 0; c_cnt_title = 0xFF;
+    c_px_cnt_sec = 0xFFFFFFFFu; c_px_cnt_state = 0xFF; c_px_cnt_up = 0xFF;
+    c_px_cnt_bg = 0xFFFF; c_px_cnt_bub = 0xFFFF;
+#endif
   }
   else if (scr == UI_SCREEN_ALARM)
   {
+#if 0
     draw_colon_at(SC_ALM_COL_LEFT, SC_ALM_Y, SC_C_MAIN_INK);   /* 坑#85 闹钟屏：冒号 97 深棕 */
     c_alm_h1 = c_alm_h2 = c_alm_m1 = c_alm_m2 = 0xFF;
     c_alm_on = 0xFF; c_alm_loop = 0xFF; c_alm_ring = 0xFF;
     c_alm_sel = 0xFF;   /* 强制重画「闹钟N」序号（坑#86 粉条序号由本缓存驱动） */
+#else
+    /* 新 UI：同上，强制 Px_DrawAlm 整屏重画 */
+    c_alm_h1 = c_alm_h2 = c_alm_m1 = c_alm_m2 = 0xFF;
+    c_alm_on = 0xFF; c_alm_loop = 0xFF; c_alm_ring = 0xFF;
+    c_alm_sel = 0xFF;
+    c_px_alm_idx = 0xFF; c_px_alm_hh = 0xFF; c_px_alm_mm = 0xFF;
+    c_px_alm_on = 0xFF; c_px_alm_loop = 0xFF; c_px_alm_bg = 0xFFFF; c_px_alm_bub = 0xFFFF;
+#endif
   }
+
+  /* 旧 UI 增量缓存（c_cnt_* / c_alm_* / c_ico_*）现在只被 #if 0 的旧绘制读取：
+     这里统一读一次，防 -Wall 的 -Wunused-but-set-variable 噪声
+     （回退旧 UI、把上面 #if 0 打开后，本行可删）。 */
+  (void)c_cnt_m3; (void)c_cnt_m2; (void)c_cnt_m1; (void)c_cnt_s1; (void)c_cnt_s2;
+  (void)c_cnt_w3; (void)c_cnt_state; (void)c_cnt_title; (void)c_cnt_prog; (void)c_prog_bar;
+  (void)c_alm_h1; (void)c_alm_h2; (void)c_alm_m1; (void)c_alm_m2;
+  (void)c_alm_on; (void)c_alm_loop; (void)c_alm_ring; (void)c_alm_sel;
+  (void)c_ico_hourly; (void)c_ico_snooze; (void)c_ico_hourly_drawn; (void)c_ico_snooze_drawn;
+  (void)c_cnt_blink_drawn;
 }
 
 /* ==================== 对外 API ==================== */
@@ -1126,6 +1296,7 @@ static void draw_screen_static(int scr)
 void Screen_Init(void)
 {
   const ui_cfg_t *cfg = UI_GetConfig();
+  UI_PxSelfTest();          /* 像素 UI 资源自检（串口打印字库/精灵尺寸，2026-11-17） */
   g_alm.loop     = 0;
   g_alm.ring_sel = 0;
   g_alm.ringing  = 0;
@@ -1155,6 +1326,13 @@ void Screen_Init(void)
   (void)cfg;
   c_drawn_screen = 0xFF;
   goto_main();
+
+  /* 新 UI 气泡：开机文案（协议 V10 0x00 开机播报「欢迎使用语音闹钟」）。
+     0x00 帧由 main.c 直接 Voice_Send 发出（不经 app_voice 回调），故在此同步气泡文案；
+     8s 后 Screen_BubbleTick 自动恢复主屏默认文案「主人，有什么需要帮助的吗？」。 */
+#if VOICE_ENABLE
+  Screen_Bubble("欢迎使用语音闹钟");
+#endif
 }
 
 /* 每帧：按当前屏增量绘制 */
@@ -1247,7 +1425,11 @@ void Screen_OnSecond(TimeStruct *t)
   {
     g_last_hourly = t->hour;
     Voice_Send(VOICE_TX_TELL_TIME, t->hour, 0, 0, 0);
+    Screen_BubbleTime(t->hour, t->minute);   /* 新 UI：气泡同步「现在是XX点XX分」（0x07 文案） */
   }
+
+  /* 新 UI 气泡：临时文案超时（8s）后恢复该屏默认文案（每秒一次，2026-11-17） */
+  Screen_BubbleTick();
 }
 
 /* 语音模块 0xEF（15s 无命令）等超时回主屏——常态判断：默认回主屏，
@@ -1345,6 +1527,7 @@ int Screen_HandleVoice(const VoiceFrame *f)
         g_alm.ringing = 0;
         Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);
         (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);
+        Screen_Bubble("闹钟已结束");               /* 新 UI：气泡同步「闹钟已结束」（0x04 文案） */
       }
       /* 关闭了贪睡待响的槽：取消贪睡（坑#71 #9：贪睡配置不变，槽关了自然不重响） */
       if (g_alm.snooze && g_alm_ring_idx < 3 && !g_alm_on[g_alm_ring_idx])
@@ -1901,13 +2084,16 @@ static void cnt_sel_geom(u8 item, int *x, int *w, int *y)
   }
 }
 
-/* 画选中光标（2px 下划线；黄=选中、蓝=调整态） */
+/* 画选中光标（2px 下划线；黄=选中、蓝=调整态）
+   2026-11-17 像素游戏机 UI：新设计没有「选中下划线」这一元素，倒计时屏上会在
+   (16,51) 画出一条 54x2 的蓝线压在天空上（截图对比实测），故整体停用。 */
 static void cnt_sel_draw(u8 item, u16 color)
 {
   int x, w, y;
+  (void)item; (void)color;
   cnt_sel_geom(item, &x, &w, &y);
   if (w <= 0) return;
-  Display_FillRect(x, y, w, 2, color);
+  /* 停用：不画线 */
 }
 
 /* 清光标：恢复背景（坑#88：新背景浅色渐变非纯色，FillRect 单一清色会留痕，坑#60 教训） */
@@ -2003,5 +2189,454 @@ void debug_test(TimeStruct *t)
 
 }
 
+
+
+
+/* ============================================================================
+ * 像素游戏机 UI（08 号设计）三屏绘制层 —— 2026-11-17 新增，2026-11-17 接线
+ * 只依赖 ui.h 的 UI_DrawSprite / UI_DrawStrPx / UI_StrPxWidth；
+ * 坐标全部是设计坐标（y=0 顶）。接线点：
+ *   Calendar_Refresh -> Px_DrawMain（秒变化才重画）
+ *   draw_cnt         -> Px_DrawCnt （秒/状态/模式变化才重画）
+ *   draw_alarm       -> Px_DrawAlm （槽/时间/开关/循环变化才重画）
+ * 旧奶油风绘制在对应位置 #if 0 保留，便于对比回退。
+ * ========================================================================== */
+#define PX_COL_WHITE  UI_RGB(252, 252, 255)
+#define PX_COL_INK    UI_RGB(26, 30, 70)
+#define PX_COL_PROG   UI_RGB(110, 240, 40)   /* 倒计时进度条绿（设计稿取样 (85,245,9)/(127,249,51)） */
+
+/* ============================================================================
+ * 气泡文本状态机 + 绘制（2026-11-17 新 UI，D 项）
+ *
+ * 三屏默认文案：
+ *   主屏「主人，有什么需要帮助的吗？」/ 倒计时「主人，开启冒险倒计时吧！」/
+ *   闹钟「主人，需要设置闹钟吗？」
+ * 语音播报（0x00/0x01/0x02/0x03/0x04/0x07/0x09/0x0D/0x0E/0x0F）时由
+ * app_voice.c / screen.c 调 Screen_Bubble 覆盖，8s 后 Screen_BubbleTick 恢复默认。
+ *
+ * 可用区（设计坐标，字色深色 PX_COL_INK）：
+ *   主屏  ：x 112..292，y 154，13px（UI_PX_13）
+ *   倒计时：x  82..278，y 188，13px（UI_PX_13）
+ *   闹钟  ：x 252..316，y 108 起，12px（UI_PX_12）—— 只有 64px 宽，必须按宽度折行（最多 3 行）
+ * ========================================================================== */
+
+/* 该屏默认气泡文案 */
+static const char *bub_default(int scr)
+{
+  if (scr == UI_SCREEN_CNT)       return "主人，开启冒险倒计时吧！";
+  if (scr == UI_SCREEN_ALARM)     return "主人，需要设置闹钟吗？";
+  return "主人，有什么需要帮助的吗？";
+}
+
+/* UTF-8 单字符字节数（1..4；非法首字节按 1 处理，保证不卡死） */
+static int bub_chlen(const char *s)
+{
+  u8 c = (u8)s[0];
+  if (c < 0x80u) return 1;
+  if ((c & 0xE0u) == 0xC0u) return 2;
+  if ((c & 0xF0u) == 0xE0u) return 3;
+  if ((c & 0xF8u) == 0xF0u) return 4;
+  return 1;
+}
+
+/* ------------------------------------------------------------------
+ * bub_wrap_draw：按可用宽度逐字折行绘制（CJK 按实际字宽累加，超宽换行）。
+ * 参数: x,y=左上角（设计坐标）；s=文本；maxw=可用宽度 px；maxlines=最多行数；
+ *       base=字号档位（UI_PX_*）；col=字色；lh=行高（px）
+ * 返回: 实际画出的行数（>=1；文本空时返回 0）
+ * 说明: 单字就超过 maxw 时仍画（不无限换行）；字库缺字按字号占位宽推进。
+ * ------------------------------------------------------------------ */
+static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
+                         u32 base, u16 col, int lh)
+{
+  char ch[8];
+  const char *p = s;
+  int line = 0, cx = x, cw, cl, n;
+
+  while (*p != 0 && line < maxlines)
+  {
+    cl = bub_chlen(p);
+    n = 0;
+    while (n < cl && p[n] != 0) { ch[n] = p[n]; n++; }
+    ch[n] = 0;
+
+    cw = UI_StrPxWidth(ch, base);
+    if (cw <= 0) cw = (base == UI_PX_12) ? 12 : 13;   /* 缺字占位，防重叠/死循环 */
+    if (cx > x && (cx + cw) > (x + maxw))             /* 本行放不下：先换行（必须早于右缘保护） */
+    {
+      line++;
+      cx = x;
+      if (line >= maxlines) break;
+    }
+    if (cx + cw > 320) break;                         /* 屏幕右缘保护：UI_DrawGlyphRect 不裁剪，别越界写 GRAM */
+    UI_DrawStrPx(cx, y + line * lh, ch, base, col);
+    cx += cw;
+    p += cl;
+  }
+  return (s[0] != 0) ? (line + 1) : 0;
+}
+
+/* ------------------------------------------------------------------
+ * bubble_paint：某屏气泡区「先整块恢复背景，再折行重画」。
+ * 参数: scr=屏号（UI_SCREEN_*）；s=文案（非空）
+ * 说明: 先 UI_DrawGlyphRect(0xFFFF) 只还原背景——旧文案更宽/行数更多时不残留；
+ *       再按该屏坐标/字号/行高折行画（清旧 + 重画是同一个矩形，无闪烁）。
+ * ------------------------------------------------------------------ */
+static void bubble_paint(int scr, const char *s)
+{
+  int x, y, w, lh, maxlines, h;
+  u32 base;
+
+  /* 行高 14（12px 字 + 2px 行距）：3 行 = y108..149，正好避开 y151 起的机器人精灵
+     （机器人 52x58 @ (256,151)，气泡清屏矩形若压到 y151 会把机器人顶部擦掉） */
+  if (scr == UI_SCREEN_CNT)        { x = 82;  y = 188; w = 196; base = UI_PX_13; lh = 16; maxlines = 2; }
+  else if (scr == UI_SCREEN_ALARM) { x = 250; y = 118; w = 62;  base = UI_PX_12; lh = 14; maxlines = 2; }
+  else                             { x = 112; y = 154; w = 180; base = UI_PX_13; lh = 16; maxlines = 2; }
+
+  h = lh * maxlines;                       /* 固定清一整块（覆盖旧文案所有行） */
+  if (x < 0) x = 0;
+  if (y < 0) y = 0;
+  if (x + w > 320) w = 320 - x;
+  if (y + h > 240) h = 240 - y;
+  if (w <= 0 || h <= 0) return;
+
+  UI_DrawGlyphRect(x, 239 - (y + h) + 1, w, h, 0xFFFFu, 0);   /* 只还原背景（清旧文字） */
+  (void)bub_wrap_draw(x, y, s, w, maxlines, base, PX_COL_INK, lh);
+}
+
+/* ------------------------------------------------------------------
+ * bubble_draw：按当前屏画气泡（文本/屏/背景版本变化才重画）。
+ * 由 Px_DrawMain / Px_DrawCnt / Px_DrawAlm 末尾调用（它们的调用点已按秒/状态节流）。
+ * ------------------------------------------------------------------ */
+static void bubble_draw(void)
+{
+  int scr = UI_GetScreen();
+  const char *s;
+
+  if (scr == (int)c_bub_scr && g_bub_seq == c_bub_seq && g_ui_bg_ver == c_bub_bg) return;
+  c_bub_scr = (u8)scr;
+  c_bub_seq = g_bub_seq;
+  c_bub_bg  = g_ui_bg_ver;
+  s = (g_bub_on && g_bub_text[0] != 0) ? g_bub_text : bub_default(scr);
+  bubble_paint(scr, s);
+}
+
+/* 设置气泡文本（NULL/空 -> 恢复该屏默认文案），见 screen.h */
+void Screen_Bubble(const char *s)
+{
+  int i = 0, cl, k;
+
+  if (s == 0 || s[0] == 0)
+  {
+    g_bub_on = 0;
+    g_bub_text[0] = 0;
+  }
+  else
+  {
+    /* 按完整 UTF-8 字符拷贝（留 4 字节余量，防截断成半个汉字） */
+    while (s[i] != 0 && i < BUB_TEXT_MAX - 4)
+    {
+      cl = bub_chlen(s + i);
+      for (k = 0; k < cl && s[i + k] != 0; k++) g_bub_text[i + k] = s[i + k];
+      i += k;
+      if (k < cl) break;
+    }
+    g_bub_text[i] = 0;
+    g_bub_on = 1;
+    g_bub_ms = (u32)bftm0_ct;
+  }
+  g_bub_seq++;      /* 版本号自增：本屏下一次 Px_Draw* 会重画气泡 */
+}
+
+/* 每秒调一次：临时文案超时（8s）恢复默认文案，见 screen.h */
+void Screen_BubbleTick(void)
+{
+  if (!g_bub_on) return;
+  if ((u32)(bftm0_ct - g_bub_ms) < BUB_TIMEOUT_MS) return;
+  g_bub_on = 0;
+  g_bub_text[0] = 0;
+  g_bub_seq++;
+  printf("[UI] 气泡超时 -> 恢复默认文案\r\n");
+}
+
+/* 气泡显示「现在是XX点XX分」（0x07 报时文案），见 screen.h */
+void Screen_BubbleTime(u8 hh, u8 mm)
+{
+  char b[24];
+  const char *p;
+  int n = 0;
+
+  p = "现在是";  while (*p != 0) b[n++] = *p++;
+  b[n++] = (char)('0' + (hh / 10u) % 10u);
+  b[n++] = (char)('0' + hh % 10u);
+  p = "点";      while (*p != 0) b[n++] = *p++;
+  b[n++] = (char)('0' + (mm / 10u) % 10u);
+  b[n++] = (char)('0' + mm % 10u);
+  p = "分";      while (*p != 0) b[n++] = *p++;
+  b[n] = 0;
+  Screen_Bubble(b);
+}
+
+static void px_digit(int x, int y, u8 v, int style)
+{
+  if (v > 9u) return;
+  UI_DrawSprite(UI_SPR_DIGIT(style, v), x, y);
+}
+
+/* 字符串居中：cx=中心 x */
+static void px_str_c(int cx, int y, const char *s, u32 base, u16 col)
+{
+  UI_DrawStrPx(cx - UI_StrPxWidth(s, base) / 2, y, s, base, col);
+}
+
+/* ---------------- 主屏 ---------------- */
+void Px_DrawMain(const TimeStruct *t)
+{
+  char b[16];
+  u8 hh = t->hour, mm = t->minute;
+
+  /* 大数字 HH:MM（主屏 style=0）：2/0/:/3/2 布局，x 43/85/130/150/190，y 25 */
+  px_digit(40, 25, (u8)(hh / 10u), 0);
+  px_digit(82, 25, (u8)(hh % 10u), 0);
+  UI_DrawSprite(UI_SPR_COLON(0), 127, 25);
+  px_digit(147, 25, (u8)(mm / 10u), 0);
+  px_digit(187, 25, (u8)(mm % 10u), 0);
+
+  /* 秒（两位，精灵 150/151） */
+  UI_DrawSprite(UI_SPR_SEC,     234, 44);
+  UI_DrawSprite(UI_SPR_SEC + 1u, 254, 44);
+
+  /* 日期 2026-11-03 */
+  b[0] = '2'; b[1] = '0'; b[2] = (char)('0' + (u8)((t->year / 10u) % 10u)); b[3] = (char)('0' + (u8)(t->year % 10u));
+  b[4] = '-';
+  b[5] = (char)('0' + (u8)(t->month / 10u)); b[6] = (char)('0' + (u8)(t->month % 10u));
+  b[7] = '-';
+  b[8] = (char)('0' + (u8)(t->day / 10u));   b[9] = (char)('0' + (u8)(t->day % 10u)); b[10] = 0;
+  UI_DrawStrPx(72, 79, b, UI_PX_12, PX_COL_WHITE);
+
+  /* 星期（CalcWeekday: 1=周一 .. 7=周日） */
+  {
+    static const char *wk[7] = { "星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日" };
+    int wd = CalcWeekday((int)t->year, (int)t->month, (int)t->day);
+    if (wd >= 0 && wd <= 6) UI_DrawStrPx(185, 79, wk[wd], UI_PX_12, PX_COL_WHITE);
+  }
+
+  /* 农历 + 温湿度（2026-11-17 接线）：串由 calendar.c 的取串接口生成
+     （Calendar_GetLunar 只输出「九月十四」月日，**不含「农历：」前缀**——新 UI 要求；
+       Calendar_GetTempHumi 输出「25.5」「60.0」，取最近一次 Calendar_Refresh 的采样值）。
+     ⚠️ 坐标/字号是暂定值（日期 y86 下方顺排，12px 白字），需按新背景实际留白目视微调。 */
+  {
+    char lb[20];
+    char tb[12], hb[12];
+
+    if (Calendar_GetLunar(t, lb, (int)sizeof(lb)) == 0 && lb[0] != 0)
+      UI_DrawStrPx(72, 102, lb, UI_PX_12, PX_COL_WHITE);        /* 农历：日期下一行，左对齐 x72 */
+
+    if (Calendar_GetTempHumi(tb, (int)sizeof(tb), hb, (int)sizeof(hb)) == 0)
+    {
+      /* 取整数部分 + 追加单位：设计稿是「26℃」「60%」，不要小数位（2026-11-17） */
+      char tu[16], hu[16];
+      int ti = 0, hi2 = 0, ui;
+      const char *uc = "\xE2\x84\x83";      /* U+2103 ℃ */
+      while (tb[ti] != 0 && tb[ti] != '.' && ti < 10) { tu[ti] = tb[ti]; ti++; }
+      for (ui = 0; uc[ui] != 0; ui++) tu[ti + ui] = uc[ui];
+      tu[ti + ui] = 0;
+      while (hb[hi2] != 0 && hb[hi2] != '.' && hi2 < 10) { hu[hi2] = hb[hi2]; hi2++; }
+      hu[hi2] = '%'; hu[hi2 + 1] = 0;
+      px_str_c(190, 101, tu, UI_PX_14, PX_COL_INK);    /* 温度卡内区 167..202，中心 190 */
+      px_str_c(240, 101, hu, UI_PX_14, PX_COL_INK);    /* 湿度卡内区 225..254，中心 240 */
+    }
+  }
+
+  /* 机器人（主屏：画布 45x44 @ (1,2)，贴 (38,140)） */
+  UI_DrawSprite(UI_SPR_ROBOT(0, (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u, g_cani.cur_frame % 16u),
+                39, 142);
+
+  /* 气泡文字（最后画：盖在机器人/文字之上，2026-11-17 D 项） */
+  bubble_draw();
+}
+
+/* 倒计时右侧竖向 8 段进度条（设计稿：x240 / 宽 13 / 分段 y 45·54·61·68·76·83·91·98，首段高 7）
+   亮格数按剩余比例切 8 段；只在亮格数变化时重画，避免每秒闪。
+   灭掉的格子用「恢复背景」还原跑道底色（UI_DrawGlyphRect + code 0xFFFF）。 */
+static void px_cnt_prog(void)
+{
+  static const u8 seg_y[8] = { 45, 54, 61, 68, 76, 83, 91, 98 };
+  static s8  c_lit = -1;
+  static u16 c_bg  = 0xFFFFu;
+  u32 total = g_cnt_total;
+  int lit, i;
+
+  if (total == 0u)
+    lit = 8;                                        /* 待启动/未设置：满格 */
+  else if (g_up)
+  {
+    u32 used = (u32)g_up_sec;
+    lit = (used >= total) ? 0 : (int)(8u - (8u * used) / total);
+  }
+  else
+    lit = (int)((8u * (u32)g_cnt_remain + total - 1u) / total);   /* 向上取整 */
+
+  if (lit < 0) lit = 0;
+  if (lit > 8) lit = 8;
+  if (lit == (int)c_lit && c_bg == g_ui_bg_ver) return;
+  c_lit = (s8)lit;
+  c_bg  = g_ui_bg_ver;
+
+  for (i = 0; i < 8; i++)
+  {
+    int h = (i == 0) ? 7 : 6;
+    if (i < lit) Display_FillRect(240, seg_y[i], 13, (u16)h, PX_COL_PROG);
+    else         UI_DrawGlyphRect(240, 239 - (seg_y[i] + h) + 1, 13, h, 0xFFFFu, 0);
+  }
+}
+
+/* ---------------- 倒计时屏 ---------------- */
+void Px_DrawCnt(void)
+{
+  u32 sec = (u32)g_cnt_remain;
+  u32 mins;
+  u8 m1, m2, m3, s1, s2, w3;
+
+  if (g_up) sec = g_up_sec;
+  mins = sec / 60u;
+  if (mins > 999u) mins = 999u;        /* 上限保护（999:59），防 4 位溢出布局 */
+  m3 = (u8)(mins / 100u);              /* 分钟百位（0=不显示，用 2 位布局） */
+  m2 = (u8)((mins / 10u) % 10u);
+  m1 = (u8)(mins % 10u);
+  s1 = (u8)((sec % 60u) / 10u);
+  s2 = (u8)((sec % 60u) % 10u);
+  w3 = (m3 != 0u) ? 1u : 0u;
+
+  /* 位数切换（99:59 <-> 100:00，坑#93 支持 120 分钟）：整块数字区恢复背景，
+     防旧布局的数字/冒号残留在错位处（残影）。矩形 x60-239 / y40-109（数字+标题顶）。 */
+  if (w3 != c_px_cnt_w3)
+  {
+    c_px_cnt_w3 = w3;
+    UI_DrawGlyphRect(60, 239 - (40 + 70) + 1, 180, 70, 0xFFFFu, 0);
+  }
+
+  /* MM:SS / MMM:SS（style=2 = 倒计时字组，精灵 30x44，墨迹 28x42 对齐设计稿 y47）
+     2 位布局（设计稿实测）：分十 83、分个 113、冒号 149（宽 7）、秒十 162、秒个 196
+     3 位布局（分钟≥100）：左上整体舒展，位距 27：
+       分百 69、分十 96、分个 123、冒号 152、秒十 161、秒个 190 */
+  if (w3)
+  {
+    px_digit(68,  46, m3, 2);
+    px_digit(95,  46, m2, 2);
+    px_digit(122, 46, m1, 2);
+    UI_DrawSprite(UI_SPR_COLON(2), 151, 46);
+    px_digit(160, 46, s1, 2);
+    px_digit(189, 46, s2, 2);
+  }
+  else
+  {
+    px_digit(82,  46, m2, 2);
+    px_digit(112, 46, m1, 2);
+    UI_DrawSprite(UI_SPR_COLON(2), 148, 46);
+    px_digit(161, 46, s1, 2);
+    px_digit(195, 46, s2, 2);
+  }
+
+  /* 右侧竖向 8 段进度条（设计稿 x240 宽 13，分段 y 45/54/61/68/76/83/91/98，高 6） */
+  px_cnt_prog();
+
+  /* 标题（13px 居中于面板深色区；数字墨迹底 89，说明条顶 108 → y=92..104 刚好不压） */
+  px_str_c(154, 92, g_up ? "正计时中" : "倒计时中", UI_PX_13, PX_COL_WHITE);
+
+  /* 三按钮文字（14px 白字）：中心 100 / 164 / 228 */
+  px_str_c(100, 143, "开始", UI_PX_14, PX_COL_WHITE);
+  px_str_c(164, 143, "暂停", UI_PX_14, PX_COL_WHITE);
+  px_str_c(228, 143, "重置", UI_PX_14, PX_COL_WHITE);
+
+  /* 机器人（画布 45x54 @ (14,166)，贴 (10,165)） */
+  UI_DrawSprite(UI_SPR_ROBOT(1, (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u, g_cani.cur_frame % 16u),
+                24, 179);
+
+  /* 气泡文字（倒计时屏：x82..278 / y188 起，13px，最多 2 行） */
+  bubble_draw();
+}
+
+/* ---------------- 闹钟屏 ---------------- */
+void Px_DrawAlm(void)
+{
+  /* 显示槽：响铃中 = 响铃槽（与旧 draw_alarm 一致，2026-11-17 接线时对齐），否则当前选中槽 */
+  u8 idx = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
+  u8 i, hh, mm;
+  /* 星期钮横向位置：设计稿实测 pill 25x16，槽 0 左缘 57、位距 26.3（0..6 依次 57/83/110/136/162/189/215） */
+  static const u8 tg_x[7] = { 57, 83, 110, 136, 162, 189, 215 };
+  int wd;
+
+  if (idx > 2u) idx = 0u;
+  hh = g_alm_hour[idx];
+  mm = g_alm_min[idx];
+
+  /* HH:MM（平面 style=1，精灵 22x34，墨迹对齐设计稿 x49/73/96/105/128 · y63） */
+  px_digit(48,  62, (u8)(hh / 10u), 1);
+  px_digit(72,  62, (u8)(hh % 10u), 1);
+  UI_DrawSprite(UI_SPR_COLON(1), 95, 62);
+  px_digit(104, 62, (u8)(mm / 10u), 1);
+  px_digit(127, 62, (u8)(mm % 10u), 1);
+
+  /* 槽号：紧接背景已 baked 的「闹钟」二字（bg2 的「闹钟」墨迹到 x≈194，卡片右边框在 x204）
+     14px 数字 x=196 → 墨迹 x197..202；y=86 → 墨迹 y92..102（与设计稿「闹钟1」同基线） */
+  {
+    char b[2] = { (char)('1' + idx), 0 };
+    UI_DrawStrPx(196, 86, b, UI_PX_14, PX_COL_INK);
+  }
+
+  /* 开关 + 7 个星期钮（亮灯规则见 plan C：单次只亮今天，一~五/一~六/一~日 亮 5/6/7） */
+  UI_DrawSprite(UI_SPR_ALM_SW(g_alm_on[idx] ? 1 : 0), 218, 69);
+  {
+    TimeStruct t;
+    TimeModule_GetTime(&t);
+    wd = CalcWeekday(t.year, t.month, t.day);   /* 0=周一 .. 6=周日 */
+  }
+  for (i = 0; i < 7u; i++)
+  {
+    int on;
+    switch (g_alm_loop[idx])
+    {
+      case 0:  on = ((int)i == wd); break;      /* 单次：只亮今天 */
+      case 1:  on = ((int)i <= 4);  break;      /* 一~五 */
+      case 2:  on = ((int)i <= 5);  break;      /* 一~六 */
+      default: on = 1;              break;      /* 一~日 */
+    }
+    UI_DrawSprite(UI_SPR_ALM_TG(on), tg_x[i], 180);
+  }
+
+  /* 机器人（画布 52x58 @ (1,1)，贴 (255,150)） */
+  UI_DrawSprite(UI_SPR_ROBOT(2, (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u, g_cani.cur_frame % 16u),
+                256, 151);
+
+  /* 气泡文字（闹钟屏：x252..316 / y108 起，12px，窄区自动折行，最多 3 行） */
+  bubble_draw();
+}
+
+/* ---------------- 机器人单独重绘（8 fps） ----------------
+ * 三屏的整屏重画分别绑在「秒变化 / 状态变化」上（1 fps），机器人帧只有在整屏重画时
+ * 才会被贴一次，所以动画看起来是 1 fps。UI_CharAnim_Tick() 本身 125 ms 推进一帧，
+ * 这里跟着它只把机器人那一个精灵重贴一次（一个 45~52 px 宽的块，开销很小）。
+ * 帧号/状态/屏幕都没变时直接返回，避免无谓的 Flash 读 + SPI 写。 */
+void Px_RobotTick(void)
+{
+  static u16 c_f = 0xFFFFu;
+  static u8  c_s = 0xFFu, c_st = 0xFFu;
+  u8  s  = (u8)UI_GetScreen();
+  u16 f  = (u16)(g_cani.cur_frame % 16u);
+  u8  st = (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u;
+
+  if (!g_cani.ok) return;                 /* CANI/精灵容器没就绪：不画 */
+  if (f == c_f && s == c_s && st == c_st) return;
+  c_f = f; c_s = s; c_st = st;
+
+  switch (s)
+  {
+    case UI_SCREEN_MAIN: UI_DrawSprite(UI_SPR_ROBOT(0, st, f), 39,  142); break;
+    case UI_SCREEN_CNT:  UI_DrawSprite(UI_SPR_ROBOT(1, st, f), 24,  179); break;
+    case UI_SCREEN_ALARM: UI_DrawSprite(UI_SPR_ROBOT(2, st, f), 256, 151); break;
+    default: break;
+  }
+}
 
 
