@@ -178,6 +178,8 @@ extern ui_cani_t g_cani;
 int  UI_CharAnim_Init(void);       /* 读 CANI 头+状态表；0=可播，-1=无容器/空/非法 */
 int  UI_CharAnim_Ready(void);      /* 1=可播（ok 且有帧） */
 void UI_CharAnim_Enable(int en);   /* 开启动画播放（1=播放；0=静态帧） */
+void UI_CharAnim_DrawEnable(int en); /* 2026-11-17 新 UI：1=画旧人物帧（默认）；0=只跑帧机不写屏
+                                        （新 UI 机器人改用 SPR1 精灵，cur_state/cur_frame 仍由帧机推进） */
 int  UI_CharAnim_SetState(int st); /* 切状态：目标 WAKE/ALARM 走过渡（前4帧+变化4帧），目标 IDLE/同状态直切 */
 int  UI_CharAnim_PlayOnce(int st); /* 一次性响应动画：播完 st 状态一遍后自动回原状态（如 OK 短动画） */
 void UI_CharAnim_Tick(void);       /* 0.125s 换帧并重绘（内部 g_cani.ok 与 Enable 门控） */
@@ -195,4 +197,39 @@ int  UI_Anim_GetHalfH(void);                                      /* 半幅高�
 void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int frame_idx,
                        int bg_digit, u16 color);
 
+/* ==================== 像素游戏机 UI（08 号设计，2026-11-17） ====================
+ * Flash 资源（build_px_image.py 产出 flash_image_px.bin）：
+ *   0x001000 BG0 主屏 | 0x026800 BG1 倒计时 | 0x04C000 BG2 闹钟（各 150KB，row0=设计底部）
+ *   0x072000 FONT（思源黑体 Bold 1bpp 变宽，4 档字号，code = base + Unicode）
+ *   0x110000 SPR1 精灵容器（机器人 128 帧 + 数字 22 + 秒 2 + 开关/星期钮 4）
+ * SPR1: [0..4)'SPR1' [4..8)ver | [8..12)n | 索引从 16 起，每条 16B
+ *       {w:u16,h:u16,x:i16,y:i16,px_off:u32,mask_off:u32}
+ *       像素 RGB565 行优先、row0=设计底部；掩码 1bpp 同行序。 */
+#define UI_SPR_OFF       0x110000u
+#define UI_PX_BG0        0x001000u
+#define UI_PX_BG1        0x026800u
+#define UI_PX_BG2        0x04C000u
+
+/* 字号档位（字库 code 基址） */
+#define UI_PX_12         0x00000u   /* 卡片文字 12px */
+#define UI_PX_13         0x10000u   /* 气泡文字 13px */
+#define UI_PX_14         0x20000u   /* 按钮文字 14px */
+#define UI_PX_26         0x30000u   /* 大标题 26px */
+
+/* 精灵 id（顺序与 build_px_flash.py 一致）
+   机器人段：0..31 主屏(2状态)、32..79 倒计时(3状态)、80..127 闹钟(3状态) */
+#define UI_SPR_ROBOT(screen, state, frame) \
+  ((u32)((((screen) == 0) ? 0u : (((screen) == 1) ? 32u : 80u)) + (u32)((state) * 16u) + (u32)(frame)))
+#define UI_SPR_DIGIT(style, d)              (128u + (u32)(style) * 11u + (u32)(d))  /* style 0=主屏 1=闹钟 2=倒计时 */
+#define UI_SPR_COLON(style)                 (128u + (u32)(style) * 11u + 10u)
+#define UI_SPR_SEC                         161u   /* 161=秒十 162=秒个 */
+#define UI_SPR_ALM_SW(on)                  (163u + ((on) ? 0u : 1u))
+#define UI_SPR_ALM_TG(on)                  (165u + ((on) ? 0u : 1u))
+
+void UI_DrawSprite(u32 id, int x, int y);                        /* 设计坐标左上角贴精灵（带透明掩码） */
+void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color); /* 变宽字符串（base=UI_PX_*） */
+int  UI_StrPxWidth(const char *s, u32 base);                     /* 字符串像素宽（居中排版用） */
+void UI_PxSelfTest(void);                                       /* 串口自检：字库条数 + 关键字形/精灵尺寸 */
+
 #endif
+

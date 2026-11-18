@@ -74,4 +74,30 @@ void Screen_SetupLine(void);           /* 主屏设置模式黄线绘制（App_R
 void Screen_SetupVoiceSync(const TimeStruct *nt); /* 语音设时/设日成功时同步手动设置工作区（坑#71 #10 2026-09-05） */
 void Screen_StatusIcons(void);         /* 主屏状态角标：整点报时符号/贪睡符号 常驻绘制（App_Render 主屏分支调用，2026-09-05） */
 void debug_test(TimeStruct *t);
+
+/* ==================== 气泡文本状态机（2026-11-17 新 UI） ====================
+ * 三屏各有默认文案；语音播报时 Screen_Bubble 临时覆盖，8s 后 Screen_BubbleTick
+ * 自动恢复该屏默认文案。绘制在 screen.c 的 Px_Draw* 末尾（按屏各自坐标/字号，
+ * 闹钟屏窄区按宽度手动折行）。 */
+
+/* 设置气泡当前文本（UTF-8，最多 63 字节，超出按完整字符截断）。
+ *   s = NULL 或 ""  -> 立即恢复该屏默认文案
+ * 说明：只置状态，真正上屏由下一次 Px_Draw* 完成（≤1s，随秒刷新）。 */
+void Screen_Bubble(const char *s);
+
+/* 每秒调用一次（Screen_OnSecond 内已调）：临时文案超时（8s）后恢复默认文案。 */
+void Screen_BubbleTick(void);
+
+/* 气泡显示「现在是XX点XX分」（0x07 整点报时/报时命令用，hh/mm 十进制两位）。 */
+void Screen_BubbleTime(u8 hh, u8 mm);
+
+/* ==================== 像素游戏机 UI（08 号设计，2026-11-17） ====================
+ * 三屏绘制层：只画动态元素（背景由 UI_SetScreen 上传），坐标均为设计坐标。
+ * 已接线：Calendar_Refresh -> Px_DrawMain；Screen_Draw/draw_cnt -> Px_DrawCnt；
+ *         draw_alarm -> Px_DrawAlm（旧绘制 #if 0 保留）。 */
+void Px_DrawMain(const TimeStruct *t);
+void Px_DrawCnt(void);
+void Px_DrawAlm(void);
+void Px_RobotTick(void);   /* 机器人单独按 125ms 重绘（配合 UI_CharAnim_Tick，App_Render 每轮调用） */
+
 #endif /* __SCREEN_H */

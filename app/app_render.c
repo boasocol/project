@@ -30,7 +30,11 @@ void App_Render(TimeStruct *t)
 {
   Calendar_FlipTick((u32)bftm0_ct);
 
-  UI_CharAnim_Tick();   /* 形象状态动画：0.5s/帧，内部 g_cani.ok 门控（空容器即返回） */
+  UI_CharAnim_Tick();   /* 形象状态动画：125ms/帧，内部 g_cani.ok 门控（空容器即返回） */
+
+  /* 像素 UI（2026-11-17）：整屏重画按「秒/状态」节流，机器人帧率会掉到 1 fps，
+     这里每轮补一次「只重贴机器人」，帧号/状态/屏幕没变则内部直接返回。 */
+  Px_RobotTick();
 
   /* 多屏分发（2026-08-27）：主屏走 calendar 增量刷新；倒计时/闹钟屏走 screen.c */
   if (UI_GetScreen() == UI_SCREEN_MAIN)

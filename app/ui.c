@@ -75,6 +75,7 @@ typedef struct { u32 code; u32 off; u16 w; u16 h; } font_idx_t;
    2026-10-10 试过 0xE500 日期小号段（+11 提至 96），用户要求回退原大小 -> 移除回 84。 */
 #define MAX_FONT_IDX 91   /* 89 + 坑#88 蓝牙2汉字（89->91，2026-10-12；89=84+PAUSE5） */
 static font_idx_t g_idx[MAX_FONT_IDX];   /* 字库索引缓存（二分查找用） */
+static u32 g_index_off;   /* FONT 索引表偏移（Flash 内直接二分，2026-11-17） */
 static u32 g_font_count = 0;             /* 字库字符个数 */
 static u8  g_glyph[512];                 /* 单个字形位图缓冲（最大 44x84 1bpp，行对齐 6B x84 = 504B；2026-09-05 由 640 缩，省 128B） */
 static const u8 g_blank[512] = {0};      /* 全空字模（找不到字形时仅还原背景） */
@@ -139,17 +140,20 @@ int UI_CacheFont(void)
   if (crc != stored)
     return -2;
   g_font_count = (u32)h[11] | ((u32)h[12] << 8) | ((u32)h[13] << 16) | ((u32)h[14] << 24);
-  if (g_font_count > MAX_FONT_IDX) g_font_count = MAX_FONT_IDX;
-  u32 index_off = (u32)h[15] | ((u32)h[16] << 8) | ((u32)h[17] << 16) | ((u32)h[18] << 24);
-  /* 逐条读索引 {code u32, off u32, w u16, h u16}，共 12B/条 */
-  for (u32 i = 0; i < g_font_count; i++)
+  g_index_off  = (u32)h[15] | ((u32)h[16] << 8) | ((u32)h[17] << 16) | ((u32)h[18] << 24);
+  /* 2026-11-17：新 UI 字库 488 字形，g_idx[] 只够 91 条 —— 不再裁剪总数，
+     索引表留在 Flash 按需逐条读（二分 9 次），支持任意字形数。 */
   {
-    u8 e[12];
-    Flash_Read(g_font_base + index_off + i * 12, e, 12);
-    g_idx[i].code = (u32)e[0] | ((u32)e[1] << 8) | ((u32)e[2] << 16) | ((u32)e[3] << 24);
-    g_idx[i].off  = (u32)e[4] | ((u32)e[5] << 8) | ((u32)e[6] << 16) | ((u32)e[7] << 24);
-    g_idx[i].w    = (u16)e[8] | ((u16)e[9] << 8);
-    g_idx[i].h    = (u16)e[10] | ((u16)e[11] << 8);
+    u32 k, n = (g_font_count > MAX_FONT_IDX) ? MAX_FONT_IDX : g_font_count;
+    for (k = 0; k < n; k++)
+    {
+      u8 e[12];
+      Flash_Read(g_font_base + g_index_off + k * 12, e, 12);
+      g_idx[k].code = (u32)e[0] | ((u32)e[1] << 8) | ((u32)e[2] << 16) | ((u32)e[3] << 24);
+      g_idx[k].off  = (u32)e[4] | ((u32)e[5] << 8) | ((u32)e[6] << 16) | ((u32)e[7] << 24);
+      g_idx[k].w    = (u16)e[8] | ((u16)e[9] << 8);
+      g_idx[k].h    = (u16)e[10] | ((u16)e[11] << 8);
+    }
   }
   return 0;
 }
@@ -185,10 +189,21 @@ int UI_LoadConfig(void)
     return -2;
   }
   memcpy(&g_cfg, pl, plen);
-  /* 注意：newlib-nano printf 不支持 "+" 标志（%+d 会挂起），tz 用 %d */
-  printf("[CONF] ok: bright=%u%% tz=%d alarm=%u@%02u:%02u bt=%u wifi=%u\r\n",
-         g_cfg.brightness, (int)g_cfg.timezone, g_cfg.alarm_on,
-         g_cfg.alarm_hour, g_cfg.alarm_min, g_cfg.bt_paired, g_cfg.wifi_on);
+  /* 注意：newlib-nano printf 一次超过 5 个可变参数时，后面的参数会取到垃圾
+     （实测第 7 个参数取到了前面比较用过的 'CONF' 魔数 0x464E4F43）。
+     所以这里改成「每行一个参数」打印，先打原始 payload 便于核对镜像。 */
+  {
+    u8 i;
+    printf("[CONF] ok raw:");
+    for (i = 0; i < (u8)plen; i++) printf(" %02X", pl[i]);
+    printf("\r\n");
+  }
+  printf("[CONF]   bright=%u\r\n", g_cfg.brightness);
+  printf("[CONF]   tz=%d\r\n", (int)g_cfg.timezone);
+  printf("[CONF]   alarm_on=%u\r\n", g_cfg.alarm_on);
+  printf("[CONF]   alarm=%02u:%02u\r\n", g_cfg.alarm_hour, g_cfg.alarm_min);
+  printf("[CONF]   bt=%u\r\n", g_cfg.bt_paired);
+  printf("[CONF]   wifi=%u\r\n", g_cfg.wifi_on);
   return 0;
 }
 
@@ -217,16 +232,23 @@ static const u8 *ui_get_glyph(u32 code)
   while (lo <= hi)
   {
     int mid = (lo + hi) / 2;
-    if (g_idx[mid].code == code)
+    u8 e[12];
+    u32 c, off, w, h;
+    Flash_Read(g_font_base + g_index_off + (u32)mid * 12u, e, 12);
+    c   = (u32)e[0] | ((u32)e[1] << 8) | ((u32)e[2] << 16) | ((u32)e[3] << 24);
+    off = (u32)e[4] | ((u32)e[5] << 8) | ((u32)e[6] << 16) | ((u32)e[7] << 24);
+    w   = (u32)e[8] | ((u32)e[9] << 8);
+    h   = (u32)e[10] | ((u32)e[11] << 8);
+    if (c == code)
     {
-      g_cur_w = g_idx[mid].w; g_cur_h = g_idx[mid].h;
-      Flash_Read(g_font_base + g_idx[mid].off, g_glyph, (u32)g_cur_h * ((g_cur_w + 7u) / 8u));
+      g_cur_w = (u16)w; g_cur_h = (u16)h;
+      Flash_Read(g_font_base + off, g_glyph, h * ((w + 7u) / 8u));
       return g_glyph;
     }
-    if (g_idx[mid].code < code) lo = mid + 1;
+    if (c < code) lo = mid + 1;
     else hi = mid - 1;
   }
-  g_cur_w = 0; g_cur_h = 0;   /* 找不到：尺寸归零，调用方仅还原背景 */
+  g_cur_w = 0; g_cur_h = 0;
   return NULL;
 }
 
@@ -641,6 +663,10 @@ void UI_DrawMascotCentered(void)
    位置：按帧 w/h 在 72x72 人物区居中（UI_ZONE_*，与静态 mascot 同一区，方向一致）。 */
 ui_cani_t g_cani;
 static u8  g_cani_enable = 0;   /* 动画播放开关（calendar.c Enable(1) 开启，0=静态帧） */
+/* 2026-11-17 新 UI（像素游戏机）：CANI 帧机照常跑（cur_state/cur_frame 被新 UI 的
+   机器人精灵 UI_SPR_ROBOT 取用），但**不画**旧人物帧——旧人物区会盖在新背景/气泡上。
+   0=只跑状态机不写屏（新 UI），1=正常画（旧 UI）。 */
+static u8  g_cani_draw = 1;
 
 int UI_CharAnim_Init(void)
 {
@@ -649,7 +675,30 @@ int UI_CharAnim_Init(void)
   memset(&g_cani, 0, sizeof(g_cani));
   Flash_Read(UI_CANI_OFF, hdr, 24);
   if (!(hdr[0] == 'C' && hdr[1] == 'A' && hdr[2] == 'N' && hdr[3] == 'I'))
+  {
+    /* 新 UI（像素游戏机 08 号设计）：镜像里没有 CANI 容器，机器人动画改用 SPR1 精灵帧
+       （机器人段 = 每屏 16 帧/状态）。这里只搭一个「3 状态 x 16 帧」的帧机，
+       给 Px_RobotTick 提供 cur_frame/cur_state；像素由 UI_SPR_ROBOT 从 SPR1 取，
+       本帧机不写屏（g_cani_draw 已被 calendar.c 置 0）。
+       没有这一步的话 g_cani.ok=0 → Tick 直接返回 → cur_frame 永远是 0，机器人不动。 */
+    u8 sh[4];
+    Flash_Read(UI_SPR_OFF, sh, 4);
+    if (sh[0] == 'S' && sh[1] == 'P' && sh[2] == 'R' && sh[3] == '1')
+    {
+      u8 i;
+      g_cani.w = 48; g_cani.h = 48;          /* 占位尺寸（不参与绘制） */
+      g_cani.nstates = 3; g_cani.nframes = 48;
+      for (i = 0; i < 3; i++)
+      {
+        g_cani.state_start[i] = (u16)((u16)i * 16u);
+        g_cani.state_count[i] = 16u;
+      }
+      g_cani.ok = 1;
+      g_cani.last_tick = bftm0_ct;
+      return 0;
+    }
     return -1;                                   /* 旧镜像无 CANI：保持停用 */
+  }
   v = (u32)hdr[8]  | ((u32)hdr[9]  << 8) | ((u32)hdr[10] << 16) | ((u32)hdr[11] << 24);
   g_cani.w = (u16)v;
   v = (u32)hdr[12] | ((u32)hdr[13] << 8) | ((u32)hdr[14] << 16) | ((u32)hdr[15] << 24);
@@ -677,6 +726,9 @@ int UI_CharAnim_Init(void)
 int UI_CharAnim_Ready(void) { return g_cani.ok ? 1 : 0; }
 
 void UI_CharAnim_Enable(int en) { g_cani_enable = en ? 1 : 0; }
+
+/* 新 UI（2026-11-17）：只跑帧机不画屏（机器人由 SPR1 精灵绘制） */
+void UI_CharAnim_DrawEnable(int en) { g_cani_draw = en ? 1 : 0; }
 
 int UI_CharAnim_SetState(int st)
 {
@@ -741,6 +793,7 @@ static void cani_draw_frame(u16 frame)
   u32 stride = (u32)g_cani.w * g_cani.h * 2u + mrow * g_cani.h;
   u32 base   = UI_CANI_OFF + 256u + (u32)frame * stride;
 
+  if (!g_cani_draw) return;   /* 新 UI：只跑帧机不画旧人物（2026-11-17） */
   cani_pos(g_cani.w, g_cani.h, &rx, &ry);
   for (u32 yy = 0; yy < g_cani.h; yy++)
   {
@@ -1430,4 +1483,132 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
              (unsigned)dt_flash, (unsigned)dt_bgread,
              (unsigned)(dt_synth - dt_bgread), (unsigned)dt_spi);
   } */
+}
+
+/* ============================================================================
+ * 像素游戏机 UI（08 号设计）精灵与变宽字符串绘制 —— 2026-11-17 新增
+ * 资源：ui.h 中 UI_SPR_OFF / UI_PX_BG* / UI_PX_12..26 说明
+ * ========================================================================== */
+static u8 g_px_mask[(320 + 7) / 8];
+
+/* 贴一个精灵：id 为 SPR1 索引，x/y 为设计坐标左上角；掩码为 0 的像素保持背景 */
+void UI_DrawSprite(u32 id, int x, int y)
+{
+  u8 ent[16];
+  u16 w, h;
+  u32 po, mo, pxw, mrw;
+  Flash_Read(UI_SPR_OFF + 16u + id * 16u, ent, 16);
+  w = (u16)(ent[0] | (ent[1] << 8));
+  h = (u16)(ent[2] | (ent[3] << 8));
+  po = (u32)ent[8]  | ((u32)ent[9]  << 8) | ((u32)ent[10] << 16) | ((u32)ent[11] << 24);
+  mo = (u32)ent[12] | ((u32)ent[13] << 8) | ((u32)ent[14] << 16) | ((u32)ent[15] << 24);
+  if (w == 0u || h == 0u || w > 320u || h > 240u) return;
+  if (y < 0 || x < 0 || (x + (int)w) > 320 || (y + (int)h) > 240) return;
+  pxw = (u32)w * 2u;
+  mrw = ((u32)w + 7u) / 8u;
+
+  for (int yy = 0; yy < (int)h; yy++)
+  {
+    u32 srow = (u32)(h - 1u - (u16)yy);          /* 存储行序：row0=设计底部 */
+    int  ly   = 239 - (y + yy);          /* 设计坐标 -> GRAM 列（设备垂直镜像） */
+    /* 1) 背景行 -> g_blit，并转成高字节先（g_blit 1680B，足够 320 宽一行） */
+    Flash_Read(g_ui_bg + (u32)ly * 320u * 2u + (u32)x * 2u, g_blit, pxw);
+    for (int i = 0; i < (int)pxw; i += 2)
+    {
+      u8 t = g_blit[i]; g_blit[i] = g_blit[i + 1]; g_blit[i + 1] = t;
+    }
+    /* 2) 精灵行 + 掩码；只把不透明像素覆盖上去（精灵像素小端 -> 高字节先） */
+    Flash_Read(UI_SPR_OFF + po + srow * pxw, g_line, pxw);
+    Flash_Read(UI_SPR_OFF + mo + srow * mrw, g_px_mask, mrw);
+    for (int xx = 0; xx < (int)w; xx++)
+    {
+      if (((g_px_mask[xx >> 3] >> (7 - (xx & 7))) & 1u) != 0u)
+      {
+        g_blit[xx * 2]     = g_line[xx * 2 + 1];
+        g_blit[xx * 2 + 1] = g_line[xx * 2];
+      }
+    }
+    SPI_LCD_Select();
+    SPI_LCD_WriteCmd(ST7789_CASET);
+    { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RASET);
+    { u8 d[4] = {HI8((u16)x), LO8((u16)x), HI8((u16)(x + (int)w - 1)), LO8((u16)(x + (int)w - 1))};
+      SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RAMWR);
+    SPI_LCD_WriteData(g_blit, pxw);
+    SPI_LCD_Deselect();
+  }
+}
+
+/* 取字模宽度（base + Unicode） */
+static int px_glyph_w(u32 code, int *ph)
+{
+  const u8 *g = ui_get_glyph(code);
+  if (!g) { *ph = 0; return 0; }
+  *ph = g_cur_h;
+  return g_cur_w;
+}
+
+/* 字符串像素宽度 */
+int UI_StrPxWidth(const char *s, u32 base)
+{
+  int w = 0, h;
+  const char *p = s;
+  while (*p)
+  {
+    u32 cp = utf8_next(&p);
+    w += px_glyph_w(base + cp, &h);
+  }
+  return w;
+}
+
+/* 变宽字符串：逐字贴字模（背景保留），x,y 为设计坐标（y=字形顶部基线域顶部） */
+void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color)
+{
+  const char *p = s;
+  int cx = x, h;
+  while (*p)
+  {
+    u32 cp = utf8_next(&p);
+    u32 code = base + cp;
+    int w = px_glyph_w(code, &h);
+    if (w <= 0 || h <= 0) continue;
+    UI_DrawGlyphRect(cx, 239 - (y + h) + 1, w, h, code, color);
+    cx += w;
+  }
+}
+
+
+/* 像素 UI 自检：打印字库/精灵关键项，便于串口确认资源是否就位（2026-11-17） */
+void UI_PxSelfTest(void)
+{
+  u8 ent[16];
+  int h;
+  printf("[PX] font_count=%u  ", (unsigned)g_font_count);
+  (void)ui_get_glyph(UI_PX_12 + (u32)'2');
+  printf("glyph12('2')=%dx%d  ", g_cur_w, g_cur_h);
+  (void)ui_get_glyph(UI_PX_26 + 0x5012u);   /* 正 */
+  printf("glyph26(正)=%dx%d\r\n", g_cur_w, g_cur_h);
+  Flash_Read(UI_SPR_OFF + 16u, ent, 16);
+  {
+    u8 fh[24], sh[24];
+    Flash_Read(g_font_base, fh, 20);
+    Flash_Read(UI_SPR_OFF, sh, 20);
+    printf("[PX] font raw@%06X: %02X %02X %02X %02X | cnt%02X%02X%02X%02X | idx%02X%02X%02X%02X\r\n",
+           (unsigned)g_font_base, fh[0], fh[1], fh[2], fh[3],
+           fh[14], fh[13], fh[12], fh[11], fh[18], fh[17], fh[16], fh[15]);
+    printf("[PX] spr  raw@%06X: %02X %02X %02X %02X | %02X%02X %02X%02X %02X%02X\r\n",
+           (unsigned)UI_SPR_OFF, sh[0], sh[1], sh[2], sh[3],
+           sh[17], sh[16], sh[19], sh[18], sh[21], sh[20]);
+  }
+  printf("[PX] spr0 %ux%u at (%d,%d) px_off=%u\r\n",
+         (unsigned)(ent[0] | (ent[1] << 8)), (unsigned)(ent[2] | (ent[3] << 8)),
+         (int)(short)(ent[4] | (ent[5] << 8)), (int)(short)(ent[6] | (ent[7] << 8)),
+         (unsigned)((u32)ent[8] | ((u32)ent[9] << 8) | ((u32)ent[10] << 16) | ((u32)ent[11] << 24)));
+  Flash_Read(UI_SPR_OFF + 16u + UI_SPR_DIGIT(0, 2) * 16u, ent, 16);
+  h = (int)(ent[2] | (ent[3] << 8));
+  printf("[PX] spr_digit(0,2) %ux%d\r\n", (int)(ent[0] | (ent[1] << 8)), h);
+  printf("[PX] cani ok=%u nstates=%u cnt0=%u cnt1=%u\r\n",
+         (unsigned)g_cani.ok, (unsigned)g_cani.nstates,
+         (unsigned)g_cani.state_count[0], (unsigned)g_cani.state_count[1]);
 }

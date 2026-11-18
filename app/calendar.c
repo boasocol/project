@@ -25,6 +25,7 @@
 #include "ui.h"
 #include "time_module.h"
 #include "BFTM0.h"   /* bftm0_ct（1ms 计数，调试测帧耗时） */
+#include "screen.h"  /* Px_DrawMain：新 UI 像素风主屏绘制（2026-11-17 接线） */
 
 /* ------------------------------------------------------------------
  * YF(y, h)：设计坐标 -> GRAM 列换算宏（仅低层原语 UI_DrawGlyphRect 用）。
@@ -81,6 +82,151 @@ static u16 c_yy = 0xFFFF;
 static u8  c_mo = 0xFF, c_dd = 0xFF, c_wd = 0xFF;
 static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 
+/* 最近一次采样值（Calendar_Refresh 入口写入，Calendar_GetTempHumi 取用；单位 0.1）。
+   初值 0x7FFF = 从未采样（与 c_temp 同"非法值"约定），GetTempHumi 内部按 0 处理防乱码。 */
+static int s_last_temp = 0x7FFF, s_last_humi = 0x7FFF;
+
+/* ------------------------------------------------------------------
+ * cal_strcpy：带长度的字符串拷贝（C89，不引 libc 的 strncpy 语义坑）。
+ * 参数: d=目标, dn=目标字节数（含 NUL）, s=源（非空）
+ * 说明: 超长截断并补 NUL；dn<=0 或 d 空时不动。
+ * ------------------------------------------------------------------ */
+static void cal_strcpy(char *d, int dn, const char *s)
+{
+  int i = 0;
+  if (d == 0 || dn <= 0) return;
+  while (s[i] != 0 && i < dn - 1) { d[i] = s[i]; i++; }
+  d[i] = 0;
+}
+
+/* ------------------------------------------------------------------
+ * Calendar_GetLunar：公历 -> 农历「月+日」串（不含「农历：」前缀）。
+ *
+ * 逻辑与旧 Calendar_RefreshStatic 内联代码完全一致（只抽出来复用，文案格式不变）：
+ *   月份：中文月名表（正/二/…/十/冬/腊）+「月」；
+ *   日：初一..初十 -> 初+一..十；十一..十九 -> 十+一..九；二十 -> 二十；
+ *       廿一..廿九 -> 廿+一..九；三十 -> 三十。
+ *   坑#71 #5：初十边界必须是 <11（写成 <10 会取 N01[-1] 越界，农历串损坏消失）。
+ *
+ * 参数: t=公历时间；buf=输出缓冲；n=buf 字节数（含 NUL，建议 >= 16）
+ * 返回: 0=成功；-1=日期/农历表越界；-2=参数非法
+ * 注意: 最长输出 12 字节（「九月十四」），n < 13 时会被安全截断（可能截断在汉字中间，
+ *       故调用方请给 >= 16 字节）。
+ * ------------------------------------------------------------------ */
+int Calendar_GetLunar(const TimeStruct *t, char *buf, int n)
+{
+  static const char *LUNAR_MONTH[12] = { /* 正 二 三 四 五 六 七 八 九 十 冬 腊 */
+    "正","二","三","四","五","六","七","八","九","十","冬","腊"};
+  static const char *N01[10] = { /* 一 二 三 四 五 六 七 八 九 十 */
+    "一","二","三","四","五","六","七","八","九","十"};
+  LunarDate ld;
+  const char *q;
+  int ln = 0;
+
+  if (buf == 0 || n <= 0) return -2;
+  buf[0] = 0;
+  if (t == 0) return -2;
+
+  if (TimeModule_GetLunar(t->year, t->month, t->day, &ld) != 0) return -1;
+  if (ld.lunarMonth < 1 || ld.lunarMonth > 12) return -1;
+  if (ld.lunarDay < 1 || ld.lunarDay > 30) return -1;
+
+  /* 月：中文月名 + 「月」 */
+  q = LUNAR_MONTH[ld.lunarMonth - 1];
+  while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+  q = "月";
+  while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+
+  /* 日：初一/十一/二十/廿X/三十 规则（与旧代码逐字一致） */
+  if (ld.lunarDay == 20)
+  {
+    q = "二十";
+  }
+  else if (ld.lunarDay == 30)
+  {
+    q = "三十";
+  }
+  else if (ld.lunarDay < 11)
+  {
+    q = "初";
+    while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+    q = N01[ld.lunarDay - 1];
+  }
+  else if (ld.lunarDay < 20)
+  {
+    q = "十";
+    while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+    q = N01[ld.lunarDay - 11];
+  }
+  else
+  {
+    q = "廿";
+    while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+    q = N01[ld.lunarDay - 21];
+  }
+  while (*q != 0 && ln < n - 1) buf[ln++] = *q++;
+  buf[ln] = 0;
+  return 0;
+}
+
+/* ------------------------------------------------------------------
+ * Calendar_GetTempHumi：温度/湿度数值串（格式同旧界面，单位 0.1）。
+ *
+ * 格式逻辑与旧 Calendar_RefreshStatic 内联代码一致（一位小数；负数带 '-'；
+ * 百位仅在 >=100 时出现），只是改成写进调用方缓冲。
+ * 数据源 = 最近一次 Calendar_Refresh 传入的 temp/humi（s_last_*），
+ * 故调用顺序必须保证 Calendar_Refresh 已跑过（主循环每轮都跑，满足）。
+ *
+ * 参数: tb/tn=温度缓冲+字节数（>= 8）；hb/hn=湿度缓冲+字节数（>= 8）
+ * 返回: 0=成功；-1=两个缓冲都非法
+ * ------------------------------------------------------------------ */
+int Calendar_GetTempHumi(char *tb, int tn, char *hb, int hn)
+{
+  char s[12];              /* 单串中间缓冲：最长 "-40.0" / "125.0" 6 字节 */
+  int ti, tf, hi, hf, m;
+  int temp, humi;
+
+  if ((tb == 0 || tn <= 0) && (hb == 0 || hn <= 0)) return -1;
+
+  temp = s_last_temp;
+  humi = s_last_humi;
+  /* 采样异常（未读到 / 超量程）：按 0 处理，防把 0x7FFF 格式化成乱码 */
+  if (temp < -400 || temp > 1250) temp = 0;
+  if (humi < 0    || humi > 1000) humi = 0;
+
+  if (tb != 0 && tn > 0)
+  {
+    ti = temp / 10;
+    tf = temp % 10;
+    if (tf < 0) tf = -tf;
+    m = 0;
+    if (ti < 0) { s[m++] = '-'; ti = -ti; }
+    if (ti >= 100) s[m++] = (char)('0' + (ti / 100) % 10);
+    if (ti >= 10 || m > 0) s[m++] = (char)('0' + (ti / 10) % 10);
+    s[m++] = (char)('0' + ti % 10);
+    s[m++] = '.';
+    s[m++] = (char)('0' + tf);
+    s[m] = 0;
+    cal_strcpy(tb, tn, s);
+  }
+
+  if (hb != 0 && hn > 0)
+  {
+    hi = humi / 10;
+    hf = humi % 10;
+    if (hf < 0) hf = -hf;
+    m = 0;
+    if (hi >= 100) s[m++] = (char)('0' + (hi / 100) % 10);
+    if (hi >= 10 || m > 0) s[m++] = (char)('0' + (hi / 10) % 10);
+    s[m++] = (char)('0' + hi % 10);
+    s[m++] = '.';
+    s[m++] = (char)('0' + hf);
+    s[m] = 0;
+    cal_strcpy(hb, hn, s);
+  }
+  return 0;
+}
+
 /* ------------------------------------------------------------------
  * 概念B 布局常量（ui-design-system.md §3 时间主卡）：
  *   大数字 HH:MM 白色 40x84 画主卡内、块水平居中 x[64..255]；
@@ -104,6 +250,12 @@ static int c_temp = 0x7FFF, c_humi = 0x7FFF;
 #define C_TIME  UI_RGB(92, 58, 42)
 #define C_SEC   UI_RGB(64, 196, 255)
 
+/* ==================================================================================
+ * 旧主屏绘制原语（奶油风概念B，UI_Show / UI_DrawGlyphRect 版）—— 2026-11-17 新 UI 接线后
+ * 全部停用：#if 0 保留便于回退（回退旧 UI = 本块 + 下方各 #if 0 一起改回 #if 1）。
+ * 新 UI 对应实现：screen.c 的 Px_DrawMain（精灵 UI_SPR_* + UI_DrawStrPx）。
+ * ================================================================================== */
+#if 0
 /* 画单个时钟数字（深棕 40 高，0xE100 时间数字段 20x40，顶部 y=CLK_Y）
    2026-09-05 坑#84：原 40x84 大数字换 30 高（新图时间胶囊仅 32px 高，84 高放不下）；
    2026-10-10 唐美人笔画粗 12x30 显小 -> 16x34 -> 20x40（build_flash 同步）；
@@ -138,6 +290,7 @@ static void draw_date_string(u16 yy, u8 mo, u8 da)
   ds[n] = 0;
   UI_Show(187, 56, ds, UI_SLOT_DATE2, C_TIME);
 }
+#endif /* 旧主屏绘制原语（新 UI 停用） */
 
 /* ==================================================================
  * 翻页动画状态（6 张卡片对应 6 个时/分/秒位）
@@ -371,13 +524,19 @@ void Calendar_FlipTick(u32 now_ms)
 /* ------------------------------------------------------------------
  * draw_bt_state：绘制蓝牙连接状态图标（勾=已连接，叉=未连接）。
  * 参数: connected=1 画对勾，0 画叉。
+ * 2026-11-17 新 UI：旧主屏的蓝牙胶囊位置（x33,y67）在新背景上没有对应位置，
+ * 本绘制 #if 0 停用（状态缓存 s_bt_connected 仍在维护，将来按新设计补坐标再打开）。
  * ------------------------------------------------------------------ */
 static void draw_bt_state(int connected)
 {
+#if 0
   /* 坑#84 新主屏：蓝牙胶囊 x14-170 y64-88 内画"蓝牙已连接/蓝牙未连接"（5 汉字 22 高 90px，
      UI_SLOT_WEEK 清90 居中；2026-10-12 用户要求加「蓝牙」二字） */
   const char *s = connected ? "蓝牙已连接" : "蓝牙未连接";
   UI_Show(BT_X, BT_Y, s, UI_SLOT_WEEK, C_TIME);
+#else
+  (void)connected;   /* 新 UI 暂不显示蓝牙状态（保留去重逻辑） */
+#endif
 }
 
 static u8 s_bt_connected = 0xFF;            /* 上次绘制状态（0xFF=未画过，强制首画） */
@@ -427,16 +586,23 @@ void Calendar_Init(void)
   g_active_b = -1;
 
   /* 初始冒号：亮起（概念B 单冒号 x=153；冒号闪烁已恢复） */
-  draw_colon(CLK_X_COL, 1);
+#if 0
+  draw_colon(CLK_X_COL, 1);   /* 旧 UI 冒号（新 UI 冒号是 Px_DrawMain 里的 UI_SPR_COLON 精灵） */
+#endif
 
   /* 语音助手小女孩：按 MSCT 尺寸自动定位（72x72 区，尺寸无关，与动画同区对齐） */
-  UI_DrawMascotCentered();
+#if 0
+  UI_DrawMascotCentered();    /* 旧 UI 静态人物（新 UI 用 SPR1 机器人精灵） */
+#endif
 
   /* 形象状态动画（CANI）：帧图=形象图\default_girl_1..48.png（101+ 编号为暂存不入脚本）。
      每状态 16 帧（8 循环 + 4 变化到2 + 4 变化到3），0.125s/帧（8 次/秒）。
      要恢复静态只显示第 1 帧：改回 UI_CharAnim_Enable(0)。 */
   (void)UI_CharAnim_Init();
   UI_CharAnim_Enable(1);
+  /* 2026-11-17 新 UI：CANI 帧机继续跑（cur_state/cur_frame 被 Px_DrawMain 的机器人精灵取用），
+     但**不再画旧人物**——旧人物区（主屏 220,128）会盖在新 UI 背景/气泡上。 */
+  UI_CharAnim_DrawEnable(0);
 
   /* 强制首帧重绘所有动态块 */
   c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;
@@ -480,6 +646,14 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
     for (int i = 0; i < 6; i++) { g_flip[i].state = 0; g_pending[i] = 0; }
   }
 
+  /* 采样值进缓存：新 UI 的 Calendar_GetTempHumi 从这里取（无参数接口） */
+  s_last_temp = temp;
+  s_last_humi = humi;
+
+#if 0
+  /* ================= 旧 UI（奶油风概念B，UI_Show 版主屏）—— 2026-11-17 新 UI 接线后停用，
+     以 #if 0 保留便于回退（回退 = 本块与下方新 UI 块互换启用状态）。 ================= */
+
   /* ---- 时钟 HH:MM 大数字 + 秒（概念B 主卡；翻页动画停用 g_anim_ok=0，纯静态直绘） ----
      4 个大数字白色 40x84 画主卡内（x[64,110,170,216]、y=CLK_Y=32），块水平居中；
      秒 16x22 青色画主卡右下（x=270,y=89）。变化位才重绘（增量）。 */
@@ -501,6 +675,23 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
      2026-09-05：去掉后半秒时隙门控（g_half_phase，原为与翻页动画错开时间片，
      动画已停用）——日期/温湿度/设置模式按键调整即时反映，不再滞后最多 500ms。 */
   Calendar_RefreshStatic(t, temp, humi);
+#else
+  /* ================= 新 UI（像素游戏机，2026-11-17 接线） =================
+   * Px_DrawMain 一次性重画主屏全部**动态元素**（时钟数字/冒号/秒/日期/星期/农历/
+   * 温湿度/机器人精灵/气泡文字）。背景不重传（由 UI_SetScreen 负责）。
+   *
+   * 重画节流：只在「秒变化」或「强制刷新」（上电/切屏回主屏/授时跳变/开显示，
+   * 经 g_static_next -> force_static）时跑一次 —— 绝不每轮主循环重画：
+   * 一屏精灵+字串约 500 次 SPI 行事务，每帧都跑会把主循环拖垮（语音轮询/按键会卡）。
+   * c_ss 复用旧秒缓存（0xFF=非法 -> 首帧必画；Calendar_ForceRedraw 会重置它）。
+   * 代价：机器人精灵帧率 = 1 帧/秒（g_cani.cur_frame 每秒采样一次）。
+   * 若需 8fps 机器人，后续把「机器人」单独拆成 125ms 节流的绘制函数即可。 */
+  if (force_static || t->second != c_ss)
+  {
+    c_ss = t->second;
+    Px_DrawMain(t);
+  }
+#endif
 }
 
 /* ------------------------------------------------------------------
@@ -509,9 +700,16 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
  * 原为与翻页动画错开时间片，动画已停用）。
  * 参数: t=当前时间；temp/humi=温湿度（单位 0.1）。
  * 流程: 各区块与 c_* 缓存比较，变化才重绘（增量）。
+ *
+ * ⚠️ 2026-11-17 新 UI 接线：本函数的绘制体已 #if 0 停用（旧奶油风坐标/字号）。
+ *    - 农历/温湿度「取串」逻辑已抽成 Calendar_GetLunar / Calendar_GetTempHumi（上方），
+ *      新 UI 由 Px_DrawMain 统一按新坐标重画；
+ *    - 保留函数本体与签名（calendar.h 公开 API），便于回退。
  * ------------------------------------------------------------------ */
 void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
 {
+  (void)t; (void)temp; (void)humi;   /* 新 UI：参数不再使用（取串走 Calendar_GetLunar/GetTempHumi） */
+#if 0
   int wd = CalcWeekday(t->year, t->month, t->day);
 
   /* ---- 日期三卡（概念B，卡 y=126..152 高26，文字顶部 y≈130） ----
@@ -592,14 +790,17 @@ void Calendar_RefreshStatic(TimeStruct *t, int temp, int humi)
     UI_Show(100, 196, hb, UI_SLOT_TH2, UI_RGB(64, 196, 255));  /* 坑#84：湿度蓝 22高（x115→100 左移防小数位超界，2026-10-10） */
     c_humi = humi;
   }
+#endif /* 旧 UI 静态区块绘制（新 UI 停用，逻辑见 Calendar_GetLunar/GetTempHumi） */
 }
 
 /* ============ 冒号闪烁（0.5s 中断驱动，g_colon_blink_flag 触发） ============ */
 static u8 colon_on = 1;   /* 冒号当前亮灭（文件级，供设置模式强制亮，坑#71 #3 2026-09-05） */
 void Calendar_ColonBlink(void)
 {
-  colon_on ^= 1;
-  draw_colon(CLK_X_COL, colon_on);
+  colon_on ^= 1;                 /* 相位照常翻转（回退旧 UI 时状态连续，新 UI 不画） */
+#if 0
+  draw_colon(CLK_X_COL, colon_on);   /* 旧 UI 冒号闪烁（新 UI 冒号是静态精灵） */
+#endif
 }
 
 /* 强制冒号亮起（坑#71 #3 2026-09-05）：进时间设置模式时调用——设置期间冒号停闪，
@@ -608,7 +809,10 @@ void Calendar_ColonBlink(void)
 void Calendar_ColonForceOn(void)
 {
   colon_on = 1;
-  draw_colon(CLK_X_COL, 1);
+#if 0
+  draw_colon(CLK_X_COL, 1);          /* 旧 UI 冒号（新 UI 冒号常亮，无需重画） */
+#endif
+  (void)colon_on;                    /* 相位变量仅旧 UI 用（防 -Wunused-but-set-variable） */
 }
 
 /* ------------------------------------------------------------------
@@ -634,6 +838,11 @@ void Calendar_ForceRedraw(void)
   c_yy = 0xFFFF; c_mo = 0xFF; c_dd = 0xFF; c_wd = 0xFF;
   c_hh = c_mm = c_ss = 0xFF;
   c_temp = c_humi = 0x7FFF;
+  /* 旧 UI 增量缓存（c_hh/c_mm/c_yy/c_mo/c_dd/c_wd/c_temp/c_humi）现在只被 #if 0 的
+     旧绘制读取：这里统一读一次，防 -Wall 的 -Wunused-but-set-variable 噪声
+     （回退旧 UI 后本行可删）。c_ss 仍是新 UI 的「秒变化」判据，不用在此读。 */
+  (void)c_hh; (void)c_mm; (void)c_yy; (void)c_mo; (void)c_dd; (void)c_wd;
+  (void)c_temp; (void)c_humi;
   s_bt_connected = 0xFF;
   g_static_next   = 1;
 }

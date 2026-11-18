@@ -29,6 +29,7 @@ static void vcmd_wake(const VoiceFrame *f)
 {
   printf("[VOICE] 唤醒词 d0=%u -> 唤醒提示音 + 动画切唤醒状态\r\n", (unsigned)f->d0);
   Voice_Send(VOICE_TX_WAKE_BEEP, 0, 0, 0, 0);
+  Screen_Bubble("我在");   /* 新 UI 气泡：同步 0x03 唤醒文案（2026-11-17） */
   (void)UI_CharAnim_SetState(UI_CANI_STATE_WAKE);
 }
 
@@ -41,6 +42,7 @@ static void vcmd_set_time(const VoiceFrame *f)
   {
     printf("[VOICE] 时间识别失败\r\n");
     Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
+    Screen_Bubble("设置失败，请重试");   /* 新 UI 气泡：0x09 文案 */
     return;
   }
   if (hh == 24) hh = 0;                       /* 24:00 -> 00:00 */
@@ -48,6 +50,7 @@ static void vcmd_set_time(const VoiceFrame *f)
   {
     printf("[VOICE] 时间非法 %u:%u\r\n", (unsigned)hh, (unsigned)mm);
     Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
+    Screen_Bubble("设置失败，请重试");   /* 新 UI 气泡：0x09 文案 */
     return;
   }
   TimeModule_GetTime(&t);
@@ -58,6 +61,7 @@ static void vcmd_set_time(const VoiceFrame *f)
   printf("[VOICE] 设置时钟 -> %02u:%02u\r\n", (unsigned)hh, (unsigned)mm);
   Screen_GoMain();         /* 坑#77 #1：语音设时间成功 → 跳回时间显示（闹钟屏下不再停留；倒计时运行/手动设置/响铃中等例外守卫内不切走，坑#80 拆 GoMain） */
   Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);        /* "好的，设置成功" */
+  Screen_Bubble("好的，设置成功。");            /* 新 UI 气泡：0x02 文案（2026-11-17） */
   (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK); /* 播放"修改成功"响应动画（播完自动回原状态） */
 }
 
@@ -72,6 +76,7 @@ static void vcmd_set_date(const VoiceFrame *f)
   {
     printf("[VOICE] 日期非法 %04u-%02u-%02u\r\n", (unsigned)yr, (unsigned)mo, (unsigned)da);
     Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);
+    Screen_Bubble("设置失败，请重试");   /* 新 UI 气泡：0x09 文案 */
     return;
   }
   TimeModule_GetTime(&t);
@@ -82,6 +87,7 @@ static void vcmd_set_date(const VoiceFrame *f)
   printf("[VOICE] 设置日期 -> %04u-%02u-%02u\r\n", (unsigned)yr, (unsigned)mo, (unsigned)da);
   Screen_GoMain();         /* 坑#77 #1：语音设日期成功 → 跳回时间显示（同设时间，坑#80 拆 GoMain） */
   Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
+  Screen_Bubble("好的，设置成功。");            /* 新 UI 气泡：0x02 文案 */
   (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK); /* 播放"修改成功"响应动画 */
 }
 
@@ -93,6 +99,7 @@ static void vcmd_tell_time(const VoiceFrame *f)
   TimeModule_GetTime(&t);
   printf("[VOICE] 报时 -> %02u:%02u\r\n", (unsigned)t.hour, (unsigned)t.minute);
   Voice_Send(VOICE_TX_TELL_TIME, t.hour, t.minute, 0, 0);
+  Screen_BubbleTime(t.hour, t.minute);   /* 新 UI 气泡：同步 0x07「现在是XX点XX分」文案 */
 }
 
 /* 设置闹钟 0x8A：d0=闹钟号(1-3) d1=时 d2=分；设备支持 3 个闹钟槽（2026-09-05）。
@@ -110,6 +117,7 @@ static void vcmd_set_alarm(const VoiceFrame *f)
     Screen_AlarmSet(n, hh, mm);   /* 写闹钟 n 配置 + 切到闹钟屏显示新时间（2026-09-05 3 槽） */
     printf("[VOICE] 设置闹钟%u -> %02u:%02u\r\n", (unsigned)n, (unsigned)hh, (unsigned)mm);
     Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
+    Screen_Bubble("好的，设置成功。");   /* 新 UI 气泡：0x02 文案 */
   }
   else
   {
@@ -118,6 +126,7 @@ static void vcmd_set_alarm(const VoiceFrame *f)
            (unsigned)n, (unsigned)hh, (unsigned)mm);
     if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
     Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败"（时间未识别属正常，需再说一次时间） */
+    Screen_Bubble("设置失败，请重试");        /* 新 UI 气泡：0x09 文案 */
   }
   (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK); /* 播放"修改成功"响应动画 */
 }
@@ -136,6 +145,7 @@ static void vcmd_state(const VoiceFrame *f)
     printf("[VOICE] 15s无命令 -> 动画回待机 + 回主屏（倒计时屏运行中除外，2026-09-05 收窄守卫）\r\n");
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);   /* 动画：唤醒状态 -> 睡眠（待机）状态 */
     Voice_Send(VOICE_TX_SLEEP_BEEP, 0, 0, 0, 0);      /* 坑#93：动画从唤醒进睡眠时发"休眠提示音"（FA F1 00 0F 00 00 00 CS FB） */
+    Screen_Bubble("主人，我去休息了，有事再叫我");       /* 新 UI 气泡：0x0F 休眠文案 */
     Screen_ReturnMain();                              /* 2026-08-27：15s 无命令回主屏 */
   }
 }
@@ -187,7 +197,10 @@ int App_VoiceCmd(const VoiceFrame *f)
        不再回 0x02"设置成功"（用户实测：说"倒计时一分钟"助手答"设置成功"，应答"计时开始"）。
        其余 screen 命令照旧回 OK。 */
     if (f->cmd != VOICE_CMD_CNT_MIN && f->cmd != VOICE_CMD_TOMATO_ON && f->cmd != VOICE_CMD_CNT_UP)
+    {
       Voice_Send(VOICE_TX_OK, 0, 0, 0, 0);
+      Screen_Bubble("好的，设置成功。");   /* 新 UI 气泡：0x02 文案（其余 screen 命令统一回 OK） */
+    }
     (void)UI_CharAnim_PlayOnce(UI_CANI_STATE_OK);
     return 1;
   }
@@ -198,6 +211,7 @@ int App_VoiceCmd(const VoiceFrame *f)
   /* 两层都不认识：未接线命令（天数倒计时 0x83/0xB7，待后续） */
   printf("[VOICE] 未接线 cmd=0x%02X（天数倒计时 0x83/0xB7，待后续）\r\n", f->cmd);
   Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败，请重试" */
+  Screen_Bubble("设置失败，请重试");        /* 新 UI 气泡：0x09 文案 */
   return 1;
 }
 
