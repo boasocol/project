@@ -70,4 +70,7 @@ void App_Render(TimeStruct *t)
   {
     Screen_Draw(t);   /* 倒计时/闹钟屏增量绘制 */
   }
+
+  /* 设置项 1Hz 闪灭：必须在整屏绘制**之后**执行——放前面会被当帧重绘覆盖（闹钟屏实测） */
+  Screen_BlinkTick();
 }

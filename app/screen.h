@@ -64,6 +64,7 @@ void Screen_CntBlink(u32 now_ms);      /* 主屏后台计时沙漏闪烁（App_R
 void Screen_AlarmSet(u8 n, u8 hh, u8 mm); /* 0x8A 设闹钟：n=闹钟号(1-3) + 时/分；写槽内存 + 设当前槽 + 切屏2（2026-09-05 3 槽） */
 /* 0x8B 打开/关闭、0x8C 循环模式：2026-09-05 起 Screen_HandleVoice 内联按 d0/d1/d2 三槽解析（协议表），无独立函数 */
 void Screen_AlarmRingStop(void);       /* 0xB1 别响了 / 0x8B 关 / 60s 自动停 */
+int  Screen_Ringing(void);             /* 1=闹钟或倒计时正在响铃（语音层判「别看回待机」用，2026-11-20） */
 void Screen_AlarmRungReset(void);      /* 改时间/日期后清"本分钟已响"标志（坑#82：语音/按键/蓝牙授时改时间后调，防回拨后闹钟不响） */
 
 /* ---- 按键事件分发（2026-09-05：App 层集中分发 Driver 的 KeyEvent{键号,短/长按} 事件流） ---- */
@@ -71,6 +72,8 @@ void Screen_HandleKey(const KeyEvent *ke); /* 主循环：按「事件类型->�
 int  Screen_SetupActive(void);         /* 1=设置模式（时间冻结显示，main 用冻结值传渲染） */
 const TimeStruct *Screen_SetupValue(void); /* 设置模式下的冻结工作区时间（退出时写回 RTC） */
 void Screen_SetupLine(void);           /* 主屏设置模式黄线绘制（App_Render 主屏分支调用，无设置时不动） */
+void Screen_BlinkTick(void);           /* 设置项 1Hz 闪灭（2026-11-19 替代光标；App_Render 末尾每帧调） */
+u8   Screen_BlinkHiddenId(void);       /* 灭相要隐藏的项 id（0xFF=无），绘制函数据此不再画它 */
 void Screen_SetupVoiceSync(const TimeStruct *nt); /* 语音设时/设日成功时同步手动设置工作区（坑#71 #10 2026-09-05） */
 void Screen_StatusIcons(void);         /* 主屏状态角标：整点报时符号/贪睡符号 常驻绘制（App_Render 主屏分支调用，2026-09-05） */
 void debug_test(TimeStruct *t);

@@ -197,36 +197,61 @@ int  UI_Anim_GetHalfH(void);                                      /* 半幅高�
 void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int frame_idx,
                        int bg_digit, u16 color);
 
-/* ==================== 像素游戏机 UI（08 号设计，2026-11-17） ====================
+/* ==================== 像素 UI（08 号设计 2026-11-17 / 国风 2026-11-19 两版共用） ====================
  * Flash 资源（build_px_image.py 产出 flash_image_px.bin）：
  *   0x001000 BG0 主屏 | 0x026800 BG1 倒计时 | 0x04C000 BG2 闹钟（各 150KB，row0=设计底部）
- *   0x072000 FONT（思源黑体 Bold 1bpp 变宽，4 档字号，code = base + Unicode）
- *   0x110000 SPR1 精灵容器（机器人 128 帧 + 数字 22 + 秒 2 + 开关/星期钮 4）
+ *   0x072000 FONT（变宽，4~5 档字号，code = base + Unicode；位深 1bpp 或 4bpp alpha，见下）
+ *   0x110000 SPR1 精灵容器
  * SPR1: [0..4)'SPR1' [4..8)ver | [8..12)n | 索引从 16 起，每条 16B
  *       {w:u16,h:u16,x:i16,y:i16,px_off:u32,mask_off:u32}
- *       像素 RGB565 行优先、row0=设计底部；掩码 1bpp 同行序。 */
+ *       像素 RGB565 行优先、row0=设计底部；掩码 1bpp 同行序。
+ *       x/y = 该精灵在屏幕上的绝对落点（国风那版的 GIF 自带位置），
+ *       需要「按精灵自带坐标贴」时用 UI_DrawSpriteAuto()。 */
 #define UI_SPR_OFF       0x110000u
 #define UI_PX_BG0        0x001000u
 #define UI_PX_BG1        0x026800u
 #define UI_PX_BG2        0x04C000u
 
-/* 字号档位（字库 code 基址） */
-#define UI_PX_12         0x00000u   /* 卡片文字 12px */
-#define UI_PX_13         0x10000u   /* 气泡文字 13px */
-#define UI_PX_14         0x20000u   /* 按钮文字 14px */
-#define UI_PX_26         0x30000u   /* 大标题 26px */
+/* 字号档位（字库 code 基址；每档 0x10000 一段，实际字号由素材清单的 font_sizes 决定）
+ * 国风版（2026-11-19/20）：font_face = 霞鹜文楷 Medium(LXGWWenKai-Medium.ttf)，
+ *   font_sizes = 12,13,14,16，font_bits = 4（4bpp alpha 抗锯齿，固件按背景混色）。
+ *   0x00000=12px 日期 / 星期 / 农历 / 温湿度 / AI标题 / 倒计时中 / 倒计时气泡
+ *   0x10000=13px 主屏气泡
+ *   0x20000=14px 闹钟槽号
+ *   0x30000=16px 闹钟屏气泡 / 温湿度数值(23°C)
+ * 08 号基线：12/13/14/26（思源黑体，1bpp）。换风格时这些 base 要跟 font_sizes 一起改。 */
+#define UI_PX_12         0x00000u   /* 日期 / 星期 / 农历 / 温湿度 / AI标题 / 倒计时中 / 倒计时气泡 */
+#define UI_PX_13         0x10000u   /* 主屏气泡 */
+#define UI_PX_14         0x20000u   /* 闹钟槽号 */
+#define UI_PX_16         0x30000u   /* 闹钟屏气泡 */
+#define UI_PX_10         UI_PX_12   /* 别名：10px 楷体在 1bpp 下笔画会断，不用；保留宏防编译错 */
+#define UI_PX_11         UI_PX_12
+#define UI_PX_26         UI_PX_16   /* 别名：当前风格没有 26px 档（仅自检打印用） */
 
-/* 精灵 id（顺序与 build_px_flash.py 一致）
-   机器人段：0..31 主屏(2状态)、32..79 倒计时(3状态)、80..127 闹钟(3状态) */
+/* 精灵 id（顺序与 build_px_flash.py 一致；换风格时这里要跟着精灵数一起改）
+   ── 国风（新ui界面 2026-11-19）：183 个
+   0..127   机器人段：0..31 主屏(2状态)、32..79 倒计时(3状态)、80..127 闹钟(3状态)
+   128..138 主屏数字 0-9 + 冒号
+   139..149 闹钟数字 0-9 + 冒号
+   150..160 倒计时数字 0-9 + 冒号
+   161..170 秒数字 0-9（10 张，旧版是 161/162 两张固定图）
+   171..172 闹钟开关 ON/OFF
+   173..178 星期可切换图标 五/六/日 各 开+关（173 五开 174 五关 175 六开 … 177 日开 178 日关）
+   179..181 闹钟槽号数字 1/2/3（清单 dig_tag）
+   182      「闹钟开关」四字灭相用的纸色贴片（清单 spr_swlbl）
+   ── 08 号（旧）：167 个，秒=2 张、开关=2 张、星期钮=2 张（161..166） */
 #define UI_SPR_ROBOT(screen, state, frame) \
   ((u32)((((screen) == 0) ? 0u : (((screen) == 1) ? 32u : 80u)) + (u32)((state) * 16u) + (u32)(frame)))
 #define UI_SPR_DIGIT(style, d)              (128u + (u32)(style) * 11u + (u32)(d))  /* style 0=主屏 1=闹钟 2=倒计时 */
 #define UI_SPR_COLON(style)                 (128u + (u32)(style) * 11u + 10u)
-#define UI_SPR_SEC                         161u   /* 161=秒十 162=秒个 */
-#define UI_SPR_ALM_SW(on)                  (163u + ((on) ? 0u : 1u))
-#define UI_SPR_ALM_TG(on)                  (165u + ((on) ? 0u : 1u))
+#define UI_SPR_SEC(d)                       (161u + (u32)(d))          /* 秒：0-9 */
+#define UI_SPR_ALM_SW(on)                   (171u + ((on) ? 0u : 1u))
+#define UI_SPR_ALM_TG(i, on)                (173u + (u32)(i) * 2u + ((on) ? 0u : 1u))  /* i=0 五 / 1 六 / 2 日 */
+#define UI_SPR_ALM_TAG(n)                   (179u + (u32)(n) - 1u)     /* 槽号 1/2/3（宋体粗体 10x14） */
+#define UI_SPR_ALM_SWLBL                     182u   /* 「闹钟开关」四个字：墨迹形状的纸色贴片 64x20 */
 
 void UI_DrawSprite(u32 id, int x, int y);                        /* 设计坐标左上角贴精灵（带透明掩码） */
+void UI_DrawSpriteAuto(u32 id);                                  /* 按精灵索引里自带的 x,y 贴（GIF 自带位置用） */
 void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color); /* 变宽字符串（base=UI_PX_*） */
 int  UI_StrPxWidth(const char *s, u32 base);                     /* 字符串像素宽（居中排版用） */
 void UI_PxSelfTest(void);                                       /* 串口自检：字库条数 + 关键字形/精灵尺寸 */

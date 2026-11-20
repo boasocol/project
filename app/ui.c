@@ -77,9 +77,22 @@ typedef struct { u32 code; u32 off; u16 w; u16 h; } font_idx_t;
 static font_idx_t g_idx[MAX_FONT_IDX];   /* 字库索引缓存（二分查找用） */
 static u32 g_index_off;   /* FONT 索引表偏移（Flash 内直接二分，2026-11-17） */
 static u32 g_font_count = 0;             /* 字库字符个数 */
-static u8  g_glyph[512];                 /* 单个字形位图缓冲（最大 44x84 1bpp，行对齐 6B x84 = 504B；2026-09-05 由 640 缩，省 128B） */
+static u8  g_glyph[512];                 /* 单个字形位图缓冲（1bpp 最大 44x84 = 504B；4bpp 在此放整字模，超了逐行流式读）；兼作流式读的行缓冲 */ /* 2026-11-20 抗锯齿 */
 static const u8 g_blank[512] = {0};      /* 全空字模（找不到字形时仅还原背景） */
 static u16 g_cur_w = 0, g_cur_h = 0;     /* 最近一次查到的字形尺寸（绘制时 1:1 用） */
+
+/* ============ 字模位深（2026-11-20 抗锯齿） ============ */
+/* FONT 容器头字节 7 = 位深标志：0/1 = 1bpp 二值掩码（旧字库），4 = 4bpp alpha。
+   4bpp 时固件读背景像素做混色（out = bg*(16-a) + ink*a >> 4），边缘才有过渡，
+   笔画细的地方不会再被二值化切掉。旧镜像（无该字节）按 1bpp 处理，向后兼容。 */
+static u8  g_font_bits  = 1;             /* 1 或 4 */
+static u32 g_glyph_off  = 0;             /* 当前字形位图在 Flash 的绝对偏移（0=无字形） */
+static u32 g_grow_bytes = 0;             /* 当前字形每行字节数（1bpp=(w+7)/8，4bpp=(w+1)/2） */
+static u8  g_gloaded    = 0;             /* 1=整字模已读入 g_glyph；0=超缓冲，绘制时逐行读 */
+
+/* 测试钩子：1=强制走「逐行流式读」路径（验证大字形路径用，出货必须 0）
+   2026-11-20 已用 1 跑过三屏：与整字模缓存路径逐像素 0 差异（main/cnt/alm 全 0）。 */
+#define STREAM_FORCE_TEST 0
 
 /* ============ CRC32（IEEE 802.3 / zlib, poly 0xEDB88320） ============ */
 /* 参数: data=待校验数据，len=长度。返回: CRC32 值。用于分区头/字库头/动画头校验。 */
@@ -141,6 +154,9 @@ int UI_CacheFont(void)
     return -2;
   g_font_count = (u32)h[11] | ((u32)h[12] << 8) | ((u32)h[13] << 16) | ((u32)h[14] << 24);
   g_index_off  = (u32)h[15] | ((u32)h[16] << 8) | ((u32)h[17] << 16) | ((u32)h[18] << 24);
+  /* 字节 7 = 位深标志（build_px_font.py）：4=4bpp alpha 抗锯齿；0/1=旧 1bpp 二值。
+     旧镜像这里是 0，按 1bpp 走，行为与改动前逐像素一致。 */
+  g_font_bits  = (h[7] == 4u) ? 4u : 1u;
   /* 2026-11-17：新 UI 字库 488 字形，g_idx[] 只够 91 条 —— 不再裁剪总数，
      索引表留在 Flash 按需逐条读（二分 9 次），支持任意字形数。 */
   {
@@ -220,11 +236,12 @@ void UI_SetAlarm(u8 on, u8 hour, u8 min)
 
 /* ============ 查字形位图（二分，code 升序） ============ */
 /* ------------------------------------------------------------------
- * ui_get_glyph：按 code 在索引中二分查找字形，并读取其位图到 g_glyph。
+ * ui_get_glyph：按 code 在索引中二分查找字形，并把位图读入 g_glyph。
  * 参数: code=字符 Unicode/字库 code 段（如 '0'+d、0xE000+d、汉字码点）。
- * 返回: 指向 g_glyph 的 1bpp 位图指针；找不到返回 NULL 并把 g_cur_w/h 清零
- *       （调用方据此仅还原背景）。
- * 副作用: 更新 g_cur_w/g_cur_h 为查到字形的尺寸。
+ * 返回: 指向 g_glyph 的位图指针；找不到返回 NULL 并把 g_cur_w/h 清零
+ *       （调用方据此仅还原背景）。超大字形（超过 g_glyph 容量）不整块读，
+ *       置 g_gloaded=0，绘制时用 ui_glyph_row 逐行取（1bpp 44x84、4bpp 大数字）。
+ * 副作用: 更新 g_cur_w/g_cur_h 为查到字形的尺寸；g_glyph_off/g_grow_bytes/g_gloaded。
  * ------------------------------------------------------------------ */
 static const u8 *ui_get_glyph(u32 code)
 {
@@ -241,15 +258,73 @@ static const u8 *ui_get_glyph(u32 code)
     h   = (u32)e[10] | ((u32)e[11] << 8);
     if (c == code)
     {
+      u32 need;
       g_cur_w = (u16)w; g_cur_h = (u16)h;
-      Flash_Read(g_font_base + off, g_glyph, h * ((w + 7u) / 8u));
+      g_grow_bytes = (g_font_bits == 4u) ? ((w + 1u) / 2u) : ((w + 7u) / 8u);
+      g_glyph_off  = g_font_base + off;
+      need = h * g_grow_bytes;
+      if (need <= (u32)sizeof(g_glyph) && !STREAM_FORCE_TEST)
+      {
+        Flash_Read(g_glyph_off, g_glyph, need);
+        g_gloaded = 1;
+      }
+      else
+      {
+        g_gloaded = 0;      /* 1bpp 44x84=504 刚好；4bpp 大数字 1.8KB -> 逐行读 */
+      }
       return g_glyph;
     }
     if (c < code) lo = mid + 1;
     else hi = mid - 1;
   }
   g_cur_w = 0; g_cur_h = 0;
+  g_glyph_off = 0; g_grow_bytes = 0; g_gloaded = 0;
   return NULL;
+}
+
+/* ------------------------------------------------------------------
+ * ui_glyph_row：取当前字形第 gy 个存储行（gy=0 是字符底行，字模预翻转）。
+ * 返回指向该行字节的指针；整字模已缓存则直接偏移，否则从 Flash 读进 g_glyph 当行缓冲。
+ * ⚠️ 返回的指针在下一次 ui_get_glyph / ui_glyph_row 后失效，只可当场用完。
+ * ------------------------------------------------------------------ */
+static const u8 *ui_glyph_row(int gy)
+{
+  if (g_glyph_off == 0u) return g_blank;
+  if (g_gloaded) return g_glyph + (u32)gy * g_grow_bytes;
+  Flash_Read(g_glyph_off + (u32)gy * g_grow_bytes, g_glyph, g_grow_bytes);
+  return g_glyph;
+}
+
+/* ------------------------------------------------------------------
+ * ui_alpha：取该字形第 gx 列的覆盖度（0..15；1bpp 只有 0/15）。
+ * 4bpp 存储：行内高半字节 = 左像素（与 build_px_font.pack_vflip4 一致）。
+ * ------------------------------------------------------------------ */
+static u8 ui_alpha(const u8 *row, int gx)
+{
+  if (g_font_bits == 4u)
+  {
+    u8 b = row[gx >> 1];
+    return (u8)((gx & 1) ? (b & 0x0Fu) : (b >> 4));
+  }
+  return (u8)(((row[gx >> 3] >> (7 - (gx & 7))) & 1u) ? 15u : 0u);
+}
+
+/* ------------------------------------------------------------------
+ * ui_blend：RGB565 按 4bit alpha 混色（a=0 原背景、a=15 纯墨色）。
+ * Cortex-M0+ 没有硬件除法 -> 用 >>4（a 取 1..14 时权重和恰为 16）；
+ * a=15 直接返回墨色，保证笔画中心是设计稿取样的纯色，不会被 15/16 稀释。
+ * ------------------------------------------------------------------ */
+static u16 ui_blend(u16 bg, u16 fg, u8 a)
+{
+  u32 rb, gb, bb, rf, gf, bf, r, g, b;
+  if (a == 0u)  return bg;
+  if (a >= 15u) return fg;
+  rb = (bg >> 11) & 0x1Fu; gb = (bg >> 5) & 0x3Fu; bb = bg & 0x1Fu;
+  rf = (fg >> 11) & 0x1Fu; gf = (fg >> 5) & 0x3Fu; bf = fg & 0x1Fu;
+  r = (rb * (16u - a) + rf * a) >> 4;
+  g = (gb * (16u - a) + gf * a) >> 4;
+  b = (bb * (16u - a) + bf * a) >> 4;
+  return (u16)((r << 11) | (g << 5) | b);
 }
 
 /* UI_GlyphWidth：查字形实际宽度 px（变宽字形：日期数字 '1' 窄 '8' 宽，按实际笔画宽推进）。
@@ -436,15 +511,17 @@ int UI_GetScreen(void) { return (int)g_ui_screen; }
  *   rw,rh : 矩形宽高（一般等于字模实际尺寸，1:1 不缩放）
  *   code  : 字库 code（决定字形与尺寸）
  *   color : 墨点颜色（RGB565）；背景保留原 UI 背景图
- * 流程: 逐行——Flash 读该行背景段 -> 字节交换 -> 按字模墨点叠色 -> RAMWR 写该行。
+ * 流程: 逐行——Flash 读该行背景段 -> 字节交换 -> 按字模覆盖度与背景混色 -> RAMWR 写该行。
+ *      4bpp 字库（抗锯齿）按 alpha 混色，1bpp 旧字库等价于 alpha 0/15（逐像素与改动前一致）。
  *      字形尺寸取自 ui_get_glyph 的 g_cur_w/g_cur_h；找不到字形则仅还原背景。
  * ------------------------------------------------------------------ */
 void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
 {
   if (rw <= 0 || rh <= 0) return;
   const u8 *g = ui_get_glyph(code);
-  if (!g) g = g_blank;   /* 找不到：仅还原背景 */
-  int row_bytes = (g_cur_w + 7) / 8;   /* 字模每行字节数（变尺寸） */
+  int gw = g ? (int)g_cur_w : 0;
+  int gh = g ? (int)g_cur_h : 0;
+  if (!g) { g_glyph_off = 0; gw = 0; gh = 0; }   /* 找不到：仅还原背景 */
 
   for (int yy = 0; yy < rh; yy++)
   {
@@ -456,12 +533,21 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
     }
     /* 叠加字墨点：字模行/列 1:1 映射到矩形内（rw/rh 等于字模尺寸时不缩放） */
-    for (int xx = 0; xx < rw; xx++)
+    if (g_glyph_off != 0u)
     {
-      int gx = (g_cur_w > 1) ? xx * g_cur_w / rw : 0;
-      int gy = (g_cur_h > 1) ? yy * g_cur_h / rh : 0;
-      int bit = (g[gy * row_bytes + (gx >> 3)] >> (7 - (gx & 7))) & 1;
-      if (bit) { g_line[xx * 2] = HI8(color); g_line[xx * 2 + 1] = LO8(color); }
+      const u8 *row = ui_glyph_row((gh > 1) ? yy * gh / rh : 0);
+      for (int xx = 0; xx < rw; xx++)
+      {
+        int gx = (gw > 1) ? xx * gw / rw : 0;
+        u8 a = ui_alpha(row, gx);
+        if (a != 0u)
+        {
+          u16 bg = (u16)(((u16)g_line[xx * 2] << 8) | (u16)g_line[xx * 2 + 1]);
+          u16 px = ui_blend(bg, color, a);
+          g_line[xx * 2]     = HI8(px);
+          g_line[xx * 2 + 1] = LO8(px);
+        }
+      }
     }
     /* 逻辑行 ly -> GRAM 列=ly，行=rx..rx+rw-1 */
     SPI_LCD_Select();
@@ -1065,7 +1151,8 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
     {
       u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
     }
-    /* 叠加本行所有字形墨点（1:1，字形顶 = 区域顶，字形高 = sp->h） */
+    /* 叠加本行所有字形墨点（1:1，字形顶 = 区域顶，字形高 = sp->h）
+       2026-11-20：按覆盖度与背景混色（4bpp 抗锯齿；1bpp 字库等价 0/15，与改动前一致） */
     int gx = cx - x;                     /* 当前字形在 clear_w 区域内的列偏移 */
     for (const char *p = s; *p; )
     {
@@ -1075,20 +1162,23 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color)
       else if (c >= '0' && c <= '9') { code = sp->base + (c - '0'); gw = sp->cell_w; }
       else                     { code = c;      gw = sp->cell_w; }
       const u8 *g = ui_get_glyph(code);
-      if (g)
+      if (g && gyy < (int)g_cur_h)   /* 档位高 > 字形高时该行无墨（等价旧版读到的 0） */
       {
-        int row_bytes = (g_cur_w + 7) / 8;
+        int gwi = (int)g_cur_w;
+        const u8 *row = ui_glyph_row(gyy);
         for (int xx = 0; xx < gw; xx++)
         {
-          int gxi = (g_cur_w > 1) ? xx * g_cur_w / gw : 0;
-          int bit = (g[gyy * row_bytes + (gxi >> 3)] >> (7 - (gxi & 7))) & 1;
-          if (bit)
+          int gxi = (gwi > 1) ? xx * gwi / gw : 0;
+          u8 a = ui_alpha(row, gxi);
+          if (a != 0u)
           {
             int pos = gx + xx;
             if (pos >= 0 && pos < sp->clear_w)
             {
-              g_line[pos * 2] = HI8(color);
-              g_line[pos * 2 + 1] = LO8(color);
+              u16 bg = (u16)(((u16)g_line[pos * 2] << 8) | (u16)g_line[pos * 2 + 1]);
+              u16 px = ui_blend(bg, color, a);
+              g_line[pos * 2]     = HI8(px);
+              g_line[pos * 2 + 1] = LO8(px);
             }
           }
         }
@@ -1149,8 +1239,18 @@ void UI_DrawTextInk(int x, int y, const char *s, u8 slot, u16 color)
     const u8 *g = ui_get_glyph(code);
     if (g)
     {
-      int row_bytes = (g_cur_w + 7) / 8;
       int gh = (sp->h < g_cur_h) ? sp->h : (int)g_cur_h;
+      if (g_font_bits == 4u)
+      {
+        /* 4bpp 抗锯齿（2026-11-20）：必须拿到"底色"才能算半透明边，而本函数的原语义是
+           "叠在刚填色的 chip 上"、屏上读不回。所以 4bpp 下改为整字合成
+           （读背景 -> 按 alpha 混色 -> 写回），调用点须先恢复背景（现有 2 处都是先
+           UI_DrawGlyphRect(0xFFFF) 恢复背景再画）。1bpp 旧字库仍走下面的纯墨点路径。 */
+        UI_DrawGlyphRect(gx, 239 - (y + gh) + 1, (int)g_cur_w, gh, code, color);
+      }
+      else
+      {
+      int row_bytes = (g_cur_w + 7) / 8;
       for (int yy = 0; yy < gh; yy++)
       {
         int ly = 239 - (y + yy);           /* 设计行 -> GRAM 列（垂直镜像） */
@@ -1167,6 +1267,7 @@ void UI_DrawTextInk(int x, int y, const char *s, u8 slot, u16 color)
           else if (run0 >= 0) { ui_run(ly, run0, gx + xx - 1, color); run0 = -1; }
         }
         if (run0 >= 0) ui_run(ly, run0, gx + gw - 1, color);
+      }
       }
     }
     gx += gw;
@@ -1343,10 +1444,12 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
   const u8 *mask = g_anim_buf + per;             /* 卡片纸覆盖位面 */
   vu32 dt_flash = (u32)bftm0_ct - (u32)t_flash;
 
-  /* 2) 读背景数字该 half 的 1bpp 位图（40x42）一次读出 */
-  const u8 *bg = ui_get_glyph((u32)'0' + (u32)bg_digit);
-  if (!bg) bg = g_blank;
+  /* 2) 读背景数字该 half 的 1bpp 位图（40x42）一次读出。
+     2026-11-20：本动画模型是 1bpp 墨点（ANI2 只有 08 号风格用），4bpp 字库下不参与，
+     按空位面处理（否则 4bpp 半字节会被当比特位读，翻页时露出错误数字）。 */
+  const u8 *bg = (g_font_bits == 1u) ? ui_get_glyph((u32)'0' + (u32)bg_digit) : NULL;
   u32 bg_rb = (g_cur_w + 7u) / 8u;
+  if (!bg) { bg = g_blank; bg_rb = 6u; }
   u32 bg_y0 = (half_idx == 1) ? 42u : 0u;        /* half1(屏幕上半)取 42..83 行，half0(屏幕下半)取 0..41 行 */
 
   /* 3) 本帧亮度（0..255 -> 1..256；shade=256 表示不调暗） */
@@ -1540,6 +1643,15 @@ void UI_DrawSprite(u32 id, int x, int y)
   }
 }
 
+/* 按精灵索引里自带的 (x,y) 贴：GIF 自带最终位置的风格（国风）用它，
+   机器人落点就完全由素材决定，固件不再写死坐标（2026-11-19）。*/
+void UI_DrawSpriteAuto(u32 id)
+{
+  u8 ent[16];
+  Flash_Read(UI_SPR_OFF + 16u + id * 16u, ent, 16);
+  UI_DrawSprite(id, (int)(short)(ent[4] | (ent[5] << 8)), (int)(short)(ent[6] | (ent[7] << 8)));
+}
+
 /* 取字模宽度（base + Unicode） */
 static int px_glyph_w(u32 code, int *ph)
 {
@@ -1584,7 +1696,7 @@ void UI_PxSelfTest(void)
 {
   u8 ent[16];
   int h;
-  printf("[PX] font_count=%u  ", (unsigned)g_font_count);
+  printf("[PX] font_count=%u bits=%u  ", (unsigned)g_font_count, (unsigned)g_font_bits);
   (void)ui_get_glyph(UI_PX_12 + (u32)'2');
   printf("glyph12('2')=%dx%d  ", g_cur_w, g_cur_h);
   (void)ui_get_glyph(UI_PX_26 + 0x5012u);   /* 正 */

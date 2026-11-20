@@ -142,6 +142,15 @@ static void vcmd_state(const VoiceFrame *f)
          f->d0 == VOICE_ST_D0_TIMEOUT ? "15s无命令" : "未知");
   if (f->d0 == VOICE_ST_D0_TIMEOUT)
   {
+    /* ⚠️ 2026-11-20 实机：贪睡后 15s 模块报「无命令」，若此时正有闹钟在响
+       （贪睡后别的闹钟到点，或贪睡重响），发休眠提示音/喇叭只有一路——铃声会被顶掉，
+       用户看到「闹钟只响了几声就停了」。响铃中：不发提示音、不切待机动画、不弹气泡，
+       只让 Screen_ReturnMain 按响铃守卫留在原屏。 */
+    if (Screen_Ringing())
+    {
+      printf("[VOICE] 15s无命令：响铃中 -> 不发休眠提示音、不切待机动画\r\n");
+      return;
+    }
     printf("[VOICE] 15s无命令 -> 动画回待机 + 回主屏（倒计时屏运行中除外，2026-09-05 收窄守卫）\r\n");
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);   /* 动画：唤醒状态 -> 睡眠（待机）状态 */
     Voice_Send(VOICE_TX_SLEEP_BEEP, 0, 0, 0, 0);      /* 坑#93：动画从唤醒进睡眠时发"休眠提示音"（FA F1 00 0F 00 00 00 CS FB） */
