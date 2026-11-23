@@ -64,6 +64,8 @@ void Key_SetScreenOffCb(KeyEventCb cb);  /* 进入关屏前调用（应用层可
 void Key_SetScreenOnCb(KeyEventCb cb);   /* 开屏完成后调用（应用层强制重绘 + 蓝牙上电；未注册则跳过） */
 
 void Key_Init(void);          /* 配置 PB12/PB13/PB14 输入 + EXTI 下降沿 + 唤醒事件（上电一次） */
+int  Key_BootHoldDetect(void); /* 上电「左+右同按」检测：1=正在外部烧录 Flash（main 据此跳过全部初始化）。
+                                  只配置 PB12/PB14，不碰 SPI1 的 PA0..PA3（2026-11-23） */
 void Key_Process(void);       /* 主循环调用：三键长/短按判定入队 + 关屏态兜底深休眠 + 唤醒开屏 */
 int  Key_IsScreenOff(void);   /* 查询是否处于关屏状态：1=关屏，0=正常 */
 int  Key_GetEvent(KeyEvent *out); /* 出队一个按键事件；返回 1=有事件(*out 有效)，0=空 */

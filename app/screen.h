@@ -46,6 +46,7 @@ typedef enum {
 /* ---- API ---- */
 void Screen_Init(void);                /* 上电：回主屏（UI_SetScreen(MAIN)，由 Calendar_Init 后调用） */
 void Screen_Draw(TimeStruct *t);       /* 每帧：按当前屏增量绘制（主屏委托 calendar，倒计时/闹钟本模块） */
+void Screen_Poll(void);                 /* 每轮处理计时结束期限，各页面均生效 */
 void Screen_OnSecond(TimeStruct *t);   /* 每秒：倒计时推进 + 闹钟到点判定（任何屏都跑） */
 int  Screen_HandleVoice(const VoiceFrame *f); /* 语音命令：倒计时/闹钟/切屏；返回 1=已处理(回OK) 0=未处理(继续基础域/回FAIL) 2=响闹中静默拦截(无回应，坑#76) */
 void Screen_ReturnMain(void);          /* 15s 无命令(0xEF)等超时回主屏（倒计时运行/暂停不回；倒计时屏进屏 15s 内不回，坑#80） */
@@ -96,10 +97,9 @@ void Screen_BubbleTime(u8 hh, u8 mm);
 
 /* ==================== 像素游戏机 UI（08 号设计，2026-11-17） ====================
  * 三屏绘制层：只画动态元素（背景由 UI_SetScreen 上传），坐标均为设计坐标。
- * 已接线：Calendar_Refresh -> Px_DrawMain；Screen_Draw/draw_cnt -> Px_DrawCnt；
+ * 已接线：Calendar_Refresh -> Px_DrawMain；Screen_Draw/draw_cnt -> CountdownView_Draw；
  *         draw_alarm -> Px_DrawAlm（旧绘制 #if 0 保留）。 */
 void Px_DrawMain(const TimeStruct *t);
-void Px_DrawCnt(void);
 void Px_DrawAlm(void);
 void Px_RobotTick(void);   /* 机器人单独按 125ms 重绘（配合 UI_CharAnim_Tick，App_Render 每轮调用） */
 

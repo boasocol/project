@@ -33,6 +33,8 @@
  ************************************************************************************************************/
 #include "screen.h"
 #include "ui.h"
+#include "countdown_view.h"
+#include "ui_skin.h"
 #include "Display.h"
 #include "calendar.h"   /* CalcWeekday / Calendar_SetStaticNext */
 #include "BFTM0.h"      /* bftm0_ct（1ms 计数，回主屏延时用） */
@@ -129,13 +131,6 @@ static u8  g_disp_off = 0;             /* 1=显示已关（语音 0xB5 关显示
      暂停=开始/暂停/继续切换；重置=回初始总时长并停止待启动；
      分秒进入调整态（光标变蓝，左右调整数值，再按确定退出；调整自动暂停）；
      退出=回主屏（倒计时/正计时后台继续跑；到点自动切回本屏响铃，2026-09-05）。 */
-#define CNT_SEL_MODE   0   /* 正/倒计时模式（顶部标题处，2026-09-05 加入光标选择） */
-#define CNT_SEL_MIN    1   /* 分（MM 大数字 M 段） */
-#define CNT_SEL_SEC    2   /* 秒（SS 段） */
-#define CNT_SEL_PAUSE  3   /* 暂停/继续（按钮1） */
-#define CNT_SEL_RESET  4   /* 重置（按钮2） */
-#define CNT_SEL_EXIT   5   /* 退出（按钮3）：回主屏，倒计时后台继续跑（2026-09-05） */
-#define CNT_SEL_COUNT  6
 static u8  g_cnt_sel = CNT_SEL_MODE;   /* 当前选中项（默认模式项） */
 static u8  g_cnt_adj = 0;                /* 1=分秒调整态（左右调整数值） */
 /* 2026-11-19 用户要求：倒计时屏**常态不闪**（不显示选中项）；按左/右/中任一键先「唤醒」，
@@ -281,15 +276,15 @@ static u8  c_alm_on = 0xFF, c_alm_loop = 0xFF, c_alm_ring = 0xFF;
 static u8  c_alm_sel = 0xFF;      /* 已绘制的闹钟槽号（坑#86 粉条「闹钟N」序号增量，原左上 chip） */
 
 /* ==================== 新 UI（像素游戏机）增量缓存（2026-11-17） ====================
-   Px_DrawCnt / Px_DrawAlm 一次重画整屏**动态元素**（精灵 + 变宽字串，约几十~上百次
+   draw_countdown_view / Px_DrawAlm 一次重画整屏**动态元素**（精灵 + 变宽字串，约几十~上百次
    SPI 行事务），不能每轮主循环都跑：下面记录「上次画的内容」，只有内容/背景/气泡变化
    才重画一次（正常 ≈ 每秒 1 次）。旧 UI 的 c_cnt_* / c_alm_* 缓存保留给 #if 0 的旧绘制。 */
-static u32 c_px_cnt_sec   = 0xFFFFFFFFu;  /* 上次 Px_DrawCnt 的秒值（正计时=已过秒） */
-static u8  c_px_cnt_state = 0xFF;         /* 上次 Px_DrawCnt 的计时状态（CNT_*） */
-static u8  c_px_cnt_up    = 0xFF;         /* 上次 Px_DrawCnt 的模式（0=倒计时 1=正计时） */
-static u16 c_px_cnt_bg    = 0xFFFF;       /* 上次 Px_DrawCnt 的背景版本（g_ui_bg_ver） */
-static u16 c_px_cnt_bub   = 0xFFFF;       /* 上次 Px_DrawCnt 的气泡版本（g_bub_seq） */
-static u8  c_px_cnt_w3    = 0xFF;         /* 上次 Px_DrawCnt 的分钟位数布局（1=3 位 MMM:SS；0=2 位；0xFF=首帧） */
+static u32 c_px_cnt_sec   = 0xFFFFFFFFu;  /* 上次 draw_countdown_view 的秒值（正计时=已过秒） */
+static u8  c_px_cnt_state = 0xFF;         /* 上次 draw_countdown_view 的计时状态（CNT_*） */
+static u8  c_px_cnt_up    = 0xFF;         /* 上次 draw_countdown_view 的模式（0=倒计时 1=正计时） */
+static u16 c_px_cnt_bg    = 0xFFFF;       /* 上次 draw_countdown_view 的背景版本（g_ui_bg_ver） */
+static u16 c_px_cnt_bub   = 0xFFFF;       /* 上次 draw_countdown_view 的气泡版本（g_bub_seq） */
+static void draw_countdown_view(void);
 static u8  c_px_alm_idx   = 0xFF;         /* 上次 Px_DrawAlm 的槽号 */
 static u8  c_px_alm_hh    = 0xFF;         /* 上次 Px_DrawAlm 的时 */
 static u8  c_px_alm_mm    = 0xFF;         /* 上次 Px_DrawAlm 的分 */
@@ -304,7 +299,7 @@ static u16 c_px_alm_bub   = 0xFFFF;       /* 上次 Px_DrawAlm 的气泡版本 *
 static void cnt_px_invalidate(void)
 {
   c_px_cnt_sec = 0xFFFFFFFFu; c_px_cnt_state = 0xFF; c_px_cnt_up = 0xFF;
-  c_px_cnt_bg = 0xFFFF; c_px_cnt_bub = 0xFFFF; c_px_cnt_w3 = 0xFF;
+  c_px_cnt_bg = 0xFFFF; c_px_cnt_bub = 0xFFFF;
 }
 
 /* ==================== 气泡文本状态（2026-11-17 新 UI，接口见 screen.h） ====================
@@ -394,6 +389,7 @@ static void alm_snooze_clear(void)
    补坐标与精灵后打开即可。*/
 void Screen_StatusIcons(void)
 {
+  if (Skin_Active()) { Skin_Hourly(g_hourly_on); return; }
   u8 h = g_hourly_on ? 1 : 0;
   /* 贪睡符号闪烁（2026-09-05 用户需求「贪睡状态符号要闪烁」）：待响时每 0.5s 亮/灭
      （与后台沙漏同节奏）；非待响恒灭。s=0 的「闪烁灭相」与「无待响」都落到擦除，
@@ -899,9 +895,17 @@ static void cnt_sel_key(const KeyEvent *ke)
   if (ke->id == KEY_ID_2)
   {
     if (g_cnt_sel == CNT_SEL_MODE)       cnt_sel_mode_ok();
-    else if (g_cnt_sel == CNT_SEL_PAUSE) cnt_sel_pause_ok();
-    else if (g_cnt_sel == CNT_SEL_RESET) cnt_sel_reset();
-    else if (g_cnt_sel == CNT_SEL_EXIT)  cnt_sel_exit();   /* 退出：回主屏，计时后台运行（2026-09-05） */
+    else if (g_cnt_sel >= CNT_SEL_PAUSE && g_cnt_sel < CNT_SEL_COUNT)
+    {
+      switch (Skin_CountdownAction(g_cnt_sel - CNT_SEL_PAUSE))
+      {
+        case SKIN_COUNT_TOGGLE: cnt_sel_pause_ok(); break;
+        case SKIN_COUNT_START: if (g_cnt != CNT_RUN) cnt_sel_pause_ok(); break;
+        case SKIN_COUNT_PAUSE: if (g_cnt == CNT_RUN) cnt_sel_pause_ok(); break;
+        case SKIN_COUNT_RESET: cnt_sel_reset(); break;
+        case SKIN_COUNT_EXIT: cnt_sel_exit(); break;
+      }
+    }
     else if (g_cnt_sel == CNT_SEL_MIN || g_cnt_sel == CNT_SEL_SEC)
     {
       if (!g_cnt_adj && g_cnt == CNT_RUN) g_cnt = CNT_PAUSE;  /* 进调整自动暂停 */
@@ -913,7 +917,7 @@ static void cnt_sel_key(const KeyEvent *ke)
 
 /* 倒计时屏每帧增量绘制
    ==================== 2026-11-17 新 UI 接线 ====================
-   动态元素改用 Px_DrawCnt 画（像素游戏机风：精灵大数字/标题/按钮/机器人 + 气泡）。
+   动态元素改用 draw_countdown_view 画（像素游戏机风：精灵大数字/标题/按钮/机器人 + 气泡）。
    旧奶油风绘制整块 #if 0 保留便于回退（回退 = 本块 #if 1、上方新 UI 块 #if 0）。
    旧的光标绘制 cnt_sel_line() 仍在后面叠加（坐标是旧布局，位置可能不美观，
    但保证能编译、不越界；等新 UI 定稿再按新坐标重做）。 */
@@ -1023,7 +1027,7 @@ static void draw_cnt(TimeStruct *t)
       c_px_cnt_up    = g_up;
       c_px_cnt_bg    = g_ui_bg_ver;
       c_px_cnt_bub   = g_bub_seq;
-      Px_DrawCnt();
+      draw_countdown_view();
     }
   }
 
@@ -1324,7 +1328,7 @@ static void draw_screen_static(int scr)
     c_cnt_state = 0xFF; c_cnt_prog = -1; c_prog_bar = 0;
     c_cnt_title = 0xFF;   /* 背景重传后强制重画顶部标题（倒计时/正计时，坑#88 标签内） */
 #else
-    /* 新 UI：背景已重传 -> 强制 Px_DrawCnt 下一帧整屏重画（旧 c_* 一并复位，便于回退） */
+    /* 新 UI：背景已重传 -> 强制 draw_countdown_view 下一帧整屏重画（旧 c_* 一并复位，便于回退） */
     c_cnt_m3 = c_cnt_m2 = c_cnt_m1 = c_cnt_s1 = c_cnt_s2 = 0xFF;
     c_cnt_w3 = 0xFF;
     c_cnt_state = 0xFF; c_cnt_prog = -1; c_prog_bar = 0; c_cnt_title = 0xFF;
@@ -1364,6 +1368,11 @@ static void draw_screen_static(int scr)
 
 void Screen_Init(void)
 {
+  int skin_status = Skin_Load();
+  int countdown_loaded = CountdownView_Init(skin_status);
+  Skin_Activate(skin_status == 0 && countdown_loaded);
+  if (skin_status < 0 || (skin_status == 0 && !countdown_loaded))
+    printf("[UI] SKIN invalid, using built-in layout\r\n");
   const ui_cfg_t *cfg = UI_GetConfig();
   UI_PxSelfTest();          /* 像素 UI 资源自检（串口打印字库/精灵尺寸，2026-11-17） */
   g_alm.loop     = 0;
@@ -1441,14 +1450,17 @@ void Screen_Draw(TimeStruct *t)
   }
   if (scr == UI_SCREEN_CNT)   draw_cnt(t);
   else if (scr == UI_SCREEN_ALARM) draw_alarm(t);
-  /* 主屏（MAIN）由 calendar.c 负责，不在此绘制 */
+}
 
-  /* 倒计时 DONE 回主屏延时到点 */
-  if (g_cnt == CNT_DONE && g_cnt_ret_ms && (u32)(bftm0_ct - g_cnt_ret_ms) < 0x80000000u)
-  {
-    g_cnt = CNT_STOP; g_cnt_ret_ms = 0;
-    goto_main();
-  }
+/* A countdown can finish or be stopped while the main page is visible. */
+void Screen_Poll(void)
+{
+  if (g_cnt != CNT_DONE || !g_cnt_ret_ms || (u32)(bftm0_ct - g_cnt_ret_ms) >= 0x80000000u)
+    return;
+  g_cnt = CNT_STOP;
+  g_cnt_ret_ms = 0;
+  if (UI_GetScreen() != UI_SCREEN_MAIN) goto_main();
+  else cnt_ring_stop();
 }
 
 /* 每秒：倒计时/正计时推进 + 闹钟判定 + 整点报时 + 设置模式超时退出 */
@@ -2003,7 +2015,9 @@ void Screen_HandleKey(const KeyEvent *ke)
         cnt_adjust((int)g_cnt_sel, delta);
         return;
       }
-      /* 坑#93（2026-11-04）：主屏空闲切屏改由短按触发（见 screen_key_main），长按不再切屏 */
+      if (UI_GetScreen() == UI_SCREEN_CNT && !g_cnt_adj && !g_cnt_ringing &&
+          ke->id == KEY_ID_1 && ke->evt == KEY_EV_LONG && !Skin_CountdownHasExit())
+        cnt_sel_exit();
     }
     return;
   }
@@ -2055,7 +2069,7 @@ static void screen_key_main(const KeyEvent *ke)
     {
       g_set_item++;
       if (g_set_item >= SET_ITEM_COUNT) g_set_item = SET_ITEM_HOUR;
-      if (g_set_item == SET_ITEM_SEC) g_set_item++;  /* 坑#89 主屏不显示秒，跳过秒项 */
+      if (g_set_item == SET_ITEM_SEC && (!Skin_Active() || !Skin_ClockHasSeconds())) ++g_set_item;
       printf("[KEY] 设置项 -> %u\r\n", (unsigned)g_set_item);
       if (g_set_item == SET_ITEM_DONE)
       {
@@ -2333,7 +2347,7 @@ void debug_test(TimeStruct *t)
  * 只依赖 ui.h 的 UI_DrawSprite / UI_DrawStrPx / UI_StrPxWidth；
  * 坐标全部是设计坐标（y=0 顶）。接线点：
  *   Calendar_Refresh -> Px_DrawMain（秒变化才重绘）
- *   draw_cnt         -> Px_DrawCnt （秒/状态/模式变化才重绘）
+ *   draw_cnt         -> draw_countdown_view （秒/状态/模式变化才重绘）
  *   draw_alarm       -> Px_DrawAlm （槽/时间/开关/循环变化才重绘）
  * 旧奶油风绘制在对应位置 #if 0 保留，便于对比回退。
  * ========================================================================== */
@@ -2341,11 +2355,8 @@ void debug_test(TimeStruct *t)
 #define PX_COL_INK    UI_RGB(72, 34, 10)     /* 国风深棕：日期/温湿度/闹钟气泡字（设计稿取样 78,37,14） */
 #define PX_COL_ALM_CARD UI_RGB(243, 223, 197) /* 闹钟右上卡片纸色（标签周边取样）。2026-11-20 起
                                                 「闹钟开关」闪灭改用墨迹形状贴片 sw_lbl_off，这里只剩参考值 */
-#define PX_COL_BTN_TXT UI_RGB(250, 250, 249)  /* 按钮上的近白字（设计稿取样） */
 #define PX_COL_CARD   UI_RGB(245, 225, 200)  /* 倒计时卡片纸色（取样 247,228,205 / 244,222,197）：闪灭时平涂盖按钮用 */
 #define PX_COL_BUB    UI_RGB(150, 120, 95)   /* 主屏气泡浅棕字（设计稿底色淡，取样 156,130,108） */
-#define PX_COL_BUB_W  UI_RGB(250, 246, 238)  /* 倒计时气泡白字（深棕气泡上） */
-#define PX_COL_PROG   UI_RGB(120, 138, 62)   /* 倒计时竹节进度条绿（设计稿取样 134,144,76） */
 
 /* ==================== 国风（新ui界面 2026-11-19）布局常量 ====================
  * 全部用「设计坐标」（顶原点）。数值来源：三屏「全显稿 vs 抠图稿」求差 + 墨迹外接框实测，
@@ -2370,21 +2381,6 @@ void debug_test(TimeStruct *t)
 #define PX_MAIN_THV_Y     97    /* 数值 16px（°C 拆开写，与设计稿 23°C 同高），墨迹 100..112 */
 #define PX_MAIN_AITITLE_X 109   /* 「AI语音助手」标题（纯净版没抠到，固件补画） */
 #define PX_MAIN_AITITLE_Y 131   /* 12px 汉字墨迹顶 y+3 → 131 落到 134，设计稿 133..143 */
-
-#define PX_CNT_DIG_Y      55    /* 倒计时数字墨迹顶（46 高） */
-/* 2 位布局（MM:SS）：实测 73 / 102 / 冒号 141 / 156 / 193 */
-#define PX_CNT2_X        { 73, 102 }
-#define PX_CNT2_COL_X    141
-#define PX_CNT2_M_X      { 156, 193 }
-/* 3 位布局（MMM:SS，分钟≥100）：等距 30 铺开在卡片内区 x62..232 */
-#define PX_CNT3_X        { 64, 94, 124 }
-#define PX_CNT3_COL_X    154
-#define PX_CNT3_M_X      { 168, 198 }
-/* 右侧竹节进度条：内腔 x249..257、y58..121（设计稿绿色填充范围） */
-#define PX_CNT_BAR_X     249
-#define PX_CNT_BAR_W       9
-#define PX_CNT_BAR_Y      58
-#define PX_CNT_BAR_H      64
 
 #define PX_ALM_DIG_Y      26    /* 闹钟数字墨迹顶（46 高） */
 #define PX_ALM_H_X        27
@@ -2431,6 +2427,8 @@ static void alm_swlbl_paint(void)
 /* 该屏默认气泡文案 */
 static const char *bub_default(int scr)
 {
+  const SkinBubble *bubble = Skin_GetBubble((unsigned)scr);
+  if (bubble) return bubble->text;
   if (scr == UI_SCREEN_CNT)       return "主人，开启国风倒计时吧！";   /* 国风版文案（旧版是「冒险」） */
   if (scr == UI_SCREEN_ALARM)     return "主人，需要设置闹钟吗？";
   return "主人，有什么需要帮助的吗？";
@@ -2453,7 +2451,7 @@ static int bub_line_span(const char *p, int maxw, u32 base, int *pxw)
 {
   char ch[8];
   int n = 0, w = 0, k, cw;
-  while (p[n] != 0)
+  while (p[n] != 0 && p[n] != '\n')
   {
     int cl = bub_chlen(p + n);
     for (k = 0; k < cl && p[n + k] != 0; k++) ch[k] = p[n + k];
@@ -2486,6 +2484,7 @@ static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
   while (*p != 0 && line < maxlines)
   {
     int linew = 0;
+    if (*p == '\n') { ++p; ++line; continue; }
     int nb = bub_line_span(p, maxw, base, &linew);
     int cx = center ? (x + (maxw - linew) / 2) : x;
     int i = 0;
@@ -2498,12 +2497,13 @@ static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
       ch[k] = 0;
     cw = UI_StrPxWidth(ch, base);
       if (cw <= 0) cw = 12;
-      if (cx + cw > 320) break;              /* 屏幕右缘保护：UI_DrawGlyphRect 不裁切 */
-    UI_DrawStrPx(cx, y + line * lh, ch, base, col);
+      if (cx + cw > x + maxw) break;              /* 屏幕右缘保护：UI_DrawGlyphRect 不裁切 */
+    UI_DrawStrPxBounded(cx, y + line * lh, ch, base, col, x + maxw);
     cx += cw;
       i += cl;
   }
     p += nb;
+    if (*p == '\n') ++p;
     line++;
 }
   return (s[0] != 0) ? line : 0;
@@ -2527,7 +2527,16 @@ static void bubble_paint(int scr, const char *s)
   u16 col;
 
   /* 字体的墨迹顶比 y 低 2px（椭体度量），下列 y 都是「目标墨迹顶 - 2」。 */
-  if (scr == UI_SCREEN_CNT)        { x = 99;  y = 192; w = 146; base = UI_PX_12; small = UI_PX_12; lh = 15; maxlines = 2; col = PX_COL_BUB_W; center = 1; }
+  const SkinBubble *page_bubble = Skin_GetBubble((unsigned)scr);
+  if (page_bubble || scr == UI_SCREEN_CNT)
+  {
+    const CountdownBubbleLayout *bubble = page_bubble ? &page_bubble->layout : CountdownView_Bubble();
+    if (!bubble->lines || !bubble->width) return;
+    x = bubble->x; y = bubble->y; w = bubble->width;
+    base = (u32)bubble->font << 16; small = (u32)bubble->small_font << 16;
+    lh = bubble->line_height; maxlines = bubble->lines;
+    col = bubble->color; center = bubble->centered;
+  }
   else if (scr == UI_SCREEN_ALARM) { x = 143; y = 162; w = 88; base = UI_PX_14; small = UI_PX_12; lh = 18; maxlines = 2; col = PX_COL_INK; center = 1; }
   /* 闹钟气泡内区实测（抠图背景）：左右描边 x137..138 / x235，圆角处收窄到 143..231；
      上下 y152..198。文字安全框约 x142..229 / y158..196（14px 楷体 6 字 2 行 = 84px）。
@@ -2554,7 +2563,7 @@ static void bubble_paint(int scr, const char *s)
 
 /* ------------------------------------------------------------------
  * bubble_draw：按当前屏画气泡（文本/屏/背景版本变化才重绘）。
- * 由 Px_DrawMain / Px_DrawCnt / Px_DrawAlm 末尾调用（它们的调用点已按秒/状态节流）。
+ * 由 Px_DrawMain / draw_countdown_view / Px_DrawAlm 末尾调用（它们的调用点已按秒/状态节流）。
  * ------------------------------------------------------------------ */
 static void bubble_draw(void)
 {
@@ -2639,9 +2648,30 @@ static void px_str_c(int cx, int y, const char *s, u32 base, u16 col)
   UI_DrawStrPx(cx - UI_StrPxWidth(s, base) / 2, y, s, base, col);
 }
 
+static void draw_skin_robot(unsigned page)
+{
+  Skin_Robot(page, g_cani.cur_state, g_cani.cur_frame);
+}
+
+static void draw_skin_main(const TimeStruct *t, int hidden)
+{
+  char lunar[20] = {0}, temp[12], humidity[12];
+  if (Calendar_GetLunar(t, lunar, sizeof(lunar)) != 0) lunar[0] = 0;
+  int sensors_valid = Calendar_GetTempHumi(temp, sizeof(temp), humidity, sizeof(humidity)) == 0;
+  int weekday = CalcWeekday(t->year, t->month, t->day);
+  Skin_Clock(t, weekday, lunar, sensors_valid ? temp : NULL, sensors_valid ? humidity : NULL, hidden);
+}
+
 /* ---------------- 主屏 ---------------- */
 void Px_DrawMain(const TimeStruct *t)
 {
+  if (Skin_Active())
+  {
+    draw_skin_main(t, Screen_BlinkHiddenId());
+    draw_skin_robot(UI_SCREEN_MAIN);
+    bubble_draw();
+    return;
+  }
   char b[16];
   u8 hh = t->hour, mm = t->minute;
 
@@ -2725,155 +2755,23 @@ void Px_DrawMain(const TimeStruct *t)
   bubble_draw();
 }
 
-/* 倒计时右侧竹节进度条（国风版 2026-11-19）：
-   设计稿是「卷轴形长条」，纯净版里是空腔、全显稿里从底到顶填绿 —— 所以它就是进度条，
-   内腔实测 x249..257（9 宽）/ y58..121（64 高）。按剩余比例从底部往上填，
-   上/下两端各内缩 2px 贴合卷轴的圆头。只在填充高度变化时重画，避免每秒闪。 */
-static void px_cnt_prog(void)
+static CountdownViewState countdown_view_state(void)
 {
-  static const u8 inset[4] = { 3, 1, 1, 3 };   /* 顶部 4 行的左右内缩（圆头） */
-  static s16 c_h = -1;
-  static u16 c_bg  = 0xFFFFu;
-  u32 total = g_cnt_total;
-  int h;
-
-  if (total == 0u)
-    h = PX_CNT_BAR_H;                              /* 待启动/未设置：满 */
-  else if (g_up)
-  {
-    u32 used = (u32)g_up_sec;
-    h = (used >= total) ? 0 : (int)((u32)PX_CNT_BAR_H * (total - used) / total);
-  }
-  else
-  {
-    u32 rem = (u32)g_cnt_remain;
-    if (rem > total) rem = total;
-    h = (int)((u32)PX_CNT_BAR_H * rem / total);
-  }
-  if (h < 0) h = 0;
-  if (h > PX_CNT_BAR_H) h = PX_CNT_BAR_H;
-  if (h == (int)c_h && c_bg == g_ui_bg_ver) return;
-  c_h = (s16)h;
-  c_bg  = g_ui_bg_ver;
-
-  /* 整条恢复背景，再画亮段（一次重画，无残留） */
-  UI_DrawGlyphRect(PX_CNT_BAR_X, 239 - (PX_CNT_BAR_Y + PX_CNT_BAR_H) + 1,
-                   PX_CNT_BAR_W, PX_CNT_BAR_H, 0xFFFFu, 0);
-  for (int i = 0; i < h; i++)
-  {
-    int y = PX_CNT_BAR_Y + PX_CNT_BAR_H - 1 - i;          /* 从底部往上 */
-    int ins = (i < 4) ? inset[i] : 0;                    /* 底部圆头内缩 */
-    int top = PX_CNT_BAR_Y + PX_CNT_BAR_H - h;
-    if (y < top + 4)                                     /* 顶部圆头内缩 */
-      ins = inset[y - top];
-    Display_FillRect(PX_CNT_BAR_X + ins, y, (u16)(PX_CNT_BAR_W - 2 * ins), 1, PX_COL_PROG);
-  }
+  return (CountdownViewState){g_up ? g_up_sec : (u32)g_cnt_remain,
+                              g_cnt_total, g_up, g_cnt == CNT_RUN};
 }
 
-/* ---------------- 倒计时屏 ---------------- */
-/* ---------------- 倒计时三个按钮的文字（2026-11-19 用户要求）----------------
-   新背景《国风计时_空白按钮_严格320x240_LCD.png》把胶囊上的字清空了，固件来写：
-     按钮1 = 开始 / 暂停（随计时状态切换）   按钮2 = 重置   按钮3 = 退出
-   实测（旧设计稿同一版胶囊）：字 31x13、墨迹 y146..158、近白 RGB(250,250,249)、16px 一档。
-   闪灭只闪**字**，不闪胶囊（背景里已经没有字，恢复背景 = 字消失，正好）。 */
-static const u16 CNT_BTN_CX[3] = { 89, 162, 232 };     /* 三个胶囊中心 x */
-#define CNT_BTN_TEXT_Y   143                            /* 16px 墨迹顶 y+3 = 146 */
-
-static const char *cnt_btn_label(u8 idx)
+static void draw_countdown_view(void)
 {
-  if (idx == 0u) return (g_cnt == CNT_RUN) ? "暂停" : "开始";
-  if (idx == 1u) return "重置";
-  return "退出";
-}
+  const CountdownViewState state = countdown_view_state();
+  const u8 id = Screen_BlinkHiddenId();
+  const CountdownItem hidden = (id >= 0x20u && id < 0x20u + CNT_SEL_COUNT)
+      ? (CountdownItem)(id - 0x20u) : CNT_SEL_COUNT;
+  CountdownView_Draw(&state, hidden);
 
-static void cnt_btn_paint(u8 idx)
-{
-  const char *t2 = cnt_btn_label(idx);
-  int tw = UI_StrPxWidth(t2, UI_PX_16);
-  UI_DrawStrPx(CNT_BTN_CX[idx] - tw / 2, CNT_BTN_TEXT_Y, t2, UI_PX_16, PX_COL_BTN_TXT);
-}
-
-void Px_DrawCnt(void)
-{
-  u32 sec = (u32)g_cnt_remain;
-  u32 mins;
-  u8 m1, m2, m3, s1, s2, w3;
-  static const u8 x2[2] = PX_CNT2_X;
-  static const u8 x2m[2] = PX_CNT2_M_X;
-  static const u8 x3[3] = PX_CNT3_X;
-  static const u8 x3m[2] = PX_CNT3_M_X;
-
-  if (g_up) sec = g_up_sec;
-  mins = sec / 60u;
-  if (mins > 999u) mins = 999u;        /* 上限保护（999:59），防 4 位溢出布局 */
-  m3 = (u8)(mins / 100u);              /* 分钟百位（0=不显示，用 2 位布局） */
-  m2 = (u8)((mins / 10u) % 10u);
-  m1 = (u8)(mins % 10u);
-  s1 = (u8)((sec % 60u) / 10u);
-  s2 = (u8)((sec % 60u) % 10u);
-  w3 = (m3 != 0u) ? 1u : 0u;
-
-  /* 位数切换（99:59 <-> 100:00，坑#93 支持 120 分钟）：整块数字区恢复背景，
-     防旧布局的数字/冒号残留在错位处（残影）。矩形 x56-240 / y50-101
-     （只盖到数字墨迹底 100，别擦到下面 baked 的「倒计时中」y103 起）。 */
-  if (w3 != c_px_cnt_w3)
-  {
-    c_px_cnt_w3 = w3;
-    UI_DrawGlyphRect(56, 239 - (50 + 52) + 1, 184, 52, 0xFFFFu, 0);
-  }
-
-  /* MM:SS / MMM:SS（style=2 = 倒计时字组，单元格 34x46，墨迹顶 y55）
-     灭相时整块数字不画（被选中的是 分 或 秒）；否则每秒重绘会把灭相画回来。 */
-  {
-    u8 hid = Screen_BlinkHiddenId();
-    int skip_dig = (hid == (u8)(0x20u + CNT_SEL_MIN)) || (hid == (u8)(0x20u + CNT_SEL_SEC));
-    if (!skip_dig && w3)
-  {
-    px_digit(x3[0], PX_CNT_DIG_Y, m3, 2);
-    px_digit(x3[1], PX_CNT_DIG_Y, m2, 2);
-    px_digit(x3[2], PX_CNT_DIG_Y, m1, 2);
-    UI_DrawSprite(UI_SPR_COLON(2), PX_CNT3_COL_X, PX_CNT_DIG_Y);
-    px_digit(x3m[0], PX_CNT_DIG_Y, s1, 2);
-    px_digit(x3m[1], PX_CNT_DIG_Y, s2, 2);
-  }
-    else if (!skip_dig)
-  {
-    px_digit(x2[0], PX_CNT_DIG_Y, m2, 2);
-    px_digit(x2[1], PX_CNT_DIG_Y, m1, 2);
-    UI_DrawSprite(UI_SPR_COLON(2), PX_CNT2_COL_X, PX_CNT_DIG_Y);
-    px_digit(x2m[0], PX_CNT_DIG_Y, s1, 2);
-    px_digit(x2m[1], PX_CNT_DIG_Y, s2, 2);
-  }
-  }
-
-  /* 右侧竖向 8 段进度条（设计稿 x240 宽 13，分段 y 45/54/61/68/76/83/91/98，高 6） */
-  px_cnt_prog();
-
-  /* 模式标题「倒计时中 / 正计时中」+ 两侧短横：纯净版背景也把它抠掉了（文字随模式变），
-     固件补画。设计稿墨迹实测：文字 x122..175 / y102..113（中心 148），
-     短横左 x97..117、右 x181..201，y108..110。14px 档墨迹顶比 y 低 ~5px → 传入 y=97。 */
-  {
-    const char *s = g_up ? "正计时中" : "倒计时中";
-    int tw = UI_StrPxWidth(s, UI_PX_12);
-    UI_DrawStrPx(148 - tw / 2, 100, s, UI_PX_12, PX_COL_INK);   /* 墨迹 103..113 = 设计稿实测，与数字底 100 留 2px */
-    Display_FillRect(97,  108, 21, 2, PX_COL_INK);
-    Display_FillRect(181, 108, 21, 2, PX_COL_INK);
-  }
-
-  /* 三个按钮的文字（开始/暂停、重置、退出）——背景已清空，由固件写 */
-  {
-    u8 b;
-    for (b = 0u; b < 3u; b++)
-    {
-      if (Screen_BlinkHiddenId() == (u8)(0x20u + CNT_SEL_PAUSE + b)) continue;   /* 灭相不画 */
-      cnt_btn_paint(b);
-    }
-  }
-
-  /* 机器人（落点由素材 GIF 自带） */
-  UI_DrawSpriteAuto(UI_SPR_ROBOT(1, (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u, g_cani.cur_frame % 16u));
-
-  /* 气泡文字（倒计时屏：深棕气泡上白字，x100..240 / y194 起） */
+  if (Skin_Active()) draw_skin_robot(UI_SCREEN_CNT);
+  else UI_DrawSpriteAuto(UI_SPR_ROBOT(1, (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u,
+                                      g_cani.cur_frame % 16u));
   bubble_draw();
 }
 
@@ -2908,9 +2806,33 @@ static u8 blink_cur_id(void)
   return BLINK_NONE;
 }
 
-/* 被选中项的矩形（设计坐标，顶原点）；返回 1=有该项 */
+static SkinAlarmState alarm_view_state(void)
+{
+  u8 index = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
+  if (index > 2u) index = 0u;
+  u8 days = g_alm_days[index];
+  if (days < 5u || days > 7u) days = 7u;
+  return (SkinAlarmState){index, g_alm_hour[index], g_alm_min[index], g_alm_on[index],
+                          0x0Fu | (alm_days_mask(days) << 4), days};
+}
+
+/* Layout-driven views derive blink rectangles from the same geometry used to draw them. */
 static int blink_rect(u8 id, s16 *x, s16 *y, s16 *w, s16 *h)
 {
+  if (Skin_Active() && id < 0x20u)
+  {
+    SkinRect rect;
+    int valid;
+    if (id < 0x10u) valid = Skin_ClockItemRect(&g_set_ws, (SkinClockField)id, &rect);
+    else
+    {
+      const SkinAlarmState state = alarm_view_state();
+      valid = Skin_AlarmItemRect(&state, (SkinAlarmField)(id - 0x10u), &rect);
+    }
+    if (!valid) return 0;
+    *x = rect.x; *y = rect.y; *w = rect.w; *h = rect.h;
+    return 1;
+  }
   if (id < 0x10u)                                   /* ---- 主屏时间设置 ---- */
   {
     switch (id)
@@ -2940,30 +2862,13 @@ static int blink_rect(u8 id, s16 *x, s16 *y, s16 *w, s16 *h)
     }
     return 1;
   }
-  /* ---- 倒计时屏：5 项（模式/分/秒/暂停/重置/退出） ---- */
   if (id >= 0x20u)
   {
-    u8 it = (u8)(id - 0x20u);
-    switch (it)
-    {
-      case CNT_SEL_MODE:
-        /* 标题「倒计时中/正计时中」：宽度按字宽算 */
-        *w = (s16)UI_StrPxWidth(g_up ? "正计时中" : "倒计时中", UI_PX_12);
-        *x = (s16)(148 - *w / 2); *y = 100; *h = 13; break;
-      case CNT_SEL_MIN:  *x = 73;  *y = PX_CNT_DIG_Y; *w = (s16)(102 + 34 - 73); *h = 46; break;   /* 分两位 73/102 */
-      case CNT_SEL_SEC:  *x = 156; *y = PX_CNT_DIG_Y; *w = (s16)(193 + 34 - 156); *h = 46; break;  /* 秒两位 156/193 */
-      /* 三个按钮只闪"正计时中"，不闪胶囊（背景里已经没有字） */
-      case CNT_SEL_PAUSE:
-      case CNT_SEL_RESET:
-      case CNT_SEL_EXIT:
-      {
-        u8 b = (u8)((id - 0x20u) - CNT_SEL_PAUSE);
-        s16 tw = (s16)UI_StrPxWidth(cnt_btn_label(b), UI_PX_16);
-        *x = (s16)(CNT_BTN_CX[b] - tw / 2); *y = 146; *w = tw; *h = 13;
-        break;
-      }
-      default: return 0;
-    }
+    const CountdownViewState state = countdown_view_state();
+    CountdownRect rect;
+    if (!CountdownView_ItemRect(&state, (CountdownItem)(id - 0x20u), &rect))
+      return 0;
+    *x = rect.x; *y = rect.y; *w = rect.w; *h = rect.h;
     return 1;
   }
   /* ---- 闹钟屏设置 ---- */
@@ -2999,6 +2904,13 @@ static void blink_repaint(void)
   /* 只在它自己那一屏上画：这个函数按 g_blink_scr 选分支、却都画到"当前屏"，
      少了这句守卫就会把 A 屏的元素画到 B 屏上（2026-11-20「退出」残留）。 */
   if (g_blink_scr != UI_GetScreen()) return;
+
+  if (Skin_Active() && g_blink_scr != UI_SCREEN_CNT)
+  {
+    if (g_blink_scr == UI_SCREEN_MAIN) draw_skin_main(&g_set_ws, -1);
+    else Px_DrawAlm();
+    return;
+  }
 
   if (g_blink_scr == UI_SCREEN_MAIN)
   {
@@ -3037,33 +2949,8 @@ static void blink_repaint(void)
 
   if (g_blink_scr == UI_SCREEN_CNT)
   {
-    u32 disp = g_up ? g_up_sec : (u32)g_cnt_remain;
-    u8 mm2 = (u8)((disp / 60u) % 100u);
-    u8 ss2 = (u8)(disp % 60u);
-    switch (id - 0x20u)
-    {
-      case CNT_SEL_MIN:
-        px_digit(73,  PX_CNT_DIG_Y, (u8)(mm2 / 10u), 2);
-        px_digit(102, PX_CNT_DIG_Y, (u8)(mm2 % 10u), 2);
-        break;
-      case CNT_SEL_SEC:
-        px_digit(156, PX_CNT_DIG_Y, (u8)(ss2 / 10u), 2);
-        px_digit(193, PX_CNT_DIG_Y, (u8)(ss2 % 10u), 2);
-        break;
-      case CNT_SEL_MODE:
-      {
-        const char *t2 = g_up ? "正计时中" : "倒计时中";
-        int tw = UI_StrPxWidth(t2, UI_PX_12);
-        UI_DrawStrPx(148 - tw / 2, 100, t2, UI_PX_12, PX_COL_INK);
-        break;
-      }
-      case CNT_SEL_PAUSE:
-      case CNT_SEL_RESET:
-      case CNT_SEL_EXIT:
-        cnt_btn_paint((u8)((id - 0x20u) - CNT_SEL_PAUSE));
-        break;
-      default: break;
-    }
+    const CountdownViewState state = countdown_view_state();
+    CountdownView_DrawItem(&state, (CountdownItem)(id - 0x20u));
     return;
   }
 
@@ -3113,7 +3000,15 @@ static void blink_apply(void)
   /* 星期循环项走通用路径即可：亮相整屏重画（该图标是彩色的）、灭相恢复背景
      （背景里就是灰图）——五/六/日 三态都适用，不必再单独分支。 */
 
-  if (g_blink_id == (u8)(0x10u + ALM_SET_ON))
+  if (Skin_Active() && g_blink_id == (u8)(0x10u + ALM_SET_ON))
+  {
+    if (g_blink_on)
+      Skin_Clear((SkinRect){g_blink_x, g_blink_y, g_blink_w, g_blink_h});
+    else if (Skin_AlarmSwitchCover()) return;
+    if (g_blink_on) { blink_repaint(); return; }
+  }
+
+  if (!Skin_Active() && g_blink_id == (u8)(0x10u + ALM_SET_ON))
   {
     /* 「闹钟开关」四字在背景里是 baked 的：
          亮相 = 从背景恢复（与设计稿逐像素一致，不用字库重排）；
@@ -3142,7 +3037,7 @@ static void blink_restore(u8 scr)
                      (u16)g_blink_w, (u16)g_blink_h, 0xFFFFu, 0);
   if (scr == UI_SCREEN_ALARM)     { Px_DrawAlmInvalidate(); Px_DrawAlm(); }
   else if (scr == UI_SCREEN_MAIN) { Calendar_SetStaticNext(); }
-  else if (scr == UI_SCREEN_CNT)  { cnt_px_invalidate(); Px_DrawCnt(); }
+  else if (scr == UI_SCREEN_CNT)  { cnt_px_invalidate(); draw_countdown_view(); }
 }
 
 /* 每帧调用（Screen_Draw 开头）：换项立刻回亮相；每 500ms 翻转一次 */
@@ -3234,8 +3129,9 @@ void Screen_BlinkTick(void)
       if (!have) { g_blink_id = BLINK_NONE; return; }
       /* 换项/换矩形：先把上一项「灭相」的痕迹还原、整层重画成真实状态，再从亮相开始。
          （同屏才需要还原；换屏时背景已整屏重传） */
+      g_blink_on = 1;
       if (scr == g_blink_scr && g_blink_x >= 0) blink_restore(scr);
-      g_blink_id = id; g_blink_scr = scr; g_blink_on = 1; g_blink_ms = (u32)bftm0_ct;
+      g_blink_id = id; g_blink_scr = scr; g_blink_ms = (u32)bftm0_ct;
       g_blink_x = nx; g_blink_y = ny; g_blink_w = nw; g_blink_h = nh;
       return;
     }
@@ -3253,6 +3149,15 @@ void Screen_BlinkTick(void)
  *   循环模式 0 单次（响一次自动关）/ 1 每天（三个全开）/ 2 自定义（按掩码） */
 void Px_DrawAlm(void)
 {
+  if (Skin_Active())
+  {
+    const SkinAlarmState state = alarm_view_state();
+    u8 hidden = Screen_BlinkHiddenId();
+    Skin_Alarm(&state, hidden >= 0x10u && hidden < 0x20u ? (int)hidden - 0x10 : -1);
+    draw_skin_robot(UI_SCREEN_ALARM);
+    bubble_draw();
+    return;
+  }
   /* 显示槽：响铃中 = 响铃槽（与旧 draw_alarm 一致，2026-11-17 接线时对齐），否则当前选中槽 */
   u8 idx = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
   u8 i, hh, mm;
@@ -3315,12 +3220,13 @@ void Px_RobotTick(void)
   static u8  c_s = 0xFFu, c_st = 0xFFu;
   u8  s  = (u8)UI_GetScreen();
   u16 f  = (u16)(g_cani.cur_frame % 16u);
-  u8  st = (g_cani.cur_state == UI_CANI_STATE_WAKE) ? 1u : 0u;
+  u8  st = Skin_Active() ? g_cani.cur_state : (g_cani.cur_state == UI_CANI_STATE_WAKE ? 1u : 0u);
 
   if (!g_cani.ok) return;                 /* CANI/精灵容器没就绪：不画 */
   if (f == c_f && s == c_s && st == c_st) return;
   c_f = f; c_s = s; c_st = st;
 
+  if (Skin_Active()) { draw_skin_robot(s); return; }
   switch (s)
   {
     case UI_SCREEN_MAIN:  UI_DrawSpriteAuto(UI_SPR_ROBOT(0, st, f)); break;

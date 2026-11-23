@@ -201,6 +201,26 @@
 			<locationURI>PARENT-2-PROJECT_LOC/app/calendar.h</locationURI>
 		</link>
 		<link>
+			<name>User/app/countdown_view.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/countdown_view.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/countdown_view.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/countdown_view.h</locationURI>
+		</link>
+		<link>
+			<name>User/app/ui_skin.c</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/ui_skin.c</locationURI>
+		</link>
+		<link>
+			<name>User/app/ui_skin.h</name>
+			<type>1</type>
+			<locationURI>PARENT-2-PROJECT_LOC/app/ui_skin.h</locationURI>
+		</link>
+		<link>
 			<name>User/app/dbgcmd.c</name>
 			<type>1</type>
 			<locationURI>PARENT-2-PROJECT_LOC/app/dbgcmd.c</locationURI>

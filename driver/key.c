@@ -178,6 +178,44 @@ static void key_screen_on(void);            /* 前向声明：Key_ScreenOff 的�
 static void key_sleep_until_key_pressed(void); /* 前向声明：循环休眠直到按键唤醒 */
 
 /************************************************************************************************************
+ * @brief  上电「左右键同按」检测 —— 外部烧录存储 IC 时让主控闭嘴。
+ *
+ * 场景（2026-11-23 用户提出）：用烧录器给板上的 SPI Flash 烧录时，烧录器会把电反灌到板子，
+ * 主控因此被"半上电"启动；如果主控这时又初始化 SPI1 去读 Flash，就和烧录器抢同一组总线
+ * （SCK/MOSI/CS），烧录失败或校验错。约定：**上电时同时按住 左键(KEY1/PB12) + 右键(KEY3/PB14)**
+ * 就当作"正在烧录"，main 据此跳过全部外设初始化并停在原地等断电。
+ *
+ * @note  只配置 PB12/PB14（GPIO 输入 + 上拉），**绝不碰 PA0..PA3**：SPI1 的 SCK/MOSI/MISO/CS
+ *        保持复位后的高阻输入，不驱动总线（CS 也不能推挽拉高，会和烧录器的驱动打架）。
+ *        消抖用忙等，不依赖 BFTM0/Delay（此时还没初始化）。
+ * @retval 1=两键都按住（已消抖） 0=不是（正常启动）
+ ************************************************************************************************************/
+int Key_BootHoldDetect(void)
+{
+  CKCU_PeripClockConfig_TypeDef clk = {{ 0 }};
+  clk.Bit.PB   = 1;
+  clk.Bit.AFIO = 1;
+  CKCU_PeripClockConfig(clk, ENABLE);
+
+  /* 输入 + 输入功能使能 + 内部上拉（按下=低）；PB14 复位可能映射其它 AF，显式拉回 GPIO */
+  GPIO_DirectionConfig(KEY_GPIO, KEY1_PIN | KEY3_PIN, GPIO_DIR_IN);
+  GPIO_InputConfig(KEY_GPIO, KEY1_PIN | KEY3_PIN, ENABLE);
+  GPIO_PullResistorConfig(KEY_GPIO, KEY1_AFIO | KEY3_AFIO, GPIO_PR_UP);
+  AFIO_GPxConfig(GPIO_PB, KEY1_AFIO, AFIO_FUN_GPIO);
+  AFIO_GPxConfig(GPIO_PB, KEY3_AFIO, AFIO_FUN_GPIO);
+
+  /* 先立刻采一次：正常开机（没按住）在这里就返回，**不给正常启动加任何延时**
+     （Voice_Init 要抢语音模块上电帧 0xEF，启动路径越短越好）。 */
+  if (GPIO_ReadInBit(KEY_GPIO, KEY1_PIN) != RESET || GPIO_ReadInBit(KEY_GPIO, KEY3_PIN) != RESET)
+    return 0;
+
+  /* 两键都按住：约 30ms 忙等滤掉接触抖动，再确认一次（此时才付这段延时） */
+  for (volatile u32 i = 0; i < 400000u; i++) { }
+  return (GPIO_ReadInBit(KEY_GPIO, KEY1_PIN) == RESET) &&
+         (GPIO_ReadInBit(KEY_GPIO, KEY3_PIN) == RESET);
+}
+
+/************************************************************************************************************
  * @brief  初始化 PB12/PB13/PB14：GPIO 输入 + EXTI 下降沿 + 硬件消抖 + 低功耗唤醒事件（KEY1）。
  * @retval None
  ************************************************************************************************************/
@@ -452,7 +490,9 @@ static void key_scan(void)
         g_press_conf[i] = 0;
         key_q_push((key_id_t)i, KEY_EV_SHORT);
       }
-      else if (g_pend[i])                  /* 松开抖动残留 pend（按压未确认就松开/抖动误置）：清掉防残留 */
+      /* EXTI can record a fresh press after the GPIO sample above. Keep the
+         new edge until the confirmation window has elapsed. */
+      else if (g_pend[i] && (s32)(now - g_press_ms[i]) >= (s32)KEY_DEBOUNCE_MS)
       {
         g_pend[i] = 0;
         g_press_conf[i] = 0;

@@ -113,6 +113,8 @@ void UI_Show(int x, int y, const char *s, u8 slot, u16 color); /* 统一显示�
 void UI_DrawTextInk(int x, int y, const char *s, u8 slot, u16 color); /* 仅叠墨点（不清背景/不读 Flash）：chip 文字配合 Display_FillRect 填底用（2026-08-27） */
 
 /* ==================== API ==================== */
+/* Optional block in [0x100, 0x1000). Returns 0=valid, 1=absent, -1=invalid. */
+int UI_ReadLayout(u32 offset, const char magic[4], void *payload, u16 size);
 int  UI_LoadHeader(void);   /* 读分区头并校验 magic+crc32，定位 ui/font/config 基址。0=成功 */
 int  UI_LoadConfig(void);   /* 读 CONF 配置容器并校验 CRC。0=成功；-1=magic；-2=CRC */
 const ui_cfg_t *UI_GetConfig(void); /* 访问已加载配置（未加载/失败为全 0） */
@@ -250,8 +252,10 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
 #define UI_SPR_ALM_TAG(n)                   (179u + (u32)(n) - 1u)     /* 槽号 1/2/3（宋体粗体 10x14） */
 #define UI_SPR_ALM_SWLBL                     182u   /* 「闹钟开关」四个字：墨迹形状的纸色贴片 64x20 */
 
+u32 UI_SpriteCount(void);
 void UI_DrawSprite(u32 id, int x, int y);                        /* 设计坐标左上角贴精灵（带透明掩码） */
 void UI_DrawSpriteAuto(u32 id);                                  /* 按精灵索引里自带的 x,y 贴（GIF 自带位置用） */
+void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int right);
 void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color); /* 变宽字符串（base=UI_PX_*） */
 int  UI_StrPxWidth(const char *s, u32 base);                     /* 字符串像素宽（居中排版用） */
 void UI_PxSelfTest(void);                                       /* 串口自检：字库条数 + 关键字形/精灵尺寸 */

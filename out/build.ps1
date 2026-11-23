@@ -18,7 +18,7 @@ $ELF   = Join-Path $OUT 'firmware.elf'
 New-Item -ItemType Directory -Force -Path $OBJD | Out-Null
 Get-ChildItem $OBJD -Include *.o,*.d,*.log -File -ErrorAction SilentlyContinue | Remove-Item -Force
 
-$DEFS = @('-DUSE_HT32_DRIVER','-DUSE_HT32L52241_SK','-DUSE_HT32L52231_41','-DUSE_MEM_HT32L52231')
+$DEFS = @('-DUSE_HT32_DRIVER','-DUSE_HT32L52241_SK','-DUSE_HT32L52231_41','-DUSE_MEM_HT32L52241')
 $INCS = @(
   "-I$PROJ",
   "-I$PROJ/app",
@@ -33,7 +33,7 @@ $CFLAGS = @('-mcpu=cortex-m0plus','-mthumb','-mthumb-interwork','-Os','-ffunctio
             '-Wall','-g','-gdwarf-2') + $DEFS + $INCS + @('-std=gnu11','-c')
 $AFLAGS = @('-mcpu=cortex-m0plus','-mthumb','-mthumb-interwork','-Os','-ffunction-sections','-fdata-sections',
             '-Wall','-g','-gdwarf-2','-x','assembler-with-cpp',
-            '-DUSE_HT32_CHIP=37','-DUSE_LIBCFG_RAM_SIZE=0x1000','-c')
+            '-DUSE_HT32_CHIP=37','-DUSE_LIBCFG_RAM_SIZE=0x2000','-c')
 
 $CSRC = @()
 $CSRC += Get-ChildItem (Join-Path $PROJ 'app') -Filter *.c | ForEach-Object { $_.FullName }

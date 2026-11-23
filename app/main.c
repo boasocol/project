@@ -65,8 +65,32 @@ static void app_hd9803_time(const Hd9803Time *bt)
 }
 #endif
 
+/* ================= 外部烧录存储 IC 保护（2026-11-23）=================
+   烧录器给板上的 SPI Flash 烧录时，会把电反灌到板子，主控因此被"半上电"启动；
+   如果主控这时再初始化 SPI1 去读 Flash，就会和烧录器抢同一组总线（SCK/MOSI/CS），
+   表现为烧录失败 / 校验错。
+   约定：**上电时同时按住 左键(KEY1/PB12) + 右键(KEY3/PB14)** 就当作"正在烧录"：
+     · 不初始化 SPI1/Flash（PA0..PA3 保持复位后的高阻输入，不驱动总线）
+     · 不初始化屏幕 / 串口 / 语音，直接停在原地等断电
+   一旦识别就锁住（烧录中途松手也不会突然启动去抢总线）；误触了松手断电重上电即可。
+   置 0 = 关闭该保护（正常按键行为不受影响，只是没了这个后门）。 */
+#define FLASH_ISP_HOLD   1
+
 int main(void)
 {
+#if FLASH_ISP_HOLD
+  /* 必须在任何外设初始化之前：尤其是 Flash_Init()/UI_LoadHeader() 之前的 SPI1 配置。
+     本函数只碰 PB12/PB14（GPIO 输入+上拉），不碰 PA0..PA3。 */
+  if (Key_BootHoldDetect())
+  {
+    for (;;)
+    {
+      /* 看门狗若已使能就喂一下，避免复位反复打断静默；未使能时这条不执行 */
+      if (HT_CKCU->APBCCR1 & (1 << 4)) WDT_Restart();
+    }
+  }
+#endif
+
   UART0_Configuration();
 #if VOICE_ENABLE
   /* 语音模块 UART0 RX 尽早使能：抢在模块"上电完成"帧(0xEF)之前接收。
@@ -183,6 +207,8 @@ int main(void)
       Hd9803_OnSecondTick(&t);    /* 蓝牙状态机推进 + 每日 8/18 点回连校准 */
 #endif
     }
+
+    Screen_Poll();
 
     /* 按键设置模式：显示冻结（传 g_set_ws 快照给渲染，Calendar_Refresh 增量缓存自动重绘调整段） */
     {

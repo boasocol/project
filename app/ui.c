@@ -108,6 +108,26 @@ static u32 ui_crc32(const u8 *data, u32 len)
   return crc ^ 0xFFFFFFFF;
 }
 
+/* Layout blocks occupy the reserved area before the first background. */
+int UI_ReadLayout(u32 offset, const char magic[4], void *payload, u16 size)
+{
+  u8 header[12];
+  if (offset < 0x100u || offset > 0x1000u - sizeof(header) ||
+      size > 0x1000u - offset - sizeof(header))
+    return -1;
+  Flash_Read(offset, header, sizeof(header));
+  if (header[0] == 0xFFu && header[1] == 0xFFu && header[2] == 0xFFu && header[3] == 0xFFu)
+    return 1;
+  if (memcmp(header, magic, 4u) != 0 || header[4] != 1u || header[5] != 0u ||
+      (u16)(header[6] | ((u16)header[7] << 8)) != size)
+    return -1;
+
+  const u32 crc = (u32)header[8] | ((u32)header[9] << 8) |
+                 ((u32)header[10] << 16) | ((u32)header[11] << 24);
+  Flash_Read(offset + sizeof(header), (u8 *)payload, size);
+  return ui_crc32((const u8 *)payload, size) == crc ? 0 : -1;
+}
+
 /* ============ 读分区头并校验 ============ */
 /* ------------------------------------------------------------------
  * UI_LoadHeader：从 Flash 0x000000 读 HTUI 分区头并校验，记录各分区偏移。
@@ -115,9 +135,21 @@ static u32 ui_crc32(const u8 *data, u32 len)
  * 头布局（build_flash.py build_header）：[0..32) 数据（含各分区偏移），
  * [32..36) CRC32。
  * ------------------------------------------------------------------ */
+static u32 sprite_count;
+
+u32 UI_SpriteCount(void) { return sprite_count; }
+
+static u32 sprite_le32(const u8 *p)
+{
+  return (u32)p[0] | ((u32)p[1] << 8) | ((u32)p[2] << 16) | ((u32)p[3] << 24);
+}
+
+#define SPRITE_SPACE (0x200000u - UI_SPR_OFF)
+
 int UI_LoadHeader(void)
 {
   u8 buf[36];
+  sprite_count = 0;
   Flash_Read(0, buf, 36);
   if (!(buf[0] == 'H' && buf[1] == 'T' && buf[2] == 'U' && buf[3] == 'I'))
     return -1;
@@ -131,6 +163,12 @@ int UI_LoadHeader(void)
   g_config_base = (u32)buf[24] | ((u32)buf[25] << 8) | ((u32)buf[26] << 16) | ((u32)buf[27] << 24);
   g_ui_bg       = g_ui_base;   /* 默认屏0 主界面背景基址 */
   g_ui_screen   = UI_SCREEN_MAIN;
+  Flash_Read(UI_SPR_OFF, buf, 16u);
+  if (memcmp(buf, "SPR1", 4u) == 0 && sprite_le32(buf+4) == 1u)
+  {
+    u32 count = sprite_le32(buf+8);
+    if (count <= (SPRITE_SPACE - 16u) / 16u) sprite_count = count;
+  }
   return 0;
 }
 
@@ -1600,6 +1638,7 @@ void UI_DrawSprite(u32 id, int x, int y)
   u8 ent[16];
   u16 w, h;
   u32 po, mo, pxw, mrw;
+  if (id >= sprite_count) return;
   Flash_Read(UI_SPR_OFF + 16u + id * 16u, ent, 16);
   w = (u16)(ent[0] | (ent[1] << 8));
   h = (u16)(ent[2] | (ent[3] << 8));
@@ -1609,6 +1648,9 @@ void UI_DrawSprite(u32 id, int x, int y)
   if (y < 0 || x < 0 || (x + (int)w) > 320 || (y + (int)h) > 240) return;
   pxw = (u32)w * 2u;
   mrw = ((u32)w + 7u) / 8u;
+  u32 first_data = 16u + 16u * sprite_count;
+  if (po < first_data || mo < first_data || po > SPRITE_SPACE || mo > SPRITE_SPACE ||
+      pxw * h > SPRITE_SPACE - po || mrw * h > SPRITE_SPACE - mo) return;
 
   for (int yy = 0; yy < (int)h; yy++)
   {
@@ -1648,6 +1690,7 @@ void UI_DrawSprite(u32 id, int x, int y)
 void UI_DrawSpriteAuto(u32 id)
 {
   u8 ent[16];
+  if (id >= sprite_count) return;
   Flash_Read(UI_SPR_OFF + 16u + id * 16u, ent, 16);
   UI_DrawSprite(id, (int)(short)(ent[4] | (ent[5] << 8)), (int)(short)(ent[6] | (ent[7] << 8)));
 }
@@ -1675,7 +1718,7 @@ int UI_StrPxWidth(const char *s, u32 base)
 }
 
 /* 变宽字符串：逐字贴字模（背景保留），x,y 为设计坐标（y=字形顶部基线域顶部） */
-void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color)
+void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int right)
 {
   const char *p = s;
   int cx = x, h;
@@ -1685,9 +1728,16 @@ void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color)
     u32 code = base + cp;
     int w = px_glyph_w(code, &h);
     if (w <= 0 || h <= 0) continue;
-    UI_DrawGlyphRect(cx, 239 - (y + h) + 1, w, h, code, color);
+    if (cx + w > right) break;
+    if (cx >= 0 && cx + w <= 320 && y >= 0 && y + h <= 240)
+      UI_DrawGlyphRect(cx, 239 - (y + h) + 1, w, h, code, color);
     cx += w;
   }
+}
+
+void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color)
+{
+  UI_DrawStrPxBounded(x, y, s, base, color, 320);
 }
 
 
