@@ -101,6 +101,6 @@ void Screen_BubbleTime(u8 hh, u8 mm);
  *         draw_alarm -> Px_DrawAlm（旧绘制 #if 0 保留）。 */
 void Px_DrawMain(const TimeStruct *t);
 void Px_DrawAlm(void);
-void Px_RobotTick(void);   /* 机器人单独按 125ms 重绘（配合 UI_CharAnim_Tick，App_Render 每轮调用） */
+void Px_RobotTick(void);   /* 机器人单独按 250ms 重绘（配合 UI_CharAnim_Tick，App_Render 每轮调用） */
 
 #endif /* __SCREEN_H */

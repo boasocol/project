@@ -596,7 +596,7 @@ void Calendar_Init(void)
 #endif
 
   /* 形象状态动画（CANI）：帧图=形象图\default_girl_1..48.png（101+ 编号为暂存不入脚本）。
-     每状态 16 帧（8 循环 + 4 变化到2 + 4 变化到3），0.125s/帧（8 次/秒）。
+     每状态 16 帧（8 循环 + 4 变化到2 + 4 变化到3），0.25s/帧（4 次/秒）。
      要恢复静态只显示第 1 帧：改回 UI_CharAnim_Enable(0)。 */
   (void)UI_CharAnim_Init();
   UI_CharAnim_Enable(1);
@@ -684,8 +684,8 @@ void Calendar_Refresh(TimeStruct *t, int temp, int humi)
    * 经 g_static_next -> force_static）时跑一次 —— 绝不每轮主循环重画：
    * 一屏精灵+字串约 500 次 SPI 行事务，每帧都跑会把主循环拖垮（语音轮询/按键会卡）。
    * c_ss 复用旧秒缓存（0xFF=非法 -> 首帧必画；Calendar_ForceRedraw 会重置它）。
-   * 代价：机器人精灵帧率 = 1 帧/秒（g_cani.cur_frame 每秒采样一次）。
-   * 若需 8fps 机器人，后续把「机器人」单独拆成 125ms 节流的绘制函数即可。 */
+   * 代价：机器人精灵在整屏重画里只有 1 帧/秒；单独的 Px_RobotTick（App_Render
+   * 每轮调）按 UI_CharAnim_Tick 的换帧节拍补贴，2026-11-23 起换帧 250ms（4 fps）。 */
   if (force_static || t->second != c_ss)
   {
     c_ss = t->second;

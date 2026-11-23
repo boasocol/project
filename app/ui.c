@@ -984,7 +984,7 @@ void UI_CharAnim_Tick(void)
 {
   if (!g_cani_enable) return;              /* 关闭时保持当前画面 */
   if (!g_cani.ok) return;
-  if ((u32)(bftm0_ct - g_cani.last_tick) < UI_CANI_MS_PER_FRAME) return;  /* 0.125s/帧 */
+  if ((u32)(bftm0_ct - g_cani.last_tick) < UI_CANI_MS_PER_FRAME) return;  /* 0.25s/帧 */
   g_cani.last_tick = bftm0_ct;
 
   if (g_cani.trans)
@@ -1023,13 +1023,15 @@ void UI_CharAnim_Tick(void)
     u16 nloop = g_cani.state_count[g_cani.cur_state];
     if (nloop > UI_CANI_LOOP_CNT) nloop = UI_CANI_LOOP_CNT;
 
-    /* 用户需求：待机循环在指定帧停留 N 个帧间隔（1 帧间隔 = MS_PER_FRAME=125ms）。
-       停留期间不换帧（保持当前画面），计数到 HOLD_INTERVALS 后清零放行。 */
+    /* 用户需求：待机循环在指定帧停留 N 个帧间隔（1 帧间隔 = MS_PER_FRAME=250ms）。
+       停留期间不换帧（保持当前画面），计数到 HOLD_INTERVALS 后清零放行。
+       2026-11-23：计数改用 UI_CANI_IDLE_HOLD_INTERVALS（原来是写死的 16），
+       配合换帧 125->250ms，停留绝对时长仍是 2s。 */
     if (g_cani.cur_state == UI_CANI_STATE_IDLE &&
         g_cani.cur_frame == UI_CANI_IDLE_HOLD_FRAME)
     {
       s_idle_hold++;
-      if (s_idle_hold < 16)
+      if (s_idle_hold < UI_CANI_IDLE_HOLD_INTERVALS)
         return;
       s_idle_hold = 0;
     }

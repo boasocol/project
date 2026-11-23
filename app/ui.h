@@ -142,7 +142,7 @@ void UI_DrawAlm2(int item, int x, int y); /* 坑#85 闹钟屏动态素材：设�
      [8..12)  变化到唤醒(WAKE) 帧（4 帧）
      [12..16) 变化到闹铃(ALARM) 帧（4 帧）
    状态切换效果：当前状态 循环前 4 帧 -> 变化 4 帧 -> 目标状态循环。
-   帧切换 0.125s/帧（8 次/秒，UI_CANI_MS_PER_FRAME）。 */
+   帧切换 0.25s/帧（4 次/秒，UI_CANI_MS_PER_FRAME）。 */
 #define UI_CANI_STATE_IDLE   0u  /* 待机 idle   帧 1-16（gen_canim.py 打包） */
 #define UI_CANI_STATE_WAKE   1u  /* 唤醒 wake   帧 17-32 */
 #define UI_CANI_STATE_ALARM  2u  /* 闹铃 alarm  帧 33-48（闹钟响铃时切换，2026-09-04 接线） */
@@ -153,12 +153,15 @@ void UI_DrawAlm2(int item, int x, int y); /* 坑#85 闹钟屏动态素材：设�
 #define UI_CANI_LOOP_CNT        8u   /* 每状态正常循环帧（前 8） */
 #define UI_CANI_TRANS_PRE       4u   /* 过渡先重播当前状态循环前 4 帧 */
 #define UI_CANI_TRANS_CNT       4u   /* 变化帧数 */
-#define UI_CANI_MS_PER_FRAME    125u /* 8 次刷新/秒（0.125s/帧）；单帧绘制 ~30ms 实测 */
+#define UI_CANI_MS_PER_FRAME    250u /* 4 次刷新/秒（0.25s/帧）；单帧绘制 ~30ms 实测。
+                                       2026-11-23 用户「语音助手的动画速度有点快，频率减半」
+                                       -> 125ms（8fps）改 250ms（4fps）。 */
 
 /* 待机循环"停留帧"（用户需求）：idle 每次循环在指定帧停 N 个帧间隔再继续，
    形成"两次循环间停一拍"的呼吸感。帧号为状态内 0 基（6 = 第 7 帧）。 */
 #define UI_CANI_IDLE_HOLD_FRAME     6u  /* 停留帧号（0 基） */
-#define UI_CANI_IDLE_HOLD_INTERVALS 8u  /* 停留帧间隔数（8×125ms≈1s） */
+#define UI_CANI_IDLE_HOLD_INTERVALS 8u  /* 停留帧间隔数（8×250ms = 2s，与改前 16×125ms 的停留时长相同：
+                                           只把换帧频率减半，停留这段「呼吸」的绝对时长保持不变） */
 typedef struct {
   u16 w, h;                        /* 帧尺寸（容器头读，≤80） */
   u8  nstates;                     /* 状态数 */
@@ -184,7 +187,7 @@ void UI_CharAnim_DrawEnable(int en); /* 2026-11-17 新 UI：1=画旧人物帧（
                                         （新 UI 机器人改用 SPR1 精灵，cur_state/cur_frame 仍由帧机推进） */
 int  UI_CharAnim_SetState(int st); /* 切状态：目标 WAKE/ALARM 走过渡（前4帧+变化4帧），目标 IDLE/同状态直切 */
 int  UI_CharAnim_PlayOnce(int st); /* 一次性响应动画：播完 st 状态一遍后自动回原状态（如 OK 短动画） */
-void UI_CharAnim_Tick(void);       /* 0.125s 换帧并重绘（内部 g_cani.ok 与 Enable 门控） */
+void UI_CharAnim_Tick(void);       /* 0.25s 换帧并重绘（内部 g_cani.ok 与 Enable 门控） */
 
 /* 翻页动画 API（ANI2 双位面折叠模型）：
    half_idx: 0=物理下半（阶段 B 新数字展开），1=物理上半（阶段 A 旧数字折叠）。
