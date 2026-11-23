@@ -75,6 +75,74 @@ _Static_assert(sizeof(SkinData) == 728u, "SKIN v1 payload size");
 static SkinData skin;
 static u8 active;
 
+/* ============ 内容缓存：字段内容没变就不清屏重画（2026-11-23） ============
+   缘起（用户实测「每秒刷新时全屏各种参量闪一下」）：Px_DrawMain 每秒跑一次，
+   而本文件的 draw_text / draw_date 一律「先 Skin_Clear(box) 从 Flash 还原背景、
+   再重画文字」。于是每秒都把 日期 / 星期 / 农历 / 温度标签+数值 / 湿度标签+数值 /
+   AI 标题 这 8 个字段逐个擦白再画回来（仿真实测：t+24ms 起 35ms 的滚动擦除，
+   肉眼就是整屏闪一下，每秒一次）。
+   现在每个字段记住「上次画的内容 hash + 背景版本」，内容没变直接返回；
+   数字精灵也按位缓存 —— 每秒只有真正变化的「秒个位」动一下（约 190 像素）。
+   需要「内容没变也强制重画」的场合（闪灭亮相 / 背景重传 / 闹钟屏重绘）调
+   Skin_Invalidate()，只重画某一项调 Skin_InvalidateField()。 */
+enum {
+  SLOT_DATE, SLOT_WEEKDAY, SLOT_LUNAR, SLOT_TEMP, SLOT_HUMI,
+  SLOT_TEMP_NAME, SLOT_HUMI_NAME, SLOT_ASSISTANT, SLOT_ALARM_NUMBER, SLOT_COUNT
+};
+typedef struct { u32 hash; u16 bg; } SlotCache;
+static SlotCache slot_cache[SLOT_COUNT];
+
+/* 时钟四位 + 冒号（主屏/闹钟屏各一套，靠 base 区分） */
+static u16 c_ck_base = 0xFFFFu, c_ck_bg = 0xFFFFu, c_ck_colon_bg = 0xFFFFu;
+static u8  c_ck_h1 = 0xFFu, c_ck_h2 = 0xFFu, c_ck_m1 = 0xFFu, c_ck_m2 = 0xFFu;
+/* 主屏秒两位 */
+static u16 c_sc_bg = 0xFFFFu;
+static u8  c_sc_1 = 0xFFu, c_sc_2 = 0xFFu;
+/* 闹钟槽号精灵 */
+static u16 c_alm_slot_bg = 0xFFFFu;
+static u8  c_alm_slot = 0xFFu;
+
+static u32 text_hash(const char *s)
+{
+  u32 h = 2166136261u;                 /* FNV-1a 32 */
+  while (*s) { h ^= (u8)*s++; h *= 16777619u; }
+  return h ^ 0xA5A5A5A5u;              /* 空串也不与静态零初始化相撞 */
+}
+
+/* 返回 1 = 内容与上次一致（调用方直接跳过清屏+重画）；否则登记新内容并返回 0 */
+static int slot_unchanged(unsigned slot, u32 hash)
+{
+  SlotCache *c = &slot_cache[slot];
+  if (c->bg == g_ui_bg_ver && c->hash == hash) return 1;
+  c->bg = g_ui_bg_ver;
+  c->hash = hash;
+  return 0;
+}
+
+/* 作废全部内容缓存：下一次绘制会把该屏动态层整层重画 */
+void Skin_Invalidate(void)
+{
+  for (unsigned i = 0; i < SLOT_COUNT; ++i) slot_cache[i].bg = 0xFFFFu;
+  c_ck_bg = c_ck_colon_bg = c_ck_base = 0xFFFFu;
+  c_ck_h1 = c_ck_h2 = c_ck_m1 = c_ck_m2 = 0xFFu;
+  c_sc_bg = 0xFFFFu; c_sc_1 = c_sc_2 = 0xFFu;
+  c_alm_slot_bg = 0xFFFFu; c_alm_slot = 0xFFu;
+}
+
+/* 只作废某一项：闪灭的「亮相」只重画被闪的那一项，不整屏再擦一遍 */
+void Skin_InvalidateField(SkinClockField field)
+{
+  switch (field)
+  {
+    case SKIN_CLOCK_HOUR:   c_ck_h1 = c_ck_h2 = 0xFFu; break;
+    case SKIN_CLOCK_MINUTE: c_ck_m1 = c_ck_m2 = 0xFFu; break;
+    case SKIN_CLOCK_SECOND: c_sc_1 = c_sc_2 = 0xFFu; break;
+    case SKIN_CLOCK_YEAR: case SKIN_CLOCK_MONTH: case SKIN_CLOCK_DAY:
+      slot_cache[SLOT_DATE].bg = 0xFFFFu; break;
+    default: break;
+  }
+}
+
 static int fits(SkinRect r)
 {
   return (r.w == 0u && r.h == 0u) ||
@@ -180,6 +248,7 @@ int Skin_Load(void)
 void Skin_Activate(int ready)
 {
   active = !!ready;
+  Skin_Invalidate();          /* 刚激活：内容缓存全部作废，第一次绘制要整层画全 */
   if (active) printf("[UI] SKIN flash (3 pages)\r\n");
 }
 
@@ -197,17 +266,18 @@ void Skin_Clear(SkinRect r)
 
 static u32 font_base(const TextSlot *slot) { return (u32)slot->font << 16; }
 
-static void draw_text(const TextSlot *slot, const char *text)
+static void draw_text(unsigned slot, const TextSlot *text, const char *text_str)
 {
-  if (!slot->box.w) return;
-  Skin_Clear(slot->box);
-  int x = slot->box.x;
-  if (slot->centered)
+  if (!text->box.w) return;
+  if (slot_unchanged(slot, text_hash(text_str))) return;
+  Skin_Clear(text->box);
+  int x = text->box.x;
+  if (text->centered)
   {
-    int width = UI_StrPxWidth(text, font_base(slot));
-    if (width < slot->box.w) x += (slot->box.w - width) / 2;
+    int width = UI_StrPxWidth(text_str, font_base(text));
+    if (width < text->box.w) x += (text->box.w - width) / 2;
   }
-  UI_DrawStrPxBounded(x, slot->box.y, text, font_base(slot), slot->color, slot->box.x + slot->box.w);
+  UI_DrawStrPxBounded(x, text->box.y, text_str, font_base(text), text->color, text->box.x + text->box.w);
 }
 
 static void draw_toggle(const Toggle *toggle, int on)
@@ -217,18 +287,36 @@ static void draw_toggle(const Toggle *toggle, int on)
   else UI_DrawSprite(id, toggle->box.x, toggle->box.y);
 }
 
-static void draw_pair(u16 base, const u16 *x, u16 y, unsigned val)
-{
-  UI_DrawSprite(base + (val / 10u) % 10u, x[0], y);
-  UI_DrawSprite(base + val % 10u, x[1], y);
-}
-
+/* 时钟：四位逐位缓存（只有变化的那一位才重贴精灵）+ 冒号每背景版本贴一次。
+   show_hour/show_minute=0 是闪灭的灭相：不画、并把该两位缓存作废，亮相时补画。 */
 static void draw_clock(const DigitRow *row, unsigned hour, unsigned minute,
                        int show_hour, int show_minute)
 {
-  if (show_hour) draw_pair(row->base, row->x, row->y, hour);
-  UI_DrawSprite(row->colon, row->x[2], row->y);
-  if (show_minute) draw_pair(row->base, row->x+3, row->y, minute);
+  if (c_ck_base != row->base || c_ck_bg != g_ui_bg_ver)
+  {
+    c_ck_base = row->base; c_ck_bg = g_ui_bg_ver;
+    c_ck_h1 = c_ck_h2 = c_ck_m1 = c_ck_m2 = 0xFFu;
+    c_ck_colon_bg = 0xFFFFu;
+  }
+  if (show_hour)
+  {
+    u8 h1 = (u8)(hour / 10u), h2 = (u8)(hour % 10u);
+    if (c_ck_h1 != h1) { c_ck_h1 = h1; UI_DrawSprite(row->base + h1, row->x[0], row->y); }
+    if (c_ck_h2 != h2) { c_ck_h2 = h2; UI_DrawSprite(row->base + h2, row->x[1], row->y); }
+  }
+  else c_ck_h1 = c_ck_h2 = 0xFFu;
+  if (c_ck_colon_bg != g_ui_bg_ver)
+  {
+    c_ck_colon_bg = g_ui_bg_ver;
+    UI_DrawSprite(row->colon, row->x[2], row->y);
+  }
+  if (show_minute)
+  {
+    u8 m1 = (u8)(minute / 10u), m2 = (u8)(minute % 10u);
+    if (c_ck_m1 != m1) { c_ck_m1 = m1; UI_DrawSprite(row->base + m1, row->x[3], row->y); }
+    if (c_ck_m2 != m2) { c_ck_m2 = m2; UI_DrawSprite(row->base + m2, row->x[4], row->y); }
+  }
+  else c_ck_m1 = c_ck_m2 = 0xFFu;
 }
 
 static void make_date(const TimeStruct *t, char result[11])
@@ -264,13 +352,16 @@ static void draw_date(const TimeStruct *t, int hidden)
   if (!slot->box.w) return;
   char text[11];
   make_date(t, text);
+  /* hidden 只对 年/月/日 有意义：其它项在闪时不要把日期也算成"变了"（否则闪一次擦一次） */
+  unsigned part = (hidden >= SKIN_CLOCK_YEAR && hidden <= SKIN_CLOCK_DAY) ? (unsigned)hidden + 1u : 0u;
+  if (slot_unchanged(SLOT_DATE, text_hash(text) ^ (part * 2654435761u))) return;
   int x = date_origin(slot, text);
   Skin_Clear(slot->box);
   for (unsigned i = 0; i < 10u; ++i)
   {
     char digit[2] = {text[i], 0};
-    int part = i < 4u ? SKIN_CLOCK_YEAR : (i < 7u ? SKIN_CLOCK_MONTH : SKIN_CLOCK_DAY);
-    if (i == 4u || i == 7u || part != hidden)
+    int digit_part = i < 4u ? SKIN_CLOCK_YEAR : (i < 7u ? SKIN_CLOCK_MONTH : SKIN_CLOCK_DAY);
+    if (i == 4u || i == 7u || digit_part != hidden)
       UI_DrawStrPxBounded(x, slot->box.y, digit, font_base(slot), slot->color, slot->box.x + slot->box.w);
     x += UI_StrPxWidth(digit, font_base(slot));
   }
@@ -282,10 +373,20 @@ void Skin_Clock(const TimeStruct *t, int weekday, const char *lunar, const char 
   static const char *const names[7] = {"星期一","星期二","星期三","星期四","星期五","星期六","星期日"};
   const ClockPage *p = &skin.main;
   draw_clock(&p->clock, t->hour, t->minute, hidden != SKIN_CLOCK_HOUR, hidden != SKIN_CLOCK_MINUTE);
-  if (Skin_ClockHasSeconds() && hidden != SKIN_CLOCK_SECOND)
-    draw_pair(p->seconds_base, p->seconds_x, p->seconds_y, t->second);
+  if (Skin_ClockHasSeconds())
+  {
+    if (c_sc_bg != g_ui_bg_ver) { c_sc_bg = g_ui_bg_ver; c_sc_1 = c_sc_2 = 0xFFu; }
+    if (hidden != SKIN_CLOCK_SECOND)
+    {
+      u8 sec = (t->second > 59u) ? 0u : (u8)t->second;
+      u8 s1 = (u8)(sec / 10u), s2 = (u8)(sec % 10u);
+      if (c_sc_1 != s1) { c_sc_1 = s1; UI_DrawSprite(p->seconds_base + s1, p->seconds_x[0], p->seconds_y); }
+      if (c_sc_2 != s2) { c_sc_2 = s2; UI_DrawSprite(p->seconds_base + s2, p->seconds_x[1], p->seconds_y); }
+    }
+    else c_sc_1 = c_sc_2 = 0xFFu;
+  }
   draw_date(t, hidden);
-  if (weekday >= 0 && weekday < 7) draw_text(&p->weekday, names[weekday]);
+  if (weekday >= 0 && weekday < 7) draw_text(SLOT_WEEKDAY, &p->weekday, names[weekday]);
   char text[32];
   if (lunar[0])
   {
@@ -294,23 +395,23 @@ void Skin_Clock(const TimeStruct *t, int weekday, const char *lunar, const char 
     unsigned n = 0;
     while (prefix + n + 1u < sizeof(text) && lunar[n]) { text[prefix+n] = lunar[n]; ++n; }
     text[prefix+n] = 0;
-    draw_text(&p->lunar, text);
+    draw_text(SLOT_LUNAR, &p->lunar, text);
   }
   if (temp && humi)
   {
-    draw_text(&p->temp_name, "温度");
-    draw_text(&p->humi_name, "湿度");
+    draw_text(SLOT_TEMP_NAME, &p->temp_name, "温度");
+    draw_text(SLOT_HUMI_NAME, &p->humi_name, "湿度");
     unsigned i = 0;
     while (i < 6u && temp[i] && temp[i] != '.') { text[i] = temp[i]; ++i; }
     static const char units[3][4] = {"\xC2\xB0" "C", "℃", ""};
     memcpy(text + i, units[p->temperature_unit], 4u);
-    draw_text(&p->temp, text);
+    draw_text(SLOT_TEMP, &p->temp, text);
     i = 0;
     while (i < 6u && humi[i] && humi[i] != '.') { text[i] = humi[i]; ++i; }
     text[i++] = '%'; text[i] = 0;
-    draw_text(&p->humidity, text);
+    draw_text(SLOT_HUMI, &p->humidity, text);
   }
-  draw_text(&p->assistant, "AI语音助手");
+  draw_text(SLOT_ASSISTANT, &p->assistant, "AI语音助手");
   if (p->assistant_rule.w)
     Display_FillRect(p->assistant_rule.x, p->assistant_rule.y, p->assistant_rule.w,
                      p->assistant_rule.h, p->assistant.color);
@@ -371,13 +472,21 @@ void Skin_Alarm(const SkinAlarmState *s, int hidden)
   if (hidden != SKIN_ALARM_SLOT)
   {
     if (p->number_base != SKIN_NO_SPRITE)
-      UI_DrawSprite(p->number_base + s->slot, p->number_box.x, p->number_box.y);
+    {
+      if (c_alm_slot_bg != g_ui_bg_ver) { c_alm_slot_bg = g_ui_bg_ver; c_alm_slot = 0xFFu; }
+      if (c_alm_slot != s->slot)
+      {
+        c_alm_slot = s->slot;
+        UI_DrawSprite(p->number_base + s->slot, p->number_box.x, p->number_box.y);
+      }
+    }
     else
     {
       char text[2] = {'1' + s->slot, 0};
-      draw_text(&p->number, text);
+      draw_text(SLOT_ALARM_NUMBER, &p->number, text);
     }
   }
+  else slot_cache[SLOT_ALARM_NUMBER].bg = 0xFFFFu;   /* 灭相：缓存作废，亮相补画 */
   if (hidden != SKIN_ALARM_SWITCH || p->switch_cover != SKIN_NO_SPRITE)
     draw_toggle(&p->enabled, s->enabled);
   for (unsigned i = 0; i < 7u; ++i)

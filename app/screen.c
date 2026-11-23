@@ -2907,8 +2907,13 @@ static void blink_repaint(void)
 
   if (Skin_Active() && g_blink_scr != UI_SCREEN_CNT)
   {
-    if (g_blink_scr == UI_SCREEN_MAIN) draw_skin_main(&g_set_ws, -1);
-    else Px_DrawAlm();
+    if (g_blink_scr == UI_SCREEN_MAIN)
+    {
+      /* 只作废被闪的那一项：亮相只重画它自己。整层作废会把 8 个字段再擦一遍（闪）。 */
+      if (id < 0x10u) Skin_InvalidateField((SkinClockField)id);
+      draw_skin_main(&g_set_ws, -1);
+    }
+    else { Px_DrawAlmInvalidate(); Px_DrawAlm(); }
     return;
   }
 
@@ -3036,7 +3041,7 @@ static void blink_restore(u8 scr)
     UI_DrawGlyphRect(g_blink_x, 239 - (g_blink_y + g_blink_h) + 1,
                      (u16)g_blink_w, (u16)g_blink_h, 0xFFFFu, 0);
   if (scr == UI_SCREEN_ALARM)     { Px_DrawAlmInvalidate(); Px_DrawAlm(); }
-  else if (scr == UI_SCREEN_MAIN) { Calendar_SetStaticNext(); }
+  else if (scr == UI_SCREEN_MAIN) { Skin_Invalidate(); Calendar_SetStaticNext(); }
   else if (scr == UI_SCREEN_CNT)  { cnt_px_invalidate(); draw_countdown_view(); }
 }
 
@@ -3201,9 +3206,12 @@ void Px_DrawAlm(void)
   bubble_draw();
 }
 
-/* 作废闹钟屏的全部增量缓存：闪灭的「亮相」要整屏重画时调（2026-11-19） */
+/* 作废闹钟屏的全部增量缓存：闪灭的「亮相」要整屏重画时调（2026-11-19）
+   2026-11-23：同时作废 ui_skin 的内容缓存——否则 Skin_Alarm 认为「内容没变」
+   不重画，灭相擦掉的槽号/开关永远回不来。 */
 void Px_DrawAlmInvalidate(void)
 {
+  Skin_Invalidate();
   c_px_alm_idx = 0xFF; c_px_alm_hh = 0xFF; c_px_alm_mm = 0xFF;
   c_px_alm_on  = 0xFF; c_px_alm_loop = 0xFF; c_px_alm_wd = 0xFF;
   c_px_alm_bg  = 0xFFFF; c_px_alm_bub = 0xFFFF;

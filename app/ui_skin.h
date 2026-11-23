@@ -37,6 +37,11 @@ typedef struct {
 int Skin_Load(void);
 void Skin_Activate(int ready);
 int Skin_Active(void);
+/* 内容缓存（2026-11-23）：字段内容没变就不清屏重画（修「每秒全屏闪一下」）。
+   需要「内容没变也强制重画」时调 Skin_Invalidate()（闪灭亮相 / 背景重传 / 闹钟屏重绘），
+   只重画某一项调 Skin_InvalidateField()。 */
+void Skin_Invalidate(void);
+void Skin_InvalidateField(SkinClockField field);
 const SkinBubble *Skin_GetBubble(unsigned page);
 void Skin_Clock(const TimeStruct *t, int weekday, const char *lunar, const char *temp,
                 const char *humi, int hidden);
