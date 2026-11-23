@@ -1,0 +1,17 @@
+bg0 = 时间界面.png
+bg1 = 倒计时界面.png
+bg2 = 闹钟界面.png
+bg0_full = 时间界面（全显）.png
+sec_patch = none
+main0 = 时间界面_休眠.gif
+main1 = 时间界面_唤醒.gif
+cnt0 = 倒计时界面_休眠.gif
+cnt1 = 倒计时界面_唤醒.gif
+cnt2 = 倒计时界面_接受指令.gif
+alm0 = 闹钟界面_休眠.gif
+alm1 = 闹钟界面_唤醒.gif
+alm2 = 闹钟界面_接受指令.gif
+sw_on = 开关_开.png
+sw_off = 开关_关.png
+tg_on = 星期钮_亮.png
+tg_off = 星期钮_灭.png

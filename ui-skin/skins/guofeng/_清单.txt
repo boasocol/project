@@ -1,0 +1,66 @@
+# 新 UI（国风）素材显式映射 —— 2026-11-19 版
+# 说明见 _清单.txt 规范（交付规范 §2.4）
+
+# ---- 三屏背景：一律用「（抠图）」纯净版 ----
+bg0 = 时间界面（抠图）.png
+bg1 = 国风计时_空白按钮.png
+bg2 = 闹钟界面（抠图）.png
+sec_patch = none
+# 闹钟屏「（抠图）」里 08:35 没抠掉 -> 素材阶段抹成卡片底色（x0,y0,x1,y1）
+blank2 = 25,24,170,74
+
+# ---- 机器人 GIF（自带最终位置，画布 320x240）----
+main0 = 时间_休眠状态_320x240_4秒.gif
+main1 = 时间_唤醒状态_320x240_4秒.gif
+cnt0 = 倒计时_休眠状态_320x240_同比例缩小_4秒.gif
+cnt1 = 倒计时_唤醒状态_320x240_同比例缩小_4秒.gif
+cnt2 = 倒计时_接收指令状态_320x240_同比例缩小_4秒.gif
+alm0 = 国风机器人_休眠_闭眼呼吸_4秒_320x240_原图比例小尺寸_透明.gif
+alm1 = 国风机器人_唤醒_睁眼转头_4秒_320x240_原图比例小尺寸_透明.gif
+alm2 = 国风机器人_接收指令_OK手势_4秒_320x240_原图比例小尺寸_透明.gif
+
+# 这版 GIF 是「全画布 + 已定位」，贴图基准 = 0,0（08 号那版是紧裁图，基准是屏上落点）
+place_main = 0,0
+place_cnt = 0,0
+place_alm = 0,0
+
+# ---- 数字精灵前缀（本风格自带，见 skins/guofeng/digits/）----
+# digits=none：本风格数字不用 08 号那套像素数字，改为我方提供的现成 png
+digits = none
+dig_dir = digits
+dig_main = main_
+dig_alm = alm_
+dig_cnt = cnt_
+dig_sec = sec_
+# 闹钟槽号 1/2/3 用宋体粗体小精灵（细楷体的 1 在屏上像一根棍，用户反馈「汉字残缺」）
+dig_tag = tag_
+
+# ---- 闹钟开关：开=蓝（从「打开状态」稿抠），关=灰（纯净版同框）----
+sw_on = sw_on.png
+sw_off = sw_off.png
+
+# ---- 星期可切换的只有 五 / 六 / 日（一~四 恒亮）----
+tg5_on = tg5_on.png
+tg5_off = tg5_off.png
+tg6_on = tg6_on.png
+tg6_off = tg6_off.png
+tg7_on = tg7_on.png
+tg7_off = tg7_off.png
+
+# ---- 「闹钟开关」四字的闪灭 ----
+# 四字在背景里是 baked 的（开态直接用背景 = 与设计稿逐像素一致）；
+# 灭相抹字用一个「墨迹形状」的纸色贴片：alpha = 墨迹掩码、RGB = 同行纸色中位数，
+# 所以只把字盖成纸，纸面本身一个像素都不动（整块平涂会在纸上留一个方块）。
+spr_swlbl = sw_lbl_off.png
+
+text_extra = 开启国风吧AI手温度湿度C开关
+# 相对本素材目录（assets/fonts 不入库，见 ui-skin/assets/fonts/README.md）
+font_face = ../../assets/fonts/LXGWWenKai-Medium.ttf
+font_sizes = 12,13,14,16
+# 霞鹜文楷 Medium（OFL）：12px 下 1bpp 仍然清晰，笔画也够密
+font_thr = 110
+# 超采样：先 4 倍渲染再缩到目标格，12px 的连通腔/细横才不会被糊成一个块
+font_ss = 4
+# 抗锯齿：4=4bpp alpha（16 档覆盖度，固件按当前背景混色，边缘不再硬切/缺笔画）
+# 1=旧的 1bpp 二值。改这个要连固件一起烧（固件读字库头的位深标志）
+font_bits = 4

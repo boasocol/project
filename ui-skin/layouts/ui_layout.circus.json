@@ -1,0 +1,350 @@
+{
+  "version": 1,
+  "overlays": [
+    {
+      "name": "hourly_enabled",
+      "file": "时间界面（全显）.png",
+      "crop": [
+        172,
+        198,
+        48,
+        20
+      ]
+    }
+  ],
+  "main": {
+    "numbers": {
+      "x": [
+        95,
+        125,
+        154,
+        167,
+        197
+      ],
+      "y": 34,
+      "digits": 128,
+      "colon": 138
+    },
+    "seconds": null,
+    "date": {
+      "box": [
+        13,
+        127,
+        64,
+        16
+      ],
+      "font": 0,
+      "color": "#62240F"
+    },
+    "date_separator": ".",
+    "weekday": {
+      "box": [
+        77,
+        129,
+        36,
+        16
+      ],
+      "font": 0,
+      "color": "#62240F"
+    },
+    "lunar": {
+      "box": [
+        23,
+        148,
+        96,
+        16
+      ],
+      "font": 0,
+      "color": "#62240F"
+    },
+    "lunar_prefix": true,
+    "temperature_unit": "combined",
+    "temperature": {
+      "box": [
+        235,
+        100,
+        52,
+        19
+      ],
+      "font": 2,
+      "color": "#62240F",
+      "centered": true
+    },
+    "humidity": {
+      "box": [
+        260,
+        141,
+        50,
+        19
+      ],
+      "font": 2,
+      "color": "#62240F",
+      "centered": true
+    },
+    "hourly": {
+      "at": [
+        172,
+        198
+      ],
+      "off": null,
+      "on": "hourly_enabled"
+    },
+    "bubble": null,
+    "robot": {
+      "idle": {
+        "first": 0,
+        "count": 16
+      },
+      "wake": {
+        "first": 16,
+        "count": 16
+      }
+    }
+  },
+  "countdown": {
+    "digits": {
+      "y": 40,
+      "short_x": [
+        49,
+        82,
+        115,
+        128,
+        161
+      ],
+      "long_x": [
+        34,
+        66,
+        98,
+        130,
+        143,
+        175
+      ],
+      "clear": [
+        34,
+        40,
+        173,
+        47
+      ],
+      "digits": 150,
+      "colon": 160
+    },
+    "progress": {
+      "type": "segments",
+      "segments": [
+        {
+          "rect": [
+            211,
+            38,
+            14,
+            13
+          ],
+          "color": "#F12C24",
+          "shape": "ellipse"
+        },
+        {
+          "rect": [
+            211,
+            53,
+            14,
+            13
+          ],
+          "color": "#FFC51B",
+          "shape": "ellipse"
+        },
+        {
+          "rect": [
+            211,
+            68,
+            14,
+            13
+          ],
+          "color": "#35BEF1",
+          "shape": "ellipse"
+        },
+        {
+          "rect": [
+            211,
+            83,
+            14,
+            13
+          ],
+          "color": "#79C918",
+          "shape": "ellipse"
+        }
+      ]
+    },
+    "title": {
+      "center": 127,
+      "y": 91,
+      "font": 1,
+      "color": "#FFF8DB",
+      "rules": [
+        null,
+        null
+      ]
+    },
+    "buttons": {
+      "centers": [
+        60,
+        157,
+        259
+      ],
+      "y": 197,
+      "font": 2,
+      "color": "#FFF8DB",
+      "actions": [
+        "toggle",
+        "reset",
+        "exit"
+      ]
+    },
+    "bubble": {
+      "area": [
+        239,
+        88,
+        72
+      ],
+      "font": 0,
+      "line_height": 16,
+      "lines": 2,
+      "color": "#62240F",
+      "default_text": "主人，\n准备好开场啦",
+      "centered": true,
+      "small_font": 0
+    },
+    "robot": {
+      "idle": {
+        "first": 32,
+        "count": 16
+      },
+      "wake": {
+        "first": 48,
+        "count": 16
+      },
+      "ack": {
+        "first": 64,
+        "count": 16
+      }
+    }
+  },
+  "alarm": {
+    "numbers": {
+      "x": [
+        35,
+        61,
+        87,
+        98,
+        124
+      ],
+      "y": 49,
+      "digits": 139,
+      "colon": 149
+    },
+    "slot": {
+      "text": {
+        "box": [
+          220,
+          73,
+          12,
+          16
+        ],
+        "font": 0,
+        "color": "#62240F"
+      }
+    },
+    "switch": {
+      "at": [
+        249,
+        64
+      ],
+      "off": 164,
+      "on": 163
+    },
+    "weekdays": [
+      {
+        "at": [
+          26,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          67,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          108,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          149,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          190,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          231,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      },
+      {
+        "at": [
+          272,
+          143
+        ],
+        "off": 166,
+        "on": 165
+      }
+    ],
+    "bubble": {
+      "area": [
+        59,
+        168,
+        104
+      ],
+      "font": 1,
+      "line_height": 16,
+      "lines": 2,
+      "color": "#62240F",
+      "default_text": "主人，需要\n设置闹钟吗？",
+      "centered": true,
+      "small_font": 1
+    },
+    "robot": {
+      "idle": {
+        "first": 80,
+        "count": 16
+      },
+      "wake": {
+        "first": 96,
+        "count": 16
+      },
+      "ack": {
+        "first": 112,
+        "count": 16
+      }
+    }
+  }
+}

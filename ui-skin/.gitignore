@@ -1,0 +1,15 @@
+# 构建产物与第三方字体不入库
+
+# 打包产物（每次一个时间戳目录，体积大且可重建）
+out/
+
+# 第三方字体（OFL/开源，体积大；见 assets/fonts/README.md 的下载来源与校验值）
+assets/fonts/*.otf
+assets/fonts/*.ttf
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# 临时 staging
+.staging/

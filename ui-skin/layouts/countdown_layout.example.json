@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "digits": {
+    "y": 55,
+    "short_x": [73, 102, 141, 156, 193],
+    "long_x": [64, 94, 124, 154, 168, 198],
+    "clear": [56, 50, 184, 52]
+  },
+  "progress": {
+    "rect": [249, 58, 9, 64],
+    "color": "#788A3E"
+  },
+  "title": {
+    "center": 148,
+    "y": 100,
+    "font": 0,
+    "color": "#48220A",
+    "rules": [[97, 108, 21, 2], [181, 108, 21, 2]]
+  },
+  "buttons": {
+    "centers": [89, 162, 232],
+    "y": 143,
+    "font": 3,
+    "color": "#FAFAF9"
+  },
+  "bubble": {
+    "x": 99,
+    "y": 192,
+    "width": 146,
+    "line_height": 15,
+    "lines": 2,
+    "font": 0,
+    "small_font": 0,
+    "color": "#FAF6EE",
+    "centered": true
+  }
+}
