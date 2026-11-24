@@ -642,6 +642,7 @@ static void timestamp_to_time(u32 timestamp, TimeStruct *time)
  * Reference date: 1900-01-31 = lunar 1900 first day of first month.
  * Algorithm validated against known dates (Spring Festival 2023/24/25/26,
  * 2023 leap-2nd-month, 2024 Lantern). 2026-08-07 = lunar 6th month 25th.
+ * 坑#100（2026-11-24）：闰月被反复吞掉，所有「闰月之后」的日期全错；见下方月份循环注释。
  * ========================================================================== */
 #define LUNAR_BASE_YEAR   2000u
 /* 农历数据表覆盖 2000-2099（索引 = year-2000）。
@@ -770,24 +771,35 @@ int TimeModule_GetLunar(u16 year, u8 month, u8 day, LunarDate *lunar)
   while (offset >= (int)lunar_year_days(ly) && ly < LUNAR_BASE_YEAR + 99u)  /* 坑#81 上界钳制：防数据/边界偏差时越界 */
   { offset -= (int)lunar_year_days(ly); ly++; }
 
-  /* locate lunar month */
+  /* locate lunar month
+     ⚠️ 坑#100（2026-11-24 用户「语音设置时间为 2026年1月1日 时农历不对」）：
+     旧写法的闰月判断是 `leap > 0 && lm == leap + 1 && !is_leap`，而闰月吃完后
+     只把 is_leap 清零（`if (is_leap && lm == leap) is_leap = 0;`）——lm 随即 ++
+     回到 leap+1，条件再次成立 -> **闰月被反复吞掉**，offset 每圈减 29，
+     直到 offset < 29 才跳出，结果永远停在「(闰)leap 月 + 十几日」。
+     实测 2026-01-01 显示「六月十六」（应为「冬月十三」）、2026-02-16 显示
+     「六月初四」（应为腊月廿九）——凡是「闰月之后」的日期全错。
+     修法：用独立的 leap_done 记住闰月已出过，闰月只走一次；顺带把循环变成
+     有界（每月一次，最多 13 圈）。 */
   u8 leap = lunar_leap_month(ly);
   u8 is_leap = 0;
+  u8 leap_done = 0;                    /* 该农历年的闰月已经出过 */
   u8 lm = 1;
   for (;;)
   {
     u8 dim;
-    if (leap > 0 && lm == leap + 1 && !is_leap)
+    if (leap > 0 && !leap_done && lm == leap + 1)
     {
       is_leap = 1; lm--; dim = lunar_leap_days(ly);
     }
     else
     {
+      is_leap = 0;                     /* 当前这一圈是平月 */
       dim = lunar_month_days(ly, lm);
     }
     if (offset < dim) break;
     offset -= dim;
-    if (is_leap && lm == leap) is_leap = 0;
+    if (is_leap) leap_done = 1;        /* 闰月已出，之后的 leap+1 走平月 */
     lm++;
   }
 
