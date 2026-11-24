@@ -190,6 +190,42 @@ static u8 alm_days_mask(u8 d)
   return 1u;
 }
 
+/* 掩码 -> 5/6/7 天（取最右边那个点亮的图标，语义与按键 5->6->7 递增一致）。
+   只用于「闪灭矩形取哪一格」和按键调节的起点，不参与响铃判定。 */
+static u8 alm_days_of_mask(u8 mask)
+{
+  mask &= 7u;
+  if (mask & 4u) return 7u;
+  if (mask & 2u) return 6u;
+  return 5u;
+}
+
+/* ⚠️ 2026-11-24 用户：「语音设置闹钟七天循环，状态和显示不能对应，手动设置的可以」。
+   根因是**两份数据源**：响铃判定用 (g_alm_loop + g_alm_wd)，而闹钟屏的 五/六/日 图标
+   用 alm_days_mask(g_alm_days) 反推；语音 0x8C 只改 loop/wd、没改 days（也改不了：
+   掩码 5/6/7 才有 days 对应值），于是「语音设了七天」屏上还是上次的 5 天。
+   现在统一成：**显示与响铃都只看 (loop + wd)**，days 降级为「按键 5/6/7 的存档」。 */
+
+/* 显示用掩码：这一槽 五/六/日 哪几天参与（与 weekday_match 同源） */
+static u8 alm_show_mask(u8 idx)
+{
+  if (idx > 2u) idx = 0u;
+  if (g_alm_loop[idx] == 1u) return 7u;   /* 每天：三个图标全亮 */
+  return (u8)(g_alm_wd[idx] & 7u);        /* 单次 / 自定义：按掩码 */
+}
+
+/* 一次写三件套，保证 loop / wd / days 不再互相打架 */
+static void alm_set_cycle(u8 idx, u8 loop, u8 wd)
+{
+  u8 m = (u8)(wd & 7u);
+  if (idx > 2u) return;
+  if (loop > 2u) loop = 2u;
+  if (loop == 1u) m = 7u;                 /* 每天：掩码必然全满 */
+  g_alm_loop[idx] = loop;
+  g_alm_wd[idx]   = m;
+  g_alm_days[idx] = alm_days_of_mask(m);
+}
+
 static u8  g_alm_set_active = 0;   /* 1=闹钟设置模式 */
 static u8  g_alm_set_item   = 0;   /* 当前设置项（ALM_SET_*） */
 static s8  g_alm_set_line = -1;    /* 上次画的黄线项（-1=未画） */
@@ -1287,7 +1323,7 @@ static void draw_alarm(TimeStruct *t)
     u8 hh = g_alm_hour[idx], mm = g_alm_min[idx];
     u8 on = g_alm_on[idx] ? 1 : 0;
     u8 loop = g_alm_loop[idx];
-    u8 wdm = alm_days_mask(g_alm_days[idx]);
+    u8 wdm = alm_show_mask(idx);   /* 与显示同源（2026-11-24）：原来用 g_alm_days 反推，语音设过就不同步 */
     if (idx != c_px_alm_idx || hh != c_px_alm_hh || mm != c_px_alm_mm || on != c_px_alm_on ||
         loop != c_px_alm_loop || wdm != c_px_alm_wd ||
         g_ui_bg_ver != c_px_alm_bg || g_bub_seq != c_px_alm_bub)
@@ -1637,15 +1673,29 @@ int Screen_HandleVoice(const VoiceFrame *f)
       return 1;
     }
     case VOICE_CMD_ALARM_LOOP: /* 0x8C 闹钟循环模式：d0/d1/d2 = 闹钟1/2/3 循环
-                                  （2026-11-19 四档改三档：0 单次 / 1 每天 / 2 自定义；协议表原 0单次/1一~五/2一~六/3一~日）
-                                  收到 1（每天）时把 五/六/日 掩码一并置满；收到 2 保留现有掩码。 */
+                                   ⚠️ 模块协议仍是**四档**（0单次/1一~五/2一~六/3一~日，见
+                                  notes/voice-clock-protocol.md），固件模型是三档
+                                  （0单次/1每天/2自定义）。2026-11-24 之前把 1 当成「每天」、
+                                  把 3 夹成「自定义」→ 语音说「七天」结果既不是七天、屏上图标
+                                  还是上次的（用户实测）。现在按「哪几天响」翻译：
+                                    0 -> 单次（掩码保留，切回来还能用）
+                                    1 -> 自定义 + 五            (一~五)
+                                    2 -> 自定义 + 五、六         (一~六)
+                                    3 -> 每天（掩码全满=7）       (一~日)
+                                  统一走 alm_set_cycle，loop/wd/days 三件套一起写。 */
     {
       u8 chg = 0xFF;
-      u8 v;
-      if (f->d0 != 0xFF) { v = (f->d0 > 2) ? 2 : f->d0; g_alm_loop[0] = v; if (v == 1u) g_alm_wd[0] = 7; if (chg == 0xFF) chg = 0; }
-      if (f->d1 != 0xFF) { v = (f->d1 > 2) ? 2 : f->d1; g_alm_loop[1] = v; if (v == 1u) g_alm_wd[1] = 7; if (chg == 0xFF) chg = 1; }
-      if (f->d2 != 0xFF) { v = (f->d2 > 2) ? 2 : f->d2; g_alm_loop[2] = v; if (v == 1u) g_alm_wd[2] = 7; if (chg == 0xFF) chg = 2; }
-      if (chg != 0xFF) g_alm_sel = chg;           /* 显示被操作的槽（draw_alarm 增量刷新星期chips） */
+      static const u8 loop_of[4] = { 0u, 2u, 2u, 1u };   /* 协议档 -> 模型档 */
+      static const u8 mask_of[4] = { 0u, 1u, 3u, 7u };   /* 协议档 -> 五/六/日 掩码 */
+      if (f->d0 != 0xFF) { u8 v = f->d0 & 3u; if (v == 0u) g_alm_loop[0] = 0; else alm_set_cycle(0, loop_of[v], mask_of[v]); if (chg == 0xFF) chg = 0; }
+      if (f->d1 != 0xFF) { u8 v = f->d1 & 3u; if (v == 0u) g_alm_loop[1] = 0; else alm_set_cycle(1, loop_of[v], mask_of[v]); if (chg == 0xFF) chg = 1; }
+      if (f->d2 != 0xFF) { u8 v = f->d2 & 3u; if (v == 0u) g_alm_loop[2] = 0; else alm_set_cycle(2, loop_of[v], mask_of[v]); if (chg == 0xFF) chg = 2; }
+      if (chg != 0xFF)
+      {
+        g_alm_sel = chg;                          /* 显示被操作的槽（draw_alarm 增量刷新星期chips） */
+        printf("[ALM] 0x8C 循环: 槽%u loop=%u mask=%u days=%u\r\n", (unsigned)chg + 1u,
+               (unsigned)g_alm_loop[chg], (unsigned)alm_show_mask(chg), (unsigned)g_alm_days[chg]);
+      }
       if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
       g_alm_idle_ms = (u32)bftm0_ct;              /* 语音操作闹钟循环：刷新空闲起点 */
       return 1;
@@ -1898,12 +1948,13 @@ static void alm_set_key(const KeyEvent *ke)
         break;
       case ALM_SET_DAYS:                         /* 星期循环 5/6/7 天：左右加减回绕 */
       {
-        int d = (int)g_alm_days[g_alm_sel] + delta;
+        /* 起点取「屏上正在显示的」天数：语音刚设过（loop/wd 变了但 days 是旧值）时，
+           按一下就该从显示的状态开始加减，而不是从记忆里的旧值跳。 */
+        int cur = (int)alm_days_of_mask(alm_show_mask(g_alm_sel));
+        int d = cur + delta;
         if (d > 7) d = 5;
         if (d < 5) d = 7;
-        g_alm_days[g_alm_sel] = (u8)d;
-        g_alm_wd[g_alm_sel]   = alm_days_mask((u8)d);
-        g_alm_loop[g_alm_sel] = 2u;
+        alm_set_cycle(g_alm_sel, 2u, alm_days_mask((u8)d));   /* 自定义 + 对应掩码 */
         break;
       }
       default: break;
@@ -2810,10 +2861,11 @@ static SkinAlarmState alarm_view_state(void)
 {
   u8 index = g_alm.ringing ? g_alm_ring_idx : g_alm_sel;
   if (index > 2u) index = 0u;
-  u8 days = g_alm_days[index];
-  if (days < 5u || days > 7u) days = 7u;
+  /* 五/六/日 图标与响铃判定同源（alm_show_mask），不再拿 g_alm_days 反推（2026-11-24） */
+  u8 mask = alm_show_mask(index);
+  u8 days = alm_days_of_mask(mask);
   return (SkinAlarmState){index, g_alm_hour[index], g_alm_min[index], g_alm_on[index],
-                          0x0Fu | (alm_days_mask(days) << 4), days};
+                          0x0Fu | (mask << 4), days};
 }
 
 /* Layout-driven views derive blink rectangles from the same geometry used to draw them. */
@@ -2884,9 +2936,8 @@ static int blink_rect(u8 id, s16 *x, s16 *y, s16 *w, s16 *h)
       case ALM_SET_MIN:  *x = PX_ALM_M_X;   *y = PX_ALM_DIG_Y; *w = (s16)(PX_ALM_M2_X + 30 - PX_ALM_M_X); *h = 46; break;
       case ALM_SET_DAYS:
       {
-        u8 d = g_alm_days[(g_alm_sel > 2u) ? 0u : g_alm_sel];
-        if (d < 5u) d = 5u;
-        if (d > 7u) d = 7u;
+        /* 闪灭矩形按「屏上正在显示的那几个图标」取（与显示同源，别再用 g_alm_days 反推） */
+        u8 d = alm_days_of_mask(alm_show_mask((u8)((g_alm_sel > 2u) ? 0u : g_alm_sel)));
         *x = (s16)tgx[d - 5u]; *y = PX_ALM_TG_Y; *w = (s16)tgw[d - 5u]; *h = 44;
         break;
       }
@@ -3195,7 +3246,7 @@ void Px_DrawAlm(void)
      （实测：7 天→5 天后「六/日」仍是彩色）。两张精灵都由素材生成：
        开 = 「（打开状态）」的彩色插图（带墨迹 alpha，纸面不贴，所以没有方块补丁）
        关 = 「（抠图）」同框原样（= 背景本身），贴了等于恢复背景。 */
-  wd_mask = alm_days_mask(g_alm_days[idx]);
+  wd_mask = alm_show_mask(idx);   /* 与响铃判定同源（2026-11-24：原来用 g_alm_days 反推，语音设过就不同步） */
   for (i = 0; i < 3u; i++)
     UI_DrawSprite(UI_SPR_ALM_TG(i, ((wd_mask >> i) & 1u) ? 1u : 0u), tg_x[i], PX_ALM_TG_Y);
 

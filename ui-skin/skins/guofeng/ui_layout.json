@@ -301,11 +301,11 @@
     "bubble": {
       "area": [
         143,
-        162,
+        160,
         88
       ],
       "font": 2,
-      "line_height": 18,
+      "line_height": 16,
       "lines": 2,
       "color": "#48220A",
       "default_text": "主人，需要设置闹钟吗？",
