@@ -261,6 +261,7 @@ static s8         g_set_line_y = 0;
    用户要的语义：改过分 -> 秒归零（从整分开始）；只改时/只改日期 -> 分秒接着走，不清零。 */
 static u8         g_set_adj_hour = 0;
 static u8         g_set_adj_min  = 0;
+static u8         g_set_adj_sec  = 0;   /* 2026-11-24：动过秒 -> 退出时保留用户设的秒（见 set_exit） */
 
 static void cnt_ring_stop(void);  /* 前置声明：停倒计时到点响铃（goto_main 在定义之前使用） */
 static void set_exit(void);       /* 前置声明：退出按键设置模式（Screen_OnSecond 15s 超时用） */
@@ -1805,7 +1806,7 @@ static void set_item_adjust(int delta)
   {
     case SET_ITEM_HOUR:  g_set_ws.hour   = set_wrap8((int)g_set_ws.hour   + delta, 0, 23); g_set_adj_hour = 1; break;
     case SET_ITEM_MIN:   g_set_ws.minute = set_wrap8((int)g_set_ws.minute + delta, 0, 59); g_set_adj_min  = 1; break;
-    case SET_ITEM_SEC:   g_set_ws.second = set_wrap8((int)g_set_ws.second + delta, 0, 59); break;  /* 坑#89 已从循环移除（主屏不显示秒），此 case 不可达，保留防回归 */
+    case SET_ITEM_SEC:   g_set_ws.second = set_wrap8((int)g_set_ws.second + delta, 0, 59); g_set_adj_sec = 1; break;
     case SET_ITEM_YEAR:
       g_set_ws.year = set_wrap16((int)g_set_ws.year + delta, 2000, 2099);
       set_day_clamp();                        /* 坑#77 #4：年变后日钳制到新月份最大天数 */
@@ -1829,23 +1830,34 @@ static void set_item_adjust(int delta)
 static void set_exit(void)
 {
   if (g_set_line >= 0) set_line_clear((u8)g_set_line);  /* 清黄线（恢复该处背景） */
-  /* 2026-11-20 用户语义：只有「改过分」才把秒清零（从整分开始计时）；
-     只改小时 / 只改日期时，分秒接着走，不能凭空清成 00。
-     （进设置时时间是冻结的，这里用当前 RTC 的分/秒接续，避免退出瞬间时间倒退。） */
+  /* 写回规则（时/分/秒 各自"用户动过没有"）：
+     ① 时、分：用户没动过的按当前 RTC 接续（进设置时是冻结快照，直接用会让时间倒退）——
+        改过分 -> 分用用户设的；只改时 -> 分接续；只改日期 -> 时分都接续（2026-11-20 语义）。
+     ② 秒：**用户动过秒就保留他设的秒**（2026-11-24 用户「设置完秒以后退出设置，秒设置没生效」，
+        旧代码三条分支都会覆盖 g_set_ws.second：改过分归零、其余从 RTC 取 -> 秒项永远白设）；
+        没动过秒才回到老规则：改过分 -> 秒归零（从整分开始计时），否则跟 RTC 接续。 */
   {
     TimeStruct now;
     TimeModule_GetTime(&now);
-    if (g_set_adj_min)
-      g_set_ws.second = 0;
-    else if (g_set_adj_hour)
-    {
-      g_set_ws.minute = now.minute;
-      g_set_ws.second = now.second;
-    }
-    else
+    if (!g_set_adj_hour && !g_set_adj_min)
     {
       g_set_ws.hour   = now.hour;
       g_set_ws.minute = now.minute;
+    }
+    else if (g_set_adj_hour && !g_set_adj_min)
+    {
+      g_set_ws.minute = now.minute;
+    }
+    if (g_set_adj_sec)
+    {
+      /* 保留用户设的秒（分也跟着用用户设的；时若没动过上面已接续） */
+    }
+    else if (g_set_adj_min)
+    {
+      g_set_ws.second = 0;
+    }
+    else
+    {
       g_set_ws.second = now.second;
     }
   }
@@ -1856,6 +1868,7 @@ static void set_exit(void)
   g_set_line   = -1;
   g_set_adj_hour = 0;
   g_set_adj_min  = 0;
+  g_set_adj_sec  = 0;
   Calendar_SetStaticNext();
   printf("[KEY] 设置退出 RTC=%04u-%02u-%02u %02u:%02u:%02u\r\n",
          (unsigned)g_set_ws.year, (unsigned)g_set_ws.month, (unsigned)g_set_ws.day,
@@ -2093,7 +2106,9 @@ void Screen_HandleKey(const KeyEvent *ke)
 }
 
 /* ==================== 主屏时间设置模式（Screen_HandleKey 的 MAIN 分流） ====================
-   设置项循环：时 -> 分 -> 年 -> 月 -> 日 -> 完成（坑#89 移除秒：主屏不显示秒，光标无处可指）；
+   设置项循环：时 -> 分 -> [秒] -> 年 -> 月 -> 日 -> 完成
+   （秒项只在当前皮肤显示秒时才进循环：换肤版国风主屏有秒，08 号内置版没有 -> 跳过；
+    坑#89 当年是"主屏不显示秒"才移除的，2026-11-19 国风版加回秒显示后这一项又被打开了）；
    KEY2 短按：进设置 / 下一项 / 切到「完成」哨兵自动退出（用户 2026-09-05 改为一轮直接退出）；
    KEY1 减 / KEY3 加；非设置态 KEY1/KEY3 短按 = 切屏（KEY1 左->倒计时屏、KEY3 右->闹钟屏，坑#93 2026-11-04）。 */
 static void screen_key_main(const KeyEvent *ke)
@@ -2108,6 +2123,7 @@ static void screen_key_main(const KeyEvent *ke)
       g_set_item   = SET_ITEM_HOUR;
       g_set_adj_hour = 0;
       g_set_adj_min  = 0;
+      g_set_adj_sec  = 0;
       Calendar_ColonForceOn();              /* 进设置强制冒号亮（防落在闪烁"腊"相位设置期一直灭，坑#71 #3 2026-09-05） */
       printf("[KEY] 进入设置模式（时）\r\n");
     }
