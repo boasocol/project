@@ -305,10 +305,6 @@ static u16 c_prog_bar = 0;          /* 已绘制的进度条填充色（换色�
 static u8  c_cnt_blink_on  = 0xFF;  /* 上次沙漏亮/灭（0xFF=首帧必画，2026-09-05） */
 static u8  c_cnt_blink_act = 0xFF;  /* 上次沙漏三态模式（0=无 1=暂停常亮 2=运行闪烁，0xFF=首帧，坑#77 #5） */
 static u8  c_cnt_blink_drawn = 0;   /* 沙漏当前是否画在屏上（1=画着，擦除判断） */
-static u8  c_ico_hourly = 0xFF;     /* 上次整点报时符号亮/灭（0xFF=首帧；0=灭 1=亮，坑#71 2026-09-05） */
-static u8  c_ico_snooze = 0xFF;     /* 上次贪睡符号亮/灭（0xFF=首帧） */
-static u8  c_ico_hourly_drawn = 0;  /* 整点报时符号是否画在屏上（擦除判断） */
-static u8  c_ico_snooze_drawn = 0;  /* 贪睡符号是否画在屏上（擦除判断） */
 static u8  c_alm_h1 = 0xFF, c_alm_h2 = 0xFF, c_alm_m1 = 0xFF, c_alm_m2 = 0xFF;
 static u8  c_alm_on = 0xFF, c_alm_loop = 0xFF, c_alm_ring = 0xFF;
 static u8  c_alm_sel = 0xFF;      /* 已绘制的闹钟槽号（坑#86 粉条「闹钟N」序号增量，原左上 chip） */
@@ -386,8 +382,6 @@ static void goto_main(void)
   g_alm_set_exit_ms = 0;   /* 取消「退出设置后自动回主屏」倒计时（回主屏了自然作废，2026-09-05） */
   g_alm_idle_ms = 0;       /* 离开闹钟屏：清空闲计时（2026-09-05） */
   c_cnt_blink_on = 0xFF; c_cnt_blink_act = 0xFF; c_cnt_blink_drawn = 0;  /* 回主屏：沙漏缓存重置（背景重传已覆盖） */
-  c_ico_hourly = 0xFF; c_ico_snooze = 0xFF;      /* 回主屏：状态角标缓存重置（背景重传已覆盖，2026-09-05） */
-  c_ico_hourly_drawn = c_ico_snooze_drawn = 0;
   g_cnt_idle_ms = (u32)bftm0_ct;                  /* 回主屏：倒计时屏空闲计时重新起算 */
   /* 坑#93（2026-11-04）：倒计时到点待响（遇闹钟响铃/设置态，cnt_tick 置 g_cnt_pending_ring）——
      任何回主屏路径（闹钟响停/设置退出/0xEF 等）在此补响倒计时钟声 + 切倒计时屏（显示 00:00 已结束红） */
@@ -419,58 +413,102 @@ static void alm_snooze_clear(void)
   g_alm_snooze_ms = 0;
 }
 
-/* 主屏状态角标（坑#71 #1/#2 2026-09-05，App_Render 主屏分支每帧调）：
-   整点报时开启时常驻 0xE302 符号、贪睡待响时常驻 0xE303 符号（主卡左上 16x16 白），
-   用 c_* 缓存去重，状态变化才画/擦，回主屏 goto_main 重置缓存强制重画。
-   2026-11-17 新 UI：主屏没有这两个角标的图标位（旧坐标 (44,2)/(64,2) + 米黄擦除色
-   会在新背景上留米黄方块），绘制体 #if 0 停用；状态缓存维护照旧，将来按新设计
-   补坐标与精灵后打开即可。*/
+/* ==================== 顶层状态角标（2026-11-25）====================
+   用户要求：「现在是兼容版，要适配各种 UI，所以统一放在正上方弄几个角标」。
+   做法（不依赖任何皮肤资源、不用重打镜像）：
+     - 位置固定：整条水平居中、贴顶（y=1），14x14 角标、间距 5px；最多 3 个 -> 134..186。
+     - 图标是**固件内置**的双色 1bpp 位图（白底芯片 + 深墨图形），由 UI_DrawIcon2 绘制：
+       背景按当前屏 g_ui_bg 从 Flash 还原，所以换任何皮肤、换任何背景都不会留色块。
+     - 状态位：bit0 闹钟已开（任一槽）、bit1 整点报时、bit2 贪睡待响（0.5s 闪）。
+   为什么不用原来的 0xE302/0xE303 符号：那是**字库**里的 PUA 码点，换字库就没了
+   （实测 guofeng 528 字形、sample08 488 字形，PUA 字符都是 0 个）。 */
+#define BADGE_W     14
+#define BADGE_H     14
+#define BADGE_GAP    5
+#define BADGE_Y      1
+#define BADGE_N      3
+#define BADGE_STRIP_W (BADGE_N * BADGE_W + (BADGE_N - 1) * BADGE_GAP)   /* 52 */
+#define BADGE_X0    ((SCREEN_W - BADGE_STRIP_W) / 2)                /* 134 */
+
+/* 角标配色：芯片纸白 + 深墨（浅背景靠深边、深背景靠白底，两边都看得清） */
+#define C_BADGE_PAPER 0xFFFFu
+#define C_BADGE_INK   0x2104u
+
+/* 闹钟（铃身 + 下沿 + 铃舌） */
+static const u8 ico_alarm_white[BADGE_H][2] = {
+  {0x00,0x00}, {0x78,0xF8}, {0x77,0x78}, {0x6F,0xB8}, {0x6F,0xB8}, {0x5F,0xD8},
+  {0x5F,0xD8}, {0x5F,0xD8}, {0x3F,0xE8}, {0x00,0x08}, {0x7C,0x78}, {0x7F,0xF8},
+  {0x7F,0xF8}, {0x00,0x00},
+};
+static const u8 ico_alarm_dark[BADGE_H][2] = {
+  {0x7F,0xF8}, {0x87,0x04}, {0x88,0x84}, {0x90,0x44}, {0x90,0x44}, {0xA0,0x24},
+  {0xA0,0x24}, {0xA0,0x24}, {0xC0,0x14}, {0xFF,0xF4}, {0x83,0x84}, {0x80,0x04},
+  {0x80,0x04}, {0x7F,0xF8},
+};
+/* 整点报时（喇叭 + 声波） */
+static const u8 ico_hourly_white[BADGE_H][2] = {
+  {0x00,0x00}, {0x7F,0xF8}, {0x7F,0xF8}, {0x73,0xB8}, {0x63,0xD8}, {0x02,0xE8},
+  {0x02,0xE8}, {0x02,0xE8}, {0x63,0xD8}, {0x73,0xB8}, {0x7F,0xF8}, {0x7F,0xF8},
+  {0x7F,0xF8}, {0x00,0x00},
+};
+static const u8 ico_hourly_dark[BADGE_H][2] = {
+  {0x7F,0xF8}, {0x80,0x04}, {0x80,0x04}, {0x8C,0x44}, {0x9C,0x24}, {0xFD,0x14},
+  {0xFD,0x14}, {0xFD,0x14}, {0x9C,0x24}, {0x8C,0x44}, {0x80,0x04}, {0x80,0x04},
+  {0x80,0x04}, {0x7F,0xF8},
+};
+/* 贪睡待响（Zz） */
+static const u8 ico_snooze_white[BADGE_H][2] = {
+  {0x00,0x00}, {0x7F,0xF8}, {0x40,0xF8}, {0x7D,0xF8}, {0x7B,0xF8}, {0x77,0xF8},
+  {0x40,0xF8}, {0x7F,0xF8}, {0x7C,0x08}, {0x7F,0xE8}, {0x7F,0xD8}, {0x7F,0xB8},
+  {0x7C,0x08}, {0x00,0x00},
+};
+static const u8 ico_snooze_dark[BADGE_H][2] = {
+  {0x7F,0xF8}, {0x80,0x04}, {0xBF,0x04}, {0x82,0x04}, {0x84,0x04}, {0x88,0x04},
+  {0xBF,0x04}, {0x80,0x04}, {0x83,0xF4}, {0x80,0x14}, {0x80,0x24}, {0x80,0x44},
+  {0x83,0xF4}, {0x7F,0xF8},
+};
+
+static u8  c_badge_key = 0xFFu;    /* 上次画的「状态位 + 闪相」，0xFF = 未画 */
+static u8  c_badge_scr = 0xFFu;    /* 上次画在哪个屏（换屏背景已重传 -> 必须重画） */
+static u16 c_badge_bg  = 0xFFFFu;  /* 上次的背景版本号 */
+
+/* 画一个角标（白底芯片 + 深墨图形，背景先还原） */
+static void badge_draw(int x, const u8 white[BADGE_H][2], const u8 dark[BADGE_H][2])
+{
+  UI_DrawIcon2(x, BADGE_Y, BADGE_W, BADGE_H, (const u8 *)white, (const u8 *)dark,
+               C_BADGE_PAPER, C_BADGE_INK);
+}
+
+/* 顶层状态角标（App_Render 每帧调；内部按 状态 + 闪相 + 屏 + 背景版本 去重）
+   名字沿用 Screen_StatusIcons（screen.h / app_render.c 已接线）。 */
 void Screen_StatusIcons(void)
 {
-  if (Skin_Active()) { Skin_Hourly(g_hourly_on); return; }
-  u8 h = g_hourly_on ? 1 : 0;
-  /* 贪睡符号闪烁（2026-09-05 用户需求「贪睡状态符号要闪烁」）：待响时每 0.5s 亮/灭
-     （与后台沙漏同节奏）；非待响恒灭。s=0 的「闪烁灭相」与「无待响」都落到擦除，
-     c_* 缓存去重即可。*/
-  u8 s = g_alm.snooze ? (u8)((bftm0_ct / 500u) & 1u) : 0;
-#if 0
-  if (h != c_ico_hourly)
+  u8 bits = 0;
+  if (g_alm_on[0] || g_alm_on[1] || g_alm_on[2]) bits |= 0x01u;   /* bit0 闹钟已开 */
+  if (g_hourly_on)                               bits |= 0x02u;   /* bit1 整点报时 */
+  u8 phase = 1u;                                                  /* 0 = 贪睡角标的灭相 */
+  if (g_alm.snooze)
   {
-    if (h)
-    {
-      UI_DrawGlyphRect(ST_ICO_X, 239 - (ST_ICO_Y1 + ST_ICO_H) + 1, ST_ICO_W, ST_ICO_H,
-                       UI_ICO_HOURLY, C_TIME_ICO);
-      c_ico_hourly_drawn = 1;
-    }
-    else if (c_ico_hourly_drawn)
-    {
-      Display_FillRect(ST_ICO_X, ST_ICO_Y1, ST_ICO_W, ST_ICO_H, SC_C_MAIN_BG);
-      c_ico_hourly_drawn = 0;
-    }
-    c_ico_hourly = h;
+    bits |= 0x04u;
+    phase = (u8)((bftm0_ct / 500u) & 1u);        /* 贪睡待响：0.5s 亮 / 0.5s 灭（与后台沙漏同节奏） */
   }
-  if (s != c_ico_snooze)
-  {
-    if (s)
-    {
-      UI_DrawGlyphRect(ST_ICO_X2, 239 - (ST_ICO_Y2 + ST_ICO_H) + 1, ST_ICO_W, ST_ICO_H,
-                       UI_ICO_SNOOZE, C_TIME_ICO);
-      c_ico_snooze_drawn = 1;
-    }
-    else if (c_ico_snooze_drawn)
-    {
-      Display_FillRect(ST_ICO_X2, ST_ICO_Y2, ST_ICO_W, ST_ICO_H, SC_C_MAIN_BG);
-      c_ico_snooze_drawn = 0;
-    }
-    c_ico_snooze = s;
-  }
-#else
-  /* 新 UI：不画（状态缓存跟上，避免回退旧 UI 时补画一堆旧角标） */
-  c_ico_hourly = h;
-  c_ico_snooze = s;
-  c_ico_hourly_drawn = 0;
-  c_ico_snooze_drawn = 0;
-#endif
+  u8 key = (u8)(bits | (phase ? 0x80u : 0u));
+  u8 scr = (u8)UI_GetScreen();
+  if (key == c_badge_key && scr == c_badge_scr && g_ui_bg_ver == c_badge_bg) return;
+  c_badge_key = key; c_badge_scr = scr; c_badge_bg = g_ui_bg_ver;
+
+  /* 先整条擦掉（按当前屏背景还原），再按需画：删掉一个角标不留残影 */
+  UI_DrawIcon2(BADGE_X0, BADGE_Y, BADGE_STRIP_W, BADGE_H, 0, 0, 0, 0);
+
+  /* 占位数：贪睡灭相也占位 -> 别的角标不会左右跳 */
+  unsigned cnt = 0;
+  if (bits & 0x01u) cnt++;
+  if (bits & 0x02u) cnt++;
+  if (bits & 0x04u) cnt++;
+  int x = (SCREEN_W - (int)(cnt * BADGE_W + (cnt - 1) * BADGE_GAP)) / 2;
+  if (bits & 0x01u) { badge_draw(x, ico_alarm_white,  ico_alarm_dark);  x += BADGE_W + BADGE_GAP; }
+  if (bits & 0x02u) { badge_draw(x, ico_hourly_white, ico_hourly_dark); x += BADGE_W + BADGE_GAP; }
+  if ((bits & 0x04u) && phase) badge_draw(x, ico_snooze_white, ico_snooze_dark);
 }
 
 /* ==================== 旧 UI 数字/冒号原语（奶油风，2026-11-17 新 UI 接线后停用） ====================
@@ -1392,14 +1430,13 @@ static void draw_screen_static(int scr)
 #endif
   }
 
-  /* 旧 UI 增量缓存（c_cnt_* / c_alm_* / c_ico_*）现在只被 #if 0 的旧绘制读取：
+  /* 旧 UI 增量缓存（c_cnt_* / c_alm_*）现在只被 #if 0 的旧绘制读取：
      这里统一读一次，防 -Wall 的 -Wunused-but-set-variable 噪声
      （回退旧 UI、把上面 #if 0 打开后，本行可删）。 */
   (void)c_cnt_m3; (void)c_cnt_m2; (void)c_cnt_m1; (void)c_cnt_s1; (void)c_cnt_s2;
   (void)c_cnt_w3; (void)c_cnt_state; (void)c_cnt_title; (void)c_cnt_prog; (void)c_prog_bar;
   (void)c_alm_h1; (void)c_alm_h2; (void)c_alm_m1; (void)c_alm_m2;
   (void)c_alm_on; (void)c_alm_loop; (void)c_alm_ring; (void)c_alm_sel;
-  (void)c_ico_hourly; (void)c_ico_snooze; (void)c_ico_hourly_drawn; (void)c_ico_snooze_drawn;
   (void)c_cnt_blink_drawn;
 }
 

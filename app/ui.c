@@ -599,6 +599,58 @@ void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color)
     SPI_LCD_Deselect();
   }
 }
+/* ============ 双色 1bpp 图标（固件内置位图，2026-11-25）============
+   用途：顶层状态角标。用户要求「兼容版要适配各种 UI，统一放在正上方」——角标不能依赖
+   皮肤精灵（每个皮肤都不一样）也不能依赖字库图标（PUA 码 0xE3xx 换成新字库后就没有了，
+   实测 guofeng / sample08 两套字库 PUA 字符数都是 0）。
+   做法：位图留在固件里；背景仍然按当前屏 g_ui_bg 从 Flash 还原 -> 任何背景都对得上。
+   掩码每行 (w+7)/8 字节、MSB 最左；dark 优先于 white；两张都传 0 = 只还原背景（擦除）。 */
+void UI_DrawIcon2(int x, int y, int w, int h, const u8 *white_bits, const u8 *dark_bits,
+                  u16 c_white, u16 c_dark)
+{
+  if (w <= 0 || h <= 0) return;
+  if (x < 0 || y < 0 || x + w > SCREEN_W || y + h > SCREEN_H) return;
+  const u32 rb = (u32)((w + 7) / 8);
+  /* 设计坐标 (x,y) -> GRAM 列：背景行 0 = 设计**底部**（与 UI_DrawGlyphRect 一致的翻转），
+     所以矩形首行是 239-(y+h)+1，往上走 = 设计 y 往下走；掩码是自然顺序（第一行=顶部），
+     取行时要反过来：GRAM 第 yy 行对应掩码第 (h-1-yy) 行。 */
+  const int ly0 = 239 - (y + h) + 1;
+  for (int yy = 0; yy < h; yy++)
+  {
+    int ly = ly0 + yy;
+    Flash_Read(g_ui_bg + (u32)ly * 320u * 2u + (u32)x * 2u, g_line, (u32)w * 2u);
+    for (int i = 0; i < w * 2; i += 2)
+    {
+      u8 t = g_line[i]; g_line[i] = g_line[i + 1]; g_line[i + 1] = t;
+    }
+    if (white_bits != 0 || dark_bits != 0)
+    {
+      const u32 my = (u32)(h - 1 - yy);
+      const u8 *wr = (white_bits != 0) ? white_bits + my * rb : 0;
+      const u8 *dr = (dark_bits  != 0) ? dark_bits  + my * rb : 0;
+      for (int xx = 0; xx < w; xx++)
+      {
+        u8 m = (u8)(0x80u >> (xx & 7));
+        int is_dark  = (dr != 0) && (dr[xx >> 3] & m);
+        int is_white = (wr != 0) && (wr[xx >> 3] & m);
+        if (!is_dark && !is_white) continue;
+        u16 px = is_dark ? c_dark : c_white;
+        g_line[xx * 2]     = HI8(px);
+        g_line[xx * 2 + 1] = LO8(px);
+      }
+    }
+    SPI_LCD_Select();
+    SPI_LCD_WriteCmd(ST7789_CASET);
+    { u8 d[4] = {0, (u8)ly, 0, (u8)ly}; SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RASET);
+    { u8 d[4] = {HI8((u16)x), LO8((u16)x), HI8((u16)(x + w - 1)), LO8((u16)(x + w - 1))};
+      SPI_LCD_WriteData(d, 4); }
+    SPI_LCD_WriteCmd(ST7789_RAMWR);
+    SPI_LCD_WriteData(g_line, (u32)w * 2u);
+    SPI_LCD_Deselect();
+  }
+}
+
 /* ============ 语音助手小女孩形象（MASCOT 容器，尺寸动态 RGB565 + 1bpp 掩码） ============ */
 /* 资源布局（build_flash.py build_mascot）：
    [0..4) 'MSCT' | [4..8) ver | [8..12) w | [12..16) h |
