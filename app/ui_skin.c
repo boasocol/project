@@ -86,11 +86,18 @@ static u8 active;
    需要「内容没变也强制重画」的场合（闪灭亮相 / 背景重传 / 闹钟屏重绘）调
    Skin_Invalidate()，只重画某一项调 Skin_InvalidateField()。 */
 enum {
-  SLOT_DATE, SLOT_WEEKDAY, SLOT_LUNAR, SLOT_TEMP, SLOT_HUMI,
+  SLOT_WEEKDAY, SLOT_LUNAR, SLOT_TEMP, SLOT_HUMI,
   SLOT_TEMP_NAME, SLOT_HUMI_NAME, SLOT_ASSISTANT, SLOT_ALARM_NUMBER, SLOT_COUNT
 };
 typedef struct { u32 hash; u16 bg; } SlotCache;
 static SlotCache slot_cache[SLOT_COUNT];
+
+/* 日期「年 / 月 / 日」三段各自缓存（2026-11-25 用户「设置中闪烁，每次闪烁都会带动
+   其他未被设置的数字抖一下」）：以前只把整个日期框当一个字段，闪「年」时整框
+   （年月日 10 个字符）都会被清掉重画，月/日跟着闪一下。现在按三段分开记，
+   只有真的变的那一段才清+画；分隔符只在整框首画/换背景时画一次。 */
+static u32 c_date_p[3] = { 0u, 0u, 0u };
+static u16 c_date_bg = 0xFFFFu;
 
 /* 时钟四位 + 冒号（主屏/闹钟屏各一套，靠 base 区分） */
 static u16 c_ck_base = 0xFFFFu, c_ck_bg = 0xFFFFu, c_ck_colon_bg = 0xFFFFu;
@@ -107,6 +114,14 @@ static u32 text_hash(const char *s)
   u32 h = 2166136261u;                 /* FNV-1a 32 */
   while (*s) { h ^= (u8)*s++; h *= 16777619u; }
   return h ^ 0xA5A5A5A5u;              /* 空串也不与静态零初始化相撞 */
+}
+
+/* 定长 hash（日期分段用：年 4 字符 / 月 2 / 日 2） */
+static u32 text_hash_len(const char *s, unsigned n)
+{
+  u32 h = 2166136261u;
+  for (unsigned i = 0; i < n; ++i) { h ^= (u8)s[i]; h *= 16777619u; }
+  return h ^ 0xA5A5A5A5u;
 }
 
 /* 返回 1 = 内容与上次一致（调用方直接跳过清屏+重画）；否则登记新内容并返回 0 */
@@ -127,6 +142,7 @@ void Skin_Invalidate(void)
   c_ck_h1 = c_ck_h2 = c_ck_m1 = c_ck_m2 = 0xFFu;
   c_sc_bg = 0xFFFFu; c_sc_1 = c_sc_2 = 0xFFu;
   c_alm_slot_bg = 0xFFFFu; c_alm_slot = 0xFFu;
+  c_date_bg = 0xFFFFu; c_date_p[0] = c_date_p[1] = c_date_p[2] = 0u;
 }
 
 /* 只作废某一项：闪灭的「亮相」只重画被闪的那一项，不整屏再擦一遍 */
@@ -137,8 +153,10 @@ void Skin_InvalidateField(SkinClockField field)
     case SKIN_CLOCK_HOUR:   c_ck_h1 = c_ck_h2 = 0xFFu; break;
     case SKIN_CLOCK_MINUTE: c_ck_m1 = c_ck_m2 = 0xFFu; break;
     case SKIN_CLOCK_SECOND: c_sc_1 = c_sc_2 = 0xFFu; break;
-    case SKIN_CLOCK_YEAR: case SKIN_CLOCK_MONTH: case SKIN_CLOCK_DAY:
-      slot_cache[SLOT_DATE].bg = 0xFFFFu; break;
+    /* 日期按段作废：闪「年」只重画年那 4 个字符，月/日不动（2026-11-25） */
+    case SKIN_CLOCK_YEAR:   c_date_p[0] = 0u; break;
+    case SKIN_CLOCK_MONTH:  c_date_p[1] = 0u; break;
+    case SKIN_CLOCK_DAY:    c_date_p[2] = 0u; break;
     default: break;
   }
 }
@@ -346,24 +364,78 @@ static int date_origin(const TextSlot *slot, const char *text)
   return x;
 }
 
+/* 日期：年 / 月 / 日 三段分别缓存，只有变的那一段才「清 + 画」。
+   2026-11-25 用户「设置中闪烁，每次闪烁都会带动其他未被设置的数字抖一下」：
+   整框当一格时，闪「年」会把整框清掉再重画一遍（5ms 采样实测：t+165ms 有
+   321 像素跨 x74..137 变化 = 年月日全被擦了一遍），月/日就跟着闪。
+   分隔符（'-'）不参与变化，只在整框首画 / 换背景时画一次。 */
 static void draw_date(const TimeStruct *t, int hidden)
 {
   const TextSlot *slot = &skin.main.date;
   if (!slot->box.w) return;
   char text[11];
   make_date(t, text);
-  /* hidden 只对 年/月/日 有意义：其它项在闪时不要把日期也算成"变了"（否则闪一次擦一次） */
-  unsigned part = (hidden >= SKIN_CLOCK_YEAR && hidden <= SKIN_CLOCK_DAY) ? (unsigned)hidden + 1u : 0u;
-  if (slot_unchanged(SLOT_DATE, text_hash(text) ^ (part * 2654435761u))) return;
+  const u32 base = font_base(slot);
+  const int limit = slot->box.x + slot->box.w;
   int x = date_origin(slot, text);
-  Skin_Clear(slot->box);
+
+  /* 三段的起点/宽度（与 Skin_ClockItemRect 同一套算法，保证擦的框和画的框一致） */
+  static const u8 part_start[3] = { 0u, 5u, 8u };
+  static const u8 part_len[3]   = { 4u, 2u, 2u };
+  int px[3], pw[3];
+  int cx = x;
+  unsigned p = 0;
   for (unsigned i = 0; i < 10u; ++i)
   {
-    char digit[2] = {text[i], 0};
-    int digit_part = i < 4u ? SKIN_CLOCK_YEAR : (i < 7u ? SKIN_CLOCK_MONTH : SKIN_CLOCK_DAY);
-    if (i == 4u || i == 7u || digit_part != hidden)
-      UI_DrawStrPxBounded(x, slot->box.y, digit, font_base(slot), slot->color, slot->box.x + slot->box.w);
-    x += UI_StrPxWidth(digit, font_base(slot));
+    char digit[2] = { text[i], 0 };
+    int w = UI_StrPxWidth(digit, base);
+    if (p < 3u && i == part_start[p])
+    {
+      int pwv = 0;
+      for (unsigned k = 0; k < part_len[p]; ++k)
+      {
+        char dd[2] = { text[i + k], 0 };
+        pwv += UI_StrPxWidth(dd, base);
+      }
+      px[p] = cx; pw[p] = pwv; p++;
+    }
+    cx += w;
+  }
+
+  /* 背景重传 / 首帧：整框重画一遍（含两个分隔符），并把三段 hash 记下来 */
+  if (c_date_bg != g_ui_bg_ver)
+  {
+    c_date_bg = g_ui_bg_ver;
+    Skin_Clear(slot->box);
+    int dx = x;
+    for (unsigned i = 0; i < 10u; ++i)
+    {
+      char digit[2] = { text[i], 0 };
+      int part = i < 4u ? 0 : (i < 7u ? 1 : 2);
+      if (hidden != (int)(SKIN_CLOCK_YEAR + part))
+        UI_DrawStrPxBounded(dx, slot->box.y, digit, base, slot->color, limit);
+      dx += UI_StrPxWidth(digit, base);
+    }
+    for (p = 0; p < 3u; ++p)
+      c_date_p[p] = text_hash_len(text + part_start[p], part_len[p]);
+    return;
+  }
+
+  /* 之后逐段：内容没变的段不动 */
+  for (p = 0; p < 3u; ++p)
+  {
+    u32 h = text_hash_len(text + part_start[p], part_len[p]);
+    if (hidden == (int)(SKIN_CLOCK_YEAR + p)) { c_date_p[p] = 0u; continue; }  /* 灭相：这段不画 */
+    if (c_date_p[p] == h) continue;
+    c_date_p[p] = h;
+    Skin_Clear((SkinRect){ (u16)px[p], slot->box.y, (u16)pw[p], slot->box.h });
+    int dx = px[p];
+    for (unsigned k = 0; k < part_len[p]; ++k)
+    {
+      char digit[2] = { text[part_start[p] + k], 0 };
+      UI_DrawStrPxBounded(dx, slot->box.y, digit, base, slot->color, limit);
+      dx += UI_StrPxWidth(digit, base);
+    }
   }
 }
 
