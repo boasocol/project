@@ -252,9 +252,17 @@ int CountdownView_ItemRect(const CountdownViewState *state, CountdownItem item, 
   return rect->w > 0;
 }
 
+/* 进度条（竖直、自下而上填）：2026-11-25 用户「计时中计时条不太稳定，有时候刚开始就会缺一点」。
+   两个毛病：
+   ① 圆头 inset 原来是 {3,1,1,3} —— 端行窄 3、次行宽 1、第三行又收窄 3，画出来是"掐腰"的
+      蝶形，满条时顶端/底端看着就是缺了一块。改成 {3,1,0,0}：端行 3px、次行 1px、其余满宽。
+   ② 高度原来截断 (h*remain/total)：一开跑 remain==total 是满的，过 1 秒 299/300=63.78
+      被截成 63 —— **第一秒就掉一行**，然后好几秒不动（看着"抖一下然后不动"）。
+      改成四舍五入：只有真掉过半格才减一行。
+   另外：变矮时只把"多出来的顶端几行"恢复背景，不再整条 clear+重画（9x64 全清有可见空白）。 */
 static void draw_progress(const CountdownViewState *state)
 {
-  static const u8 inset[4] = {3, 1, 1, 3};
+  static const u8 inset[4] = {3, 1, 0, 0};
   static int last_height = -1;
   static u16 last_background;
   const Rect *bar = &layout->progress;
@@ -265,13 +273,34 @@ static void draw_progress(const CountdownViewState *state)
   {
     if (remaining > state->total) remaining = state->total;
     if (state->counting_up) remaining = state->total - remaining;
-    height = (int)(bar->h * remaining / state->total);
+    height = (int)(((u32)bar->h * remaining + state->total / 2u) / state->total);
   }
+  if (height < 0) height = 0;
+  if (height > bar->h) height = bar->h;
   if (height == last_height && last_background == g_ui_bg_ver) return;
+
+  const int prev = (last_background == g_ui_bg_ver) ? last_height : -1;
   last_height = height;
   last_background = g_ui_bg_ver;
 
-  clear_rect(bar);
+  if (prev < 0)
+  {
+    clear_rect(bar);                     /* 首帧 / 换背景：整条重来 */
+  }
+  else if (height < prev)
+  {
+    /* 变矮：旧填充顶端到新填充顶端这一段恢复背景（含旧圆头 4 行，下面会重画新圆头） */
+    int top_old = bar->h - prev;
+    int top_new = bar->h - height;
+    if (top_old < 0) top_old = 0;
+    if (top_new > top_old)
+    {
+      Rect r = {bar->x, bar->y + top_old, bar->w, top_new - top_old};
+      clear_rect(&r);
+    }
+  }
+  /* 变高：新长出来的顶端若干行直接画成满宽（下面的循环会补画圆头） */
+
   for (int row = 0; row < height; ++row)
   {
     int top = height - 1 - row;
