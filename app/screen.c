@@ -152,7 +152,7 @@ static struct {
   u32 ring_start;   /* 响铃起始 bftm0_ct（60s 自动停） */
   u8  snooze;       /* 贪睡待响标志（1=贪睡延迟重响待触发；0=无。2026-09-05 由计数改一次性待响标志） */
 } g_alm;
-static u32 g_alm_snooze_ms = 0;        /* 贪睡重响时刻 bftm0_ct（贪睡 = 停响 + 一次性延迟 10 分钟，配置不变，坑#71 #9） */
+static u32 g_alm_snooze_ms = 0;        /* 贪睡重响时刻 bftm0_ct（贪睡 = 停响 + 一次性延迟 5 分钟，配置不变，坑#71 #9 / 坑#93 改 5 分钟） */
 
 /* ---- 3 个闹钟槽（运行时内存态，2026-09-05：ui_cfg_t 单闹钟仅作槽1 初始值，闹钟配置不写 Flash） ---- */
 static u8 g_alm_hour[3];   /* 槽i 时 */
@@ -1721,9 +1721,11 @@ int Screen_HandleVoice(const VoiceFrame *f)
         printf("[VOICE] 贪睡：当前无响铃可贪睡 -> 回 FAIL\r\n");
         return 0;
       }
-      /* 闹钟响铃中：贪睡 = 停响 + 一次性延迟 10 分钟重响（闹钟配置不变，
-         贪睡待响由 alarm_tick 到点触发重响一次；重响完即结束，不再延迟） */
-      printf("[VOICE] 贪睡：闹钟%u 延迟 10 分钟重响一次（配置不变）\r\n", (unsigned)g_alm_ring_idx + 1);
+      /* 闹钟响铃中：贪睡 = 停响 + 一次性延迟 5 分钟重响（闹钟配置不变，
+         贪睡待响由 alarm_tick 到点触发重响一次；重响完即结束，不再延迟）
+         坑#93（2026-11-04）：间隔 10 分钟 -> 5 分钟（用户「太长了，短一点」），
+         下面的 300000u 才是真值，日志/注释同步改，别再看文字以为是 10 分钟 */
+      printf("[VOICE] 贪睡：闹钟%u 延迟 5 分钟重响一次（配置不变）\r\n", (unsigned)g_alm_ring_idx + 1);
       g_alm.ringing = 0;
       Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);
       (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);   /* 贪睡：停响回待机（2026-09-04 闹铃动画） */
