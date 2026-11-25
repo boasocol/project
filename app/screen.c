@@ -1631,6 +1631,8 @@ int Screen_HandleVoice(const VoiceFrame *f)
   {
     case VOICE_CMD_CNT_MIN:    /* 0x84 分钟倒计时 d0=1-120（坑#93：新版指令集 V01 支持 1~120 分钟，原 1-60） */
       if (f->d0 >= 1 && f->d0 <= CNT_MIN_MAX) { Screen_CntStart((u16)f->d0 * 60u); return 1; }
+      printf("[VOICE] 倒计时分钟数非法 d0=%u（1~%u）-> 回 FAIL\r\n",
+             (unsigned)f->d0, (unsigned)CNT_MIN_MAX);
       return 0;
     case VOICE_CMD_TOMATO_ON:  /* 0x88 番茄：自动 25 分钟 */
       Screen_CntStart(25u * 60u); return 1;

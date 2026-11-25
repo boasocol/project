@@ -183,6 +183,29 @@ static int voice_handle_base(const VoiceFrame *f)
   }
 }
 
+/* 协议表里 CI→MCU 的**全部**命令（见 driver/voice.h / notes/voice-clock-protocol.md）。
+   用途：区分「命令是真的、但这会儿做不成」和「这条命令协议里根本没有」——只有前者才该回
+   "设置失败"。 */
+static int voice_cmd_known(u8 cmd)
+{
+  switch (cmd)
+  {
+    case VOICE_CMD_WAKE:      case VOICE_CMD_SET_TIME:   case VOICE_CMD_SET_DATE:
+    case VOICE_CMD_CNT_DAY:   case VOICE_CMD_CNT_MIN:    case VOICE_CMD_PAUSE:
+    case VOICE_CMD_RESUME:    case VOICE_CMD_STOP:       case VOICE_CMD_TOMATO_ON:
+    case VOICE_CMD_TOMATO_OFF:case VOICE_CMD_SET_ALARM:  case VOICE_CMD_ALARM_SW:
+    case VOICE_CMD_ALARM_LOOP:case VOICE_CMD_ALARM_RING:
+    case VOICE_CMD_SNOOZE:    case VOICE_CMD_ALARM_OFF:
+    case VOICE_CMD_DISP_OFF:  case VOICE_CMD_DISP_ON:
+    case VOICE_CMD_TELL_TIME: case VOICE_CMD_CNT_DAY_END:
+    case VOICE_CMD_HOURLY:    case VOICE_CMD_QUERY_ALARM:
+    case VOICE_CMD_CNT_UP:    case VOICE_CMD_VOLUME:     case VOICE_CMD_STATE:
+      return 1;
+    default:
+      return 0;
+  }
+}
+
 /* 统一业务入口（协议驱动 voice.c 注册的回调，Voice_SetCmdHandler(App_VoiceCmd)） */
 int App_VoiceCmd(const VoiceFrame *f)
 {
@@ -217,10 +240,24 @@ int App_VoiceCmd(const VoiceFrame *f)
   /* 语音基础域：vcmd_* 各自回响应 */
   if (voice_handle_base(f)) return 1;
 
-  /* 两层都不认识：未接线命令（天数倒计时 0x83/0xB7，待后续） */
-  printf("[VOICE] 未接线 cmd=0x%02X（天数倒计时 0x83/0xB7，待后续）\r\n", f->cmd);
-  Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败，请重试" */
-  Screen_Bubble("设置失败，请重试");        /* 新 UI 气泡：0x09 文案 */
+  /* 两层都不认识。按「协议表里有没有这条命令」分成两种处理：
+     ⚠️ 2026-11-25 用户「检查一下现在什么情况下会发送设置失败的语音指令，因为有时候没说话也有」：
+     原来这里对**任何**未知 cmd 都回 VOICE_TX_FAIL（模块播"设置失败，请重试"），可模块
+     误触发（没识别到词也上报）、回显（把我们发出去的 MCU→CI 帧原样吐回来）、以及变长帧
+     A5 FC（voice.c 的 CS 暂不校验）都会送来协议表里根本没有的 cmd —— 用户没说话，喇叭
+     却答"设置失败"；回显场景还会自我激荡（MCU 发 0x09 → 回显 → 不认识 → 再发 0x09…）。
+     (a) 已知命令但这次没做成（0x83/0xB7 天数倒计时未接线；暂停/继续/贪睡在状态不对时被拒）
+         → 照旧回 FAIL，让用户知道"没做成"；
+     (b) 协议表里没有的 cmd（误触发/回显/噪声）→ 只打印、不回任何东西。 */
+  if (voice_cmd_known(f->cmd))
+  {
+    printf("[VOICE] 已知命令但未执行 cmd=0x%02X -> 回 FAIL\r\n", (unsigned)f->cmd);
+    Voice_Send(VOICE_TX_FAIL, 0, 0, 0, 0);   /* 模块播"设置失败，请重试" */
+    Screen_Bubble("设置失败，请重试");        /* 新 UI 气泡：0x09 文案 */
+    return 1;
+  }
+  printf("[VOICE] 忽略未知 cmd=0x%02X（不在协议表：误触发/回显/变长帧无校验）-> 不回应\r\n",
+         (unsigned)f->cmd);
   return 1;
 }
 
