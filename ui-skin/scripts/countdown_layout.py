@@ -31,16 +31,22 @@ def rgb565(color):
 
 
 class Font:
-    def __init__(self, data):
+    def __init__(self, data, on_text_overflow=None):
         if data[:4] != b"FONT":
             raise ValueError("bad FONT container")
         self.data = data
+        self.on_text_overflow = on_text_overflow
         self.bits = 4 if data[7] == 4 else 1
         count, offset = struct.unpack_from("<II", data, 11)
         self.glyphs = {}
         for i in range(count):
             code, bitmap, w, h = struct.unpack_from("<IIHH", data, offset + 12*i)
             self.glyphs[code] = bitmap, w, h
+
+    def report_text_overflow(self, message):
+        if self.on_text_overflow is None:
+            raise ValueError(message)
+        self.on_text_overflow(message)
 
     def measure(self, slot, text):
         width, height = 0, 0
@@ -75,7 +81,8 @@ def label(font, style, text_centers, center=0):
     return [center, y, top, bottom - top, slot, rgb565(style["color"])]
 
 
-def pack_layout(config, sprites, font_data, *, full_skin=False, digit_base=150, colon_id=160):
+def pack_layout(config, sprites, font_data, *, full_skin=False, digit_base=150, colon_id=160,
+                on_text_overflow=None):
     if config["version"] != 1:
         raise ValueError("expected countdown layout version 1")
     if sprites[:4] != b"SPR1" or struct.unpack_from("<I", sprites, 8)[0] <= max(colon_id, digit_base+9):
@@ -104,7 +111,7 @@ def pack_layout(config, sprites, font_data, *, full_skin=False, digit_base=150, 
     if bar != [0]*4 and bar[2] < 7:
         raise ValueError("progress bar needs at least seven pixels for round ends")
 
-    font = Font(font_data)
+    font = Font(font_data, on_text_overflow=on_text_overflow)
     title = config["title"]
     center, = integers([title["center"]], 1)
     title_data = label(font, title, [("倒计时中", center), ("正计时中", center)], center)
@@ -128,7 +135,9 @@ def pack_layout(config, sprites, font_data, *, full_skin=False, digit_base=150, 
         for ch in "主人，开启国风倒计时吧！":
             char_w, char_h, _, _ = font.measure(font_slot, ch)
             if char_w > w or char_h > lh:
-                raise ValueError(f"glyph {ch!r} exceeds the bubble line geometry")
+                font.report_text_overflow(
+                    f"countdown bubble glyph {ch!r} (font {font_slot}) exceeds {w}×{lh} px"
+                )
     if title_data[4] > 4 or button_data[4] > 4:
         raise ValueError("font slot must be 0–4")
 
@@ -143,8 +152,9 @@ def pack_layout(config, sprites, font_data, *, full_skin=False, digit_base=150, 
     return struct.pack("<4sHHI", b"CNTL", 1, len(payload), zlib.crc32(payload)) + payload
 
 
-def pack_file(path, sprites, font):
+def pack_file(path, sprites, font, *, on_text_overflow=None):
     try:
-        return pack_layout(json.loads(path.read_text(encoding="utf-8-sig")), sprites, font)
+        config = json.loads(path.read_text(encoding="utf-8-sig"))
+        return pack_layout(config, sprites, font, on_text_overflow=on_text_overflow)
     except (KeyError, ValueError, TypeError, struct.error) as error:
         raise SystemExit(f"{path}: {error}") from error

@@ -121,11 +121,6 @@ const ui_cfg_t *UI_GetConfig(void); /* 访问已加载配置（未加载/失败�
 void UI_SetAlarm(u8 on, u8 hour, u8 min); /* 写运行时闹钟配置（仅内存，不写 Flash；响铃状态机接入后使用） */
 int  UI_CacheFont(void);    /* 缓存字库索引表（按需二分查找） */
 void UI_DrawGlyphRect(int rx, int ry, int rw, int rh, u32 code, u16 color); /* 在逻辑矩形内画单字（还原背景+叠墨点） */
-/* 双色 1bpp 图标（固件内置位图，不依赖皮肤精灵/字库图标）：先按当前屏背景还原矩形，
-   再按两张掩码叠色（dark 优先于 white）；两张掩码都传 0 = 只还原背景（擦除）。
-   掩码每行 (w+7)/8 字节、MSB 最左。2026-11-25：顶层状态角标用（兼容版适配任意 UI）。 */
-void UI_DrawIcon2(int x, int y, int w, int h, const u8 *white_bits, const u8 *dark_bits,
-                  u16 c_white, u16 c_dark);
 void UI_DrawText(const char *str, int x, int y, int cell_w, int cell_h, u16 color); /* UTF-8 字符串（每字 cell_w×cell_h） */
 void UI_DrawGlyphs(const u32 *codes, int n, int x, int y, int cell_w, int cell_h, u16 color); /* 直接传 Unicode 码点数组（避免源文件中文字面量） */
 void UI_DrawVarDigits(const char *s, int x, int y, u16 color, u32 base); /* 数字串按变体 code 段绘制(1:1，base 区分尺寸) */

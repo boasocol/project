@@ -413,102 +413,21 @@ static void alm_snooze_clear(void)
   g_alm_snooze_ms = 0;
 }
 
-/* ==================== 顶层状态角标（2026-11-25）====================
-   用户要求：「现在是兼容版，要适配各种 UI，所以统一放在正上方弄几个角标」。
-   做法（不依赖任何皮肤资源、不用重打镜像）：
-     - 位置固定：整条水平居中、贴顶（y=1），14x14 角标、间距 5px；最多 3 个 -> 134..186。
-     - 图标是**固件内置**的双色 1bpp 位图（白底芯片 + 深墨图形），由 UI_DrawIcon2 绘制：
-       背景按当前屏 g_ui_bg 从 Flash 还原，所以换任何皮肤、换任何背景都不会留色块。
-     - 状态位：bit0 闹钟已开（任一槽）、bit1 整点报时、bit2 贪睡待响（0.5s 闪）。
-   为什么不用原来的 0xE302/0xE303 符号：那是**字库**里的 PUA 码点，换字库就没了
-   （实测 guofeng 528 字形、sample08 488 字形，PUA 字符都是 0 个）。 */
-#define BADGE_W     14
-#define BADGE_H     14
-#define BADGE_GAP    5
-#define BADGE_Y      1
-#define BADGE_N      3
-#define BADGE_STRIP_W (BADGE_N * BADGE_W + (BADGE_N - 1) * BADGE_GAP)   /* 52 */
-#define BADGE_X0    ((SCREEN_W - BADGE_STRIP_W) / 2)                /* 134 */
-
-/* 角标配色：芯片纸白 + 深墨（浅背景靠深边、深背景靠白底，两边都看得清） */
-#define C_BADGE_PAPER 0xFFFFu
-#define C_BADGE_INK   0x2104u
-
-/* 闹钟（铃身 + 下沿 + 铃舌） */
-static const u8 ico_alarm_white[BADGE_H][2] = {
-  {0x00,0x00}, {0x78,0xF8}, {0x77,0x78}, {0x6F,0xB8}, {0x6F,0xB8}, {0x5F,0xD8},
-  {0x5F,0xD8}, {0x5F,0xD8}, {0x3F,0xE8}, {0x00,0x08}, {0x7C,0x78}, {0x7F,0xF8},
-  {0x7F,0xF8}, {0x00,0x00},
-};
-static const u8 ico_alarm_dark[BADGE_H][2] = {
-  {0x7F,0xF8}, {0x87,0x04}, {0x88,0x84}, {0x90,0x44}, {0x90,0x44}, {0xA0,0x24},
-  {0xA0,0x24}, {0xA0,0x24}, {0xC0,0x14}, {0xFF,0xF4}, {0x83,0x84}, {0x80,0x04},
-  {0x80,0x04}, {0x7F,0xF8},
-};
-/* 整点报时（喇叭 + 声波） */
-static const u8 ico_hourly_white[BADGE_H][2] = {
-  {0x00,0x00}, {0x7F,0xF8}, {0x7F,0xF8}, {0x73,0xB8}, {0x63,0xD8}, {0x02,0xE8},
-  {0x02,0xE8}, {0x02,0xE8}, {0x63,0xD8}, {0x73,0xB8}, {0x7F,0xF8}, {0x7F,0xF8},
-  {0x7F,0xF8}, {0x00,0x00},
-};
-static const u8 ico_hourly_dark[BADGE_H][2] = {
-  {0x7F,0xF8}, {0x80,0x04}, {0x80,0x04}, {0x8C,0x44}, {0x9C,0x24}, {0xFD,0x14},
-  {0xFD,0x14}, {0xFD,0x14}, {0x9C,0x24}, {0x8C,0x44}, {0x80,0x04}, {0x80,0x04},
-  {0x80,0x04}, {0x7F,0xF8},
-};
-/* 贪睡待响（Zz） */
-static const u8 ico_snooze_white[BADGE_H][2] = {
-  {0x00,0x00}, {0x7F,0xF8}, {0x40,0xF8}, {0x7D,0xF8}, {0x7B,0xF8}, {0x77,0xF8},
-  {0x40,0xF8}, {0x7F,0xF8}, {0x7C,0x08}, {0x7F,0xE8}, {0x7F,0xD8}, {0x7F,0xB8},
-  {0x7C,0x08}, {0x00,0x00},
-};
-static const u8 ico_snooze_dark[BADGE_H][2] = {
-  {0x7F,0xF8}, {0x80,0x04}, {0xBF,0x04}, {0x82,0x04}, {0x84,0x04}, {0x88,0x04},
-  {0xBF,0x04}, {0x80,0x04}, {0x83,0xF4}, {0x80,0x14}, {0x80,0x24}, {0x80,0x44},
-  {0x83,0xF4}, {0x7F,0xF8},
-};
-
-static u8  c_badge_key = 0xFFu;    /* 上次画的「状态位 + 闪相」，0xFF = 未画 */
-static u8  c_badge_scr = 0xFFu;    /* 上次画在哪个屏（换屏背景已重传 -> 必须重画） */
-static u16 c_badge_bg  = 0xFFFFu;  /* 上次的背景版本号 */
-
-/* 画一个角标（白底芯片 + 深墨图形，背景先还原） */
-static void badge_draw(int x, const u8 white[BADGE_H][2], const u8 dark[BADGE_H][2])
-{
-  UI_DrawIcon2(x, BADGE_Y, BADGE_W, BADGE_H, (const u8 *)white, (const u8 *)dark,
-               C_BADGE_PAPER, C_BADGE_INK);
-}
-
-/* 顶层状态角标（App_Render 每帧调；内部按 状态 + 闪相 + 屏 + 背景版本 去重）
-   名字沿用 Screen_StatusIcons（screen.h / app_render.c 已接线）。 */
+/* ==================== 顶层状态图标（2026-11-25）====================
+   用户要求：「兼容版 + 闪烁固定图标素材」，图标由皮肤提供（SICO 容器，见 ui_skin.c
+   Skin_DrawStatusIcons），固件只负责算状态 + 在**主屏**把它们按需亮/灭。
+   皮肤没给图标位（08 内置版 / 没有 SICO 的旧镜像）就什么都不画 —— 这两类界面
+   本来就没有状态位，硬画一个黑白小方块更丑（用户 2026-11-25 否掉了那版）。 */
 void Screen_StatusIcons(void)
 {
-  u8 bits = 0;
-  if (g_alm_on[0] || g_alm_on[1] || g_alm_on[2]) bits |= 0x01u;   /* bit0 闹钟已开 */
-  if (g_hourly_on)                               bits |= 0x02u;   /* bit1 整点报时 */
-  u8 phase = 1u;                                                  /* 0 = 贪睡角标的灭相 */
-  if (g_alm.snooze)
-  {
-    bits |= 0x04u;
-    phase = (u8)((bftm0_ct / 500u) & 1u);        /* 贪睡待响：0.5s 亮 / 0.5s 灭（与后台沙漏同节奏） */
-  }
-  u8 key = (u8)(bits | (phase ? 0x80u : 0u));
-  u8 scr = (u8)UI_GetScreen();
-  if (key == c_badge_key && scr == c_badge_scr && g_ui_bg_ver == c_badge_bg) return;
-  c_badge_key = key; c_badge_scr = scr; c_badge_bg = g_ui_bg_ver;
-
-  /* 先整条擦掉（按当前屏背景还原），再按需画：删掉一个角标不留残影 */
-  UI_DrawIcon2(BADGE_X0, BADGE_Y, BADGE_STRIP_W, BADGE_H, 0, 0, 0, 0);
-
-  /* 占位数：贪睡灭相也占位 -> 别的角标不会左右跳 */
-  unsigned cnt = 0;
-  if (bits & 0x01u) cnt++;
-  if (bits & 0x02u) cnt++;
-  if (bits & 0x04u) cnt++;
-  int x = (SCREEN_W - (int)(cnt * BADGE_W + (cnt - 1) * BADGE_GAP)) / 2;
-  if (bits & 0x01u) { badge_draw(x, ico_alarm_white,  ico_alarm_dark);  x += BADGE_W + BADGE_GAP; }
-  if (bits & 0x02u) { badge_draw(x, ico_hourly_white, ico_hourly_dark); x += BADGE_W + BADGE_GAP; }
-  if ((bits & 0x04u) && phase) badge_draw(x, ico_snooze_white, ico_snooze_dark);
+  if (UI_GetScreen() != UI_SCREEN_MAIN) return;   /* 图标位只在主屏 */
+  u8 phase = (u8)((bftm0_ct / 500u) & 1u);        /* 0.5s 相位 */
+  /* 闪烁集合：计时运行中 / 整点报时开 / 贪睡待响（贪睡闪的是闹钟图标） */
+  unsigned blinking = (g_cnt == CNT_RUN ? SKIN_STATUS_TIMER : 0u) |
+                      (g_hourly_on ? SKIN_STATUS_HOURLY : 0u) |
+                      (g_alm.snooze ? SKIN_STATUS_ALARM : 0u);
+  unsigned visible = phase ? SKIN_STATUS_ALL : (SKIN_STATUS_ALL & ~blinking);
+  (void)Skin_DrawStatusIcons(visible);            /* 无 SICO：内部直接返回 0 */
 }
 
 /* ==================== 旧 UI 数字/冒号原语（奶油风，2026-11-17 新 UI 接线后停用） ====================

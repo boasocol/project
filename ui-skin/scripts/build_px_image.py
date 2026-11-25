@@ -8,7 +8,7 @@
   0x100000  CONF（32B 容器，沿用旧格式与默认值）
   0x110000  SPR1（px_spr.bin）
 """
-import os, struct, zlib
+import os, struct, sys, zlib
 from pathlib import Path
 import countdown_layout
 import ui_layout
@@ -29,13 +29,20 @@ assert all(len(b) == SCREEN_BYTES for b in bg), [len(b) for b in bg]
 source_dir = Path(ui_paths.SRC)
 profile_path = source_dir / ui_layout.LAYOUT_FILE
 layout_path = source_dir / countdown_layout.LAYOUT_FILE
-countdown = skin = None
+countdown = skin = status_icons = None
+text_overflows = []
+confirm_overflow = "--confirm-text-overflow" in sys.argv[1:]
+on_text_overflow = text_overflows.append if confirm_overflow else None
 if profile_path.is_file():
     if layout_path.is_file():
         raise SystemExit("choose ui_layout.json or countdown_layout.json, not both")
-    spr, countdown, skin = ui_layout.pack_file(profile_path, spr, font)
+    spr, countdown, skin, status_icons = ui_layout.pack_file(
+        profile_path, spr, font, on_text_overflow=on_text_overflow, include_status_icons=True
+    )
 elif layout_path.is_file():
-    countdown = countdown_layout.pack_file(layout_path, spr, font)
+    countdown = countdown_layout.pack_file(
+        layout_path, spr, font, on_text_overflow=on_text_overflow
+    )
 
 # ---- 容量硬校验：超了就报错，绝不产出 >2MB 的镜像 ----
 # （2026-11-18 实测：新国风那版机器人画布大，SPR 到 1.19MB，合计 2.20MB，
@@ -59,6 +66,25 @@ if _need > FLASH_SIZE:
     ]
     raise SystemExit("\n".join(msg))
 
+if FONT_OFF + len(font) > CONFIG_OFF:
+    raise SystemExit(f"字库超出 Flash 分区容量：{len(font)} B，可用 {CONFIG_OFF - FONT_OFF} B")
+if skin is not None and ui_layout.OFFSET + len(skin) > ui_layout.STATUS_ICONS_OFFSET:
+    raise SystemExit("SKIN overlaps the status icon block")
+if status_icons is not None and ui_layout.STATUS_ICONS_OFFSET + len(status_icons) > UI_OFF:
+    raise SystemExit("status icon block exceeds the reserved area before BG0")
+
+if text_overflows:
+    print("文字超出布局区域。继续打包可能出现截断、重叠或残影。")
+    for warning in dict.fromkeys(text_overflows):
+        print(f"  - {warning}")
+    try:
+        answer = input("输入 Y 强制打包，其他输入取消 [y/N]：")
+    except EOFError:
+        answer = ""
+    if answer.strip().upper() != "Y":
+        raise SystemExit("已取消打包，未生成镜像。")
+    print("已确认文字超出布局区域，继续打包。")
+
 # CONF：亮度80/时区8/闹钟关7:00/蓝牙已配对，与旧默认一致
 payload = struct.pack('<BBBBBB', 80, 8, 0, 7, 0, 1) + b'\x00' * 10
 conf = struct.pack('<4sIII', b'CONF', 1, len(payload), zlib.crc32(payload) & 0xFFFFFFFF) + payload
@@ -77,10 +103,11 @@ if countdown is not None:
     put(countdown_layout.OFFSET, countdown)
     print(f"  CNTL  0x{countdown_layout.OFFSET:06X}  {len(countdown):7d} B")
 if skin is not None:
-    if ui_layout.OFFSET + len(skin) > UI_OFF:
-        raise SystemExit("layout exceeds the reserved area before BG0")
     put(ui_layout.OFFSET, skin)
     print(f"  SKIN  0x{ui_layout.OFFSET:06X}  {len(skin):7d} B")
+if status_icons is not None:
+    put(ui_layout.STATUS_ICONS_OFFSET, status_icons)
+    print(f"  SICO  0x{ui_layout.STATUS_ICONS_OFFSET:06X}  {len(status_icons):7d} B")
 for i, b in enumerate(bg):
     put(UI_OFF + i * SCREEN_BYTES, b)
 put(FONT_OFF, font)

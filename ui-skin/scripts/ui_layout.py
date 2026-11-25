@@ -10,6 +10,8 @@ from countdown_layout import Font, integers, rect, rgb565
 
 LAYOUT_FILE = "ui_layout.json"
 OFFSET = 0x200
+STATUS_ICONS_OFFSET = 0x500
+STATUS_ICONS = ("timer", "hourly", "alarm")
 NONE = 0xFFFF
 SEGMENTS = 8
 SCREEN_NAMES = ("main", "countdown", "alarm")
@@ -137,7 +139,9 @@ def text_slot(spec, font, examples=()):
     for sample in examples:
         width,_,_,ink_bottom = font.measure(slot, sample)
         if width > w or ink_bottom > h:
-            raise ValueError(f"text {sample!r} exceeds box {spec['box']}")
+            font.report_text_overflow(
+                f"text {sample!r} (font {slot}, {width}×{ink_bottom} px) exceeds box {spec['box']}"
+            )
     return [x,y,w,h,slot,rgb565(spec["color"]),flag(spec.get("centered", False))]
 
 
@@ -250,21 +254,41 @@ def bubble(spec, font):
         raise ValueError("bubble text exceeds its line count or 63 UTF-8 bytes")
     for variant in {slot,fallback}:
         if len(manual_lines) > 1 and any(font.measure(variant, line)[0] > w for line in manual_lines):
-            raise ValueError("manually wrapped bubble line exceeds its width")
+            font.report_text_overflow(f"bubble at ({x}, {y}), font {variant}: a line exceeds {w} px")
         for ch in text.replace("\n", ""):
             cw,_,top,bottom = font.measure(variant,ch)
             if cw>w or bottom-top>lh:
-                raise ValueError(f"bubble glyph does not fit the line: {ch}")
+                font.report_text_overflow(
+                    f"bubble at ({x}, {y}), font {variant}: glyph {ch!r} exceeds {w}×{lh} px"
+                )
     words = [x,y,w,slot,fallback,lh,n,rgb565(spec["color"]),flag(spec.get("centered",False))]
     return words,encoded.ljust(64,b"\0")
 
 
-def blocks(config, sprites, font_data, directory):
+def status_icons_block(spec, table):
+    if not isinstance(spec, dict) or set(spec) != set(STATUS_ICONS):
+        raise ValueError("main.status_icons must contain timer, hourly and alarm")
+    boxes = []
+    payload = bytearray()
+    for name in STATUS_ICONS:
+        icon = spec[name]
+        sprite = table.id(icon["sprite"])
+        w, h = table.entries[sprite][:2]
+        x, y, _, _ = rect([*integers(icon["at"], 2), w, h])
+        if any(x < ax + aw and ax < x + w and y < ay + ah and ay < y + h
+               for ax, ay, aw, ah in boxes):
+            raise ValueError(f"main.status_icons.{name} overlaps another status icon")
+        boxes.append((x, y, w, h))
+        payload += struct.pack("<5H", x, y, w, h, sprite)
+    return struct.pack("<4sHHI", b"SICO", 1, len(payload), zlib.crc32(payload)) + payload
+
+
+def blocks(config, sprites, font_data, directory, *, on_text_overflow=None, include_status_icons=False):
     if config["version"] != 1:
         raise ValueError("expected ui_layout.json version 1")
     table = SpriteTable(sprites)
     packed_sprites = table.append_overlays(directory, config.get("overlays", []))
-    font = Font(font_data)
+    font = Font(font_data, on_text_overflow=on_text_overflow)
     pages = [config[name] for name in SCREEN_NAMES]
     main, countdown, alarm = pages
     words = [*clock_page(main,table,font), *alarm_page(alarm,table,font), *countdown_page(countdown,table)]
@@ -296,7 +320,9 @@ def blocks(config, sprites, font_data, directory):
         geom, packed_sprites, font_data, full_skin=True,
         digit_base=table.id(countdown["digits"]["digits"]), colon_id=table.id(countdown["digits"]["colon"]),
     )
-    return packed_sprites, countdown_blob, skin
+    icons = status_icons_block(main["status_icons"], table) if "status_icons" in main else None
+    result = packed_sprites, countdown_blob, skin
+    return (*result, icons) if include_status_icons else result
 
 
 def font_texts(directory):
@@ -315,9 +341,10 @@ def font_texts(directory):
     return text
 
 
-def pack_file(path, sprites, font):
+def pack_file(path, sprites, font, *, on_text_overflow=None, include_status_icons=False):
     try:
         config = json.loads(path.read_text(encoding="utf-8-sig"))
-        return blocks(config, sprites, font, path.parent)
+        return blocks(config, sprites, font, path.parent, on_text_overflow=on_text_overflow,
+                      include_status_icons=include_status_icons)
     except (KeyError, ValueError, TypeError, struct.error, OSError) as error:
         raise SystemExit(f"{path}: {error}") from error

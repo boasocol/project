@@ -120,15 +120,20 @@ def main(argv):
         print("  数字：外部提供（digits=none，来源 %s）" % dig_src)
     print("=" * 62)
     for i, (label, script) in enumerate(steps, 1):
-        print("\n[%d/%d] %s ..." % (i, len(steps), label))
-        r = subprocess.run([sys.executable, os.path.join(HERE, script)],
-                           cwd=PACK, env=env, capture_output=True, text=True,
-                           encoding="utf-8", errors="replace")
+        print("\n[%d/%d] %s ..." % (i, len(steps), label), flush=True)
+        command = [sys.executable, os.path.join(HERE, script)]
+        image_step = script == "build_px_image.py"
+        if image_step:
+            command.append("--confirm-text-overflow")
+        r = subprocess.run(command, cwd=PACK, env=env, capture_output=not image_step,
+                           text=True, encoding="utf-8", errors="replace")
         tail = [ln for ln in (r.stdout or "").splitlines() if ln.strip()][-3:]
         for ln in tail:
             print("   " + ln)
         if r.returncode != 0:
-            print("\n!! %s 失败：\n%s" % (script, (r.stderr or r.stdout or "")[-1500:]))
+            print("\n!! %s 失败" % script)
+            if not image_step:
+                print((r.stderr or r.stdout or "")[-1500:])
             return 1
 
     # 3) 素材快照（这次真正用的东西，原样留一份，便于复现）

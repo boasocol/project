@@ -5,6 +5,8 @@
 #include <string.h>
 
 #define SKIN_OFFSET 0x200u
+#define STATUS_ICONS_OFFSET 0x500u
+#define STATUS_ICON_COUNT 3u
 #define FONT_SLOTS 5u
 #define SCREEN_WIDTH 320u
 #define SCREEN_HEIGHT 240u
@@ -72,7 +74,18 @@ typedef struct {
 
 _Static_assert(sizeof(SkinData) == 728u, "SKIN v1 payload size");
 
+/* SICO v1 holds the timer, hourly and alarm icon rectangles and sprite IDs. */
+typedef struct {
+  SkinRect box;
+  u16 sprite;
+} StatusIcon;
+
+_Static_assert(sizeof(StatusIcon) * STATUS_ICON_COUNT == 30u, "SICO v1 payload size");
+
 static SkinData skin;
+static StatusIcon status_icons[STATUS_ICON_COUNT];
+static u16 status_icons_bg;
+static u8 status_icons_visible, status_icons_ready;
 static u8 active;
 
 /* ============ 内容缓存：字段内容没变就不清屏重画（2026-11-23） ============
@@ -137,6 +150,9 @@ static int slot_unchanged(unsigned slot, u32 hash)
 /* 作废全部内容缓存：下一次绘制会把该屏动态层整层重画 */
 void Skin_Invalidate(void)
 {
+  /* 这里**不要**动 status_icons_visible：背景重传已经由 status_icons_bg 判出来了，
+     清零会让每次 Skin_Invalidate（闪灭还原 / 闹钟屏重绘）都把 3 个按钮图标擦一遍重画一遍
+     —— 就是「切设置项时别的元素跟着抖」那类毛病的翻版。 */
   for (unsigned i = 0; i < SLOT_COUNT; ++i) slot_cache[i].bg = 0xFFFFu;
   c_ck_bg = c_ck_colon_bg = c_ck_base = 0xFFFFu;
   c_ck_h1 = c_ck_h2 = c_ck_m1 = c_ck_m2 = 0xFFu;
@@ -255,12 +271,32 @@ static int valid_skin(void)
   return 1;
 }
 
+static int status_icons_fit(void)
+{
+  for (unsigned i = 0; i < STATUS_ICON_COUNT; ++i)
+  {
+    const StatusIcon *icon = &status_icons[i];
+    SkinRect r = icon->box;
+    if (!r.w || !r.h || !fits(r) || !sprites_fit(icon->sprite, 1u)) return 0;
+    for (unsigned j = 0; j < i; ++j)
+    {
+      SkinRect p = status_icons[j].box;
+      if (r.x < p.x + p.w && p.x < r.x + r.w && r.y < p.y + p.h && p.y < r.y + r.h) return 0;
+    }
+  }
+  return 1;
+}
+
 int Skin_Load(void)
 {
-  active = 0;
+  active = status_icons_ready = 0;
   int result = UI_ReadLayout(SKIN_OFFSET, "SKIN", &skin, sizeof(skin));
-  if (result == 0 && !valid_skin()) return -1;
-  return result;
+  if (result != 0) return result;
+  if (!valid_skin()) return -1;
+  result = UI_ReadLayout(STATUS_ICONS_OFFSET, "SICO", status_icons, sizeof(status_icons));
+  status_icons_ready = result == 0 && status_icons_fit();
+  if (!status_icons_ready) printf("[UI] SICO invalid\r\n");   /* 旧镜像没有 SICO：退回固件角标 */
+  return 0;
 }
 
 void Skin_Activate(int ready)
@@ -268,6 +304,7 @@ void Skin_Activate(int ready)
   active = !!ready;
   Skin_Invalidate();          /* 刚激活：内容缓存全部作废，第一次绘制要整层画全 */
   if (active) printf("[UI] SKIN flash (3 pages)\r\n");
+  if (active && status_icons_ready) printf("[UI] SICO flash (3 icons)\r\n");
 }
 
 int Skin_Active(void) { return active; }
@@ -525,6 +562,23 @@ int Skin_ClockItemRect(const TimeStruct *t, SkinClockField item, SkinRect *rect)
   }
   else return 0;
   return rect->w != 0u;
+}
+
+int Skin_DrawStatusIcons(unsigned visible)
+{
+  if (!active || !status_icons_ready) return 0;
+  unsigned changed = status_icons_bg == g_ui_bg_ver ? visible ^ status_icons_visible : SKIN_STATUS_ALL;
+  for (unsigned i = 0; i < STATUS_ICON_COUNT; ++i)
+  {
+    unsigned bit = 1u << i;
+    if (!(changed & bit)) continue;
+    const StatusIcon *icon = &status_icons[i];
+    if (visible & bit) UI_DrawSprite(icon->sprite, icon->box.x, icon->box.y);
+    else Skin_Clear(icon->box);
+  }
+  status_icons_bg = g_ui_bg_ver;
+  status_icons_visible = (u8)visible;
+  return 1;
 }
 
 void Skin_Hourly(int enabled)

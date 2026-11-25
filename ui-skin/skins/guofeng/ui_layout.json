@@ -1,6 +1,25 @@
 {
   "version": 1,
+  "overlays": [
+    {"name": "status_timer", "file": "status_timer.png"},
+    {"name": "status_hourly", "file": "status_hourly.png"},
+    {"name": "status_alarm", "file": "status_alarm.png"}
+  ],
   "main": {
+    "status_icons": {
+      "timer": {
+        "at": [26, 186],
+        "sprite": "status_timer"
+      },
+      "hourly": {
+        "at": [119, 185],
+        "sprite": "status_hourly"
+      },
+      "alarm": {
+        "at": [230, 186],
+        "sprite": "status_alarm"
+      }
+    },
     "numbers": {
       "x": [
         81,
@@ -248,16 +267,10 @@
     },
     "slot": {
       "sprites": 179,
-      "at": [
-        214,
-        57
-      ]
+      "at": [214, 57]
     },
     "switch": {
-      "at": [
-        247,
-        48
-      ],
+      "at": [247, 48],
       "off": 172,
       "on": 171
     },
@@ -267,35 +280,23 @@
       null,
       null,
       {
-        "at": [
-          184,
-          104
-        ],
+        "at": [184, 104],
         "off": 174,
         "on": 173
       },
       {
-        "at": [
-          227,
-          104
-        ],
+        "at": [227, 104],
         "off": 176,
         "on": 175
       },
       {
-        "at": [
-          267,
-          104
-        ],
+        "at": [267, 104],
         "off": 178,
         "on": 177
       }
     ],
     "switch_blink_cover": {
-      "at": [
-        240,
-        25
-      ],
+      "at": [240, 25],
       "sprite": 182
     },
     "bubble": {

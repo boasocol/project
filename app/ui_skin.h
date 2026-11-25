@@ -47,6 +47,13 @@ void Skin_Clock(const TimeStruct *t, int weekday, const char *lunar, const char 
                 const char *humi, int hidden);
 int Skin_ClockItemRect(const TimeStruct *t, SkinClockField item, SkinRect *rect);
 int Skin_ClockHasSeconds(void);
+enum {
+  SKIN_STATUS_TIMER = 1u << 0,
+  SKIN_STATUS_HOURLY = 1u << 1,
+  SKIN_STATUS_ALARM = 1u << 2,
+  SKIN_STATUS_ALL = SKIN_STATUS_TIMER | SKIN_STATUS_HOURLY | SKIN_STATUS_ALARM
+};
+int Skin_DrawStatusIcons(unsigned visible);
 void Skin_Hourly(int active);
 void Skin_Alarm(const SkinAlarmState *state, int hidden);
 int Skin_AlarmItemRect(const SkinAlarmState *state, SkinAlarmField item, SkinRect *rect);
