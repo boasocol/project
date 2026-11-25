@@ -288,6 +288,7 @@ static void alm_set_clear(u8 item);             /* 前置声明：闹钟屏黄�
    （cnt_sel_line / alm_set_line 内直接处理）。 */
 static void set_line_clear(u8 item);   /* 前置声明（set_exit 调用，定义见下） */
 void Screen_BlinkTick(void);          /* 前置声明：设置项 1Hz 闪灭（定义在 Px_DrawAlm 之前） */
+static void Screen_BlinkNudge(void);  /* 前置声明：调值后立刻回亮相并重新计半秒 */
 void Px_DrawAlmInvalidate(void);      /* 前置声明：作废闹钟屏增量缓存（闪灭结束后恢复真实状态） */
 static void alm_swlbl_paint(void);    /* 前置声明：「闹钟开关」四个字（背景已抹掉，固件写） */
 void Px_DrawAlm(void);
@@ -770,6 +771,7 @@ static void cnt_adjust(int field, int delta)
   g_cnt_total = g_cnt_remain;
   printf("[KEY] 倒计时调整 %s%d -> %02u:%02u\r\n", field == CNT_SEL_MIN ? "分" : "秒", delta,
          (unsigned)(g_cnt_remain / 60), (unsigned)(g_cnt_remain % 60));
+  Screen_BlinkNudge();     /* 立刻把新值画出来并停闪半秒（按键反馈） */
 }
 
 /* 「暂停」项确定：开始 / 暂停 / 继续 切换（与按钮1 文字一致） */
@@ -1826,6 +1828,7 @@ static void set_item_adjust(int delta)
   printf("[KEY] set item=%u -> %04u-%02u-%02u %02u:%02u:%02u\r\n",
          (unsigned)g_set_item, (unsigned)g_set_ws.year, (unsigned)g_set_ws.month, (unsigned)g_set_ws.day,
          (unsigned)g_set_ws.hour, (unsigned)g_set_ws.minute, (unsigned)g_set_ws.second);
+  Screen_BlinkNudge();     /* 立刻把新值画出来并停闪半秒（按键反馈） */
 }
 
 /* 退出设置：清黄线 + 写回 RTC + 强制静态刷新（防时间跳变逐位翻页）+ 复位状态 */
@@ -1978,6 +1981,7 @@ static void alm_set_key(const KeyEvent *ke)
     printf("[KEY] 闹钟设置 槽%u %02u:%02u on=%u loop=%u days=%u\r\n", (unsigned)g_alm_sel + 1,
            (unsigned)g_alm_hour[g_alm_sel], (unsigned)g_alm_min[g_alm_sel],
            (unsigned)g_alm_on[g_alm_sel], (unsigned)g_alm_loop[g_alm_sel], (unsigned)g_alm_days[g_alm_sel]);
+    Screen_BlinkNudge();     /* 立刻把新值画出来并停闪半秒（按键反馈） */
     return;
   }
   if (ke->id == KEY_ID_2)                        /* 确定：下一项，到哨兵自动退出 */
@@ -3110,8 +3114,29 @@ static void blink_restore(u8 scr)
     UI_DrawGlyphRect(g_blink_x, 239 - (g_blink_y + g_blink_h) + 1,
                      (u16)g_blink_w, (u16)g_blink_h, 0xFFFFu, 0);
   if (scr == UI_SCREEN_ALARM)     { Px_DrawAlmInvalidate(); Px_DrawAlm(); }
-  else if (scr == UI_SCREEN_MAIN) { Skin_Invalidate(); Calendar_SetStaticNext(); }
+  else if (scr == UI_SCREEN_MAIN)
+  {
+    /* 2026-11-25 用户「切换设置项还是会有抖动」：原来这里 Skin_Invalidate() 把**整层**
+       字段缓存全作废，下一次 Px_DrawMain 就会把 日期/星期/农历/温湿度/AI标题 逐个
+       Skin_Clear 再重画 —— 切一次项整屏抖一下。其实只需要把「刚被上面那行擦掉的那一项」
+       补回来：按段/按位作废对应字段即可，其它字段缓存照旧命中、一个像素都不用动。 */
+    if (g_blink_id < 0x10u) Skin_InvalidateField((SkinClockField)g_blink_id);
+    Calendar_SetStaticNext();      /* 让下一次 Calendar_Refresh 真的跑一遍 Px_DrawMain */
+  }
   else if (scr == UI_SCREEN_CNT)  { cnt_px_invalidate(); draw_countdown_view(); }
+}
+
+/* 调值后的「按键反馈」：立刻回亮相 + 半秒计时重来（2026-11-25 用户「调整设置项数值的时候
+   按键没有反馈，即显示没有及时更新为设置值并保持半秒不闪烁」）。
+   闪灭只按「项 id / 矩形」判断要不要重画，调值时矩形不变 -> 不重画；要是此刻正停在灭相，
+   新值要等下一次亮相（最多 500ms）才出现，用户按了键像没反应。 */
+static void Screen_BlinkNudge(void)
+{
+  if (g_blink_id == BLINK_NONE) return;           /* 没有在闪（常态/倒计时休眠）：不管 */
+  if (g_blink_scr != UI_GetScreen()) return;      /* 不在它那一屏：不画（防跨屏残留） */
+  g_blink_on = 1;                                 /* 强制回亮相 */
+  g_blink_ms = (u32)bftm0_ct;                     /* 半秒计时重来：新值至少看满半秒 */
+  blink_repaint();                                /* 立刻把新值画上去 */
 }
 
 /* 每帧调用（Screen_Draw 开头）：换项立刻回亮相；每 500ms 翻转一次 */
