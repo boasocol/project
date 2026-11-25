@@ -1091,7 +1091,10 @@ int Screen_Ringing(void)
   return (g_alm.ringing || g_cnt_ringing) ? 1 : 0;
 }
 
-void Screen_AlarmRingStop(void)
+/* 闹钟停响核心：只改状态/语音/单次自动关，不碰屏幕、不设气泡。
+   两处调用：① 正常停响（Screen_AlarmRingStop，之后回主屏 + 气泡）
+             ② 到点换支（alarm_tick 里上一支还在响，就地切到下一支，不闪屏） */
+static void alm_ring_stop_core(void)
 {
   if (g_cnt == CNT_DONE) { g_cnt = CNT_STOP; g_cnt_ret_ms = 0; }  /* 清倒计时结束残留，防 60s 后再触发一次回主屏 */
   if (g_alm.ringing)
@@ -1100,7 +1103,6 @@ void Screen_AlarmRingStop(void)
     printf("[ALM] 停响：槽%u（按键/0xB1/0x8A/60s 自动）\r\n", (unsigned)g_alm_ring_idx + 1u);
     Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 0, 0, 0);   /* 停播铃声 */
     (void)UI_CharAnim_SetState(UI_CANI_STATE_IDLE);       /* 停响回待机（2026-09-04 闹铃动画结束） */
-    Screen_Bubble("闹钟已结束");                            /* 新 UI：气泡同步「闹钟已结束」（0x04 文案） */
   }
   alm_snooze_clear();   /* 0xB1 别响了/60s 自动停：取消可能待响的贪睡（坑#71 #9） */
   /* 2026-11-19 三档循环：单次（loop=0）响完就把该槽关掉，等于「明天叫我一次」 */
@@ -1111,43 +1113,78 @@ void Screen_AlarmRingStop(void)
     g_alm_on[oi] = 0;
     printf("[ALM] 单次闹钟响完 -> 槽%u 已自动关闭\r\n", (unsigned)(oi + 1u));
   }
+}
+
+void Screen_AlarmRingStop(void)
+{
+  u8 was_ringing = g_alm.ringing;
+  alm_ring_stop_core();
+  if (was_ringing) Screen_Bubble("闹钟已结束");   /* 新 UI：气泡同步「闹钟已结束」（0x04 文案） */
   goto_main();   /* 内部已停倒计时响铃 */
 }
 
-/* 改时间/日期后清除"本分钟已响"标志（坑#82 2026-09-05）：用户主动改时间（语音
-   0x81/0x82、按键设置退出、蓝牙授时）把时间回拨后，闹钟到点应重新判定——否则
-   g_alm.rung=1 残留（响铃/贪睡打断后不清），回拨后同一分钟再次到达被
-   `if (g_alm.rung && g_alm.rung_min == cur_min) return;` 挡掉不响（实测：13:01 响闹
-   ->贪睡或按键打断->改时间回拨到 13:00->13:01 到点不再响闹）。
-   坑#90 分钟绑定不替代本函数：时间回拨后 rung_min 与重新到达的分钟仍相同，仍需清零。 */
+/* 改时间/日期后清除"本分钟已响"标志（坑#82 2026-09-05）：用户主动改时间（语音 0x81/0x82、
+   按键设置退出、蓝牙授时）把时间回拨后，闹钟到点应重新判定——否则 g_alm.rung=1 残留，
+   回拨后同一分钟再次到达会被 rung_min 挡掉。坑#90 的分钟绑定不替代本函数。 */
 void Screen_AlarmRungReset(void)
 {
   g_alm.rung = 0;
-  alm_snooze_clear();   /* 坑#93（2026-11-04）：语音改时间/日期也取消贪睡待响——贪睡依附闹钟时刻，时间变了不该再重响（用户实测"贪睡期间语音修改时间，贪睡未被打断"） */
+  alm_snooze_clear();
 }
 
-/* 闹钟每秒判定（Screen_OnSecond 调）：遍历 3 个闹钟槽，任一命中响铃并记录响铃槽 */
+/* 闹钟每秒判定（Screen_OnSecond 调）：遍历 3 个闹钟槽，任一命中响铃并记录响铃槽
+   ==================== 2026-11-25 坑#108：连续分钟把下一支吞掉 ====================
+   用户：「连续三个闹钟 01/02/03 分，03 那个不响，不论闹钟几；隔开的正常」。
+   旧顺序 =「先看响铃满 60s 没有，没满就 return」：上一支的起响时刻比整秒晚几十 ms
+   （前面还有一次切屏/气泡），到下一分钟边界只过了 59935 ms < 60000 → return →
+   那一刻的到点判定整段跳过，而判定只在秒=0 那一秒做 → 这支闹钟当天就再也不响。
+   实测 el：08:02:00 → 60000（成功停响并响下一支）；08:03:00 → **59935**（被吞）。
+   修法：**到点判定提到最前面**——本分钟有槽命中就响，哪怕上一支还在响（就地换支，
+   不回主屏、不设"闹钟已结束"气泡，防闪两下）；响满 60s 的自动停退到后面兜底。 */
 static void alarm_tick(TimeStruct *t)
 {
   u16 cur_min = (u16)(t->hour * 60u + t->minute);   /* 坑#90：rung 按分钟绑定，跨分钟自动失效 */
+
+  /* ① 到点判定（优先级最高，坑#108） */
+  if (t->second == 0)
+  {
+    /* 坑#79：设置模式（时间设置/倒计时分秒调整/闹钟设置）不触发任何响闹 */
+    if (g_set_active || g_alm_set_active || g_cnt_adj) return;
+    for (u8 i = 0; i < 3; i++)
+    {
+      if (!g_alm_on[i]) continue;                                          /* 槽关 */
+      if (t->hour != g_alm_hour[i] || t->minute != g_alm_min[i]) continue;  /* 时间不匹配 */
+      if (g_alm.ringing && g_alm_ring_idx == i) return;   /* 这一支正在响：不重入 */
+      if (g_alm.rung && g_alm.rung_min == cur_min) return;/* 本分钟已响过：整分钟不再判 */
+      if (!weekday_match(g_alm_loop[i], g_alm_wd[i])) continue;   /* 今天不匹配：看下一槽 */
+      /* 上一支还在响（没满 60s）：就地换支——不 goto_main，避免"回主屏→再进闹钟屏"闪两下 */
+      if (g_alm.ringing) alm_ring_stop_core();
+      g_alm_ring_idx = i;
+      g_alm.ringing    = 1;
+      g_alm.ring_start = (u32)bftm0_ct;
+      g_alm.rung       = 1;
+      g_alm.rung_min   = cur_min;      /* 坑#90：记分钟戳 */
+      g_alm_once       = (g_alm_loop[i] == 0u) ? (u8)(i + 1u) : 0u;  /* 单次：响完自动关 */
+      printf("[ALM] 响铃：槽%u %02u:%02u（loop=%u）\r\n", (unsigned)i + 1u,
+             (unsigned)g_alm_hour[i], (unsigned)g_alm_min[i], (unsigned)g_alm_loop[i]);
+      disp_wake();                       /* 响铃自动亮屏（坑#71 #15） */
+      (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);   /* 闹铃动画（2026-09-04） */
+      if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
+      Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);   /* 播放铃声 */
+      return;
+    }
+    g_alm.rung = 0;   /* 当前分钟无任何槽命中：允许后续分钟重新判定 */
+  }
+
+  /* ② 响铃中：满 60s 自动停（会回主屏）；没满就等它响完，不做其它判定 */
   if (g_alm.ringing)
   {
-    if ((u32)(bftm0_ct - g_alm.ring_start) >= 60000u)
-    {
-      /* 坑#90：响满 60s 自动停后【不 return】落到下方分钟判定——前一闹钟恰在分钟边界
-         （如 07:00 响到 07:01:00）时，相邻分钟的下一闹钟到点才不会被吞掉。
-         Screen_AlarmRingStop 已回主屏；若本分钟有槽命中会在下方重新响铃切回闹钟屏。 */
-      Screen_AlarmRingStop();
-    }
-    else
-      return;
+    if ((u32)(bftm0_ct - g_alm.ring_start) >= 60000u) Screen_AlarmRingStop();
+    return;
   }
-  /* 坑#79：设置模式（时间设置/倒计时分秒调整/闹钟设置）不触发任何响闹——
-     否则时间设置（主屏）中闹钟到点照样响（UI 仍是 MAIN 判定通过）；
-     闹钟设置中到点若判定，设置完回主屏会补响。贪睡重响一并挡（会切屏打断设置）。
-     响铃中本就进不了设置（响铃任意键停/响闹语音拦截），ringing 分支在前不受影响。 */
+
   if (g_set_active || g_alm_set_active || g_cnt_adj) return;
-  /* 贪睡待响：到点一次性重响（配置不变，响完即结束——坑#71 #9 一次性延迟语义） */
+  /* ③ 贪睡待响：到点一次性重响（配置不变，响完即结束——坑#71 #9 一次性延迟语义） */
   if (g_alm.snooze)
   {
     if ((u32)(bftm0_ct - g_alm_snooze_ms) < 0x80000000u)   /* 时间到（unsigned 回绕安全） */
@@ -1166,37 +1203,8 @@ static void alarm_tick(TimeStruct *t)
       Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);
       return;
     }
-    /* 坑#93（2026-11-04）：贪睡未到点【不 return】——落到下方分钟判定，贪睡期间
-       其他闹钟到点照常响（用户实测"一个闹钟贪睡期间另外的闹钟不会响闹"）；
-       贪睡重响与普通判定同分钟撞车时先到先响，另一条 rung 同分不重响 */
+    /* 坑#93：贪睡未到点不 return——贪睡期间其他闹钟到点照常响（上面①已处理） */
   }
-  /* 坑#77 #3：闹钟只在「分钟进位」（秒=0）那一秒判定——否则闹钟时间=当前时间时，
-     回主屏后当前分钟任一秒都命中误响（用户实测：0:00 设闹钟 0:00，设置完自动回
-     时间显示后闹钟立即响闹）。改进位判定后：设置完成回主屏若已过进位点，本次不判，
-     下一分钟不匹配则整天不再响（rung 自然清零）。 */
-  if (t->second != 0) return;
-  for (u8 i = 0; i < 3; i++)
-  {
-    if (!g_alm_on[i]) continue;                                        /* 槽关 */
-    if (t->hour != g_alm_hour[i] || t->minute != g_alm_min[i]) continue;  /* 时间不匹配：下一槽 */
-    if (g_alm.rung && g_alm.rung_min == cur_min) return;   /* 本分钟已响过：整分钟不再判（跨分钟 rung_min 不同则失效，坑#90） */
-    if (!weekday_match(g_alm_loop[i], g_alm_wd[i])) continue;   /* 今天不匹配该槽循环：跳过本槽继续下一槽（原 return 挡后续槽，坑#90） */
-    /* 坑#93（2026-11-04）：删除"只在主屏触发闹钟"守卫——倒计时/闹钟屏上闹钟到点照常响
-       （响铃切闹钟屏；倒计时后台继续跑，到点再切回倒计时屏响铃，用户实测"倒计时进行中闹钟不会响闹"） */
-    /* 到点响铃：切屏2（已在闹钟屏则只播铃不重传背景）+ 播铃声 + 人物切换闹铃动画 */
-    g_alm_ring_idx = i;
-    g_alm.ringing    = 1;
-    g_alm.ring_start = (u32)bftm0_ct;
-    g_alm.rung       = 1;
-    g_alm.rung_min   = cur_min;      /* 坑#90：记分钟戳 */
-    g_alm_once       = (g_alm_loop[i] == 0u) ? (u8)(i + 1u) : 0u;  /* 单次：响完自动关（见 Screen_AlarmRingStop） */
-    disp_wake();                       /* 响铃自动亮屏（显示若已关则开，坑#71 #15） */
-    (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);   /* 闹铃动画：走过渡后进入 alarm 循环（2026-09-04 接线） */
-    if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
-    Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);   /* 播放铃声 */
-    return;
-  }
-  g_alm.rung = 0;   /* 当前分钟无任何槽命中：允许后续重新判定 */
 }
 
 /* 闹钟屏每帧增量绘制：显示目标槽（响铃中=响铃槽，否则当前选中槽 g_alm_sel）
