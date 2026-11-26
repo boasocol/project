@@ -1,144 +1,187 @@
 {
   "version": 1,
   "overlays": [
-    {"name": "status_timer", "file": "status_timer.png"},
-    {"name": "status_hourly", "file": "status_hourly.png"},
-    {"name": "status_alarm", "file": "status_alarm.png"}
+    {
+      "name": "status_timer",
+      "file": "status_timer.png"
+    },
+    {
+      "name": "status_hourly",
+      "file": "status_hourly.png"
+    },
+    {
+      "name": "status_alarm",
+      "file": "status_alarm.png"
+    },
+    {
+      "name": "weekday_1_on",
+      "file": "weekday_1_on.png"
+    },
+    {
+      "name": "weekday_2_on",
+      "file": "weekday_2_on.png"
+    },
+    {
+      "name": "weekday_3_on",
+      "file": "weekday_3_on.png"
+    },
+    {
+      "name": "weekday_4_on",
+      "file": "weekday_4_on.png"
+    },
+    {
+      "name": "weekday_5_on",
+      "file": "weekday_5_on.png"
+    },
+    {
+      "name": "weekday_6_on",
+      "file": "weekday_6_on.png"
+    },
+    {
+      "name": "weekday_7_on",
+      "file": "weekday_7_on.png"
+    },
+    {
+      "name": "switch_blink",
+      "file": "switch_blink.png"
+    }
   ],
   "main": {
     "status_icons": {
       "timer": {
-        "at": [26, 186],
+        "at": [
+          25,
+          184
+        ],
         "sprite": "status_timer"
       },
       "hourly": {
-        "at": [119, 185],
+        "at": [
+          119,
+          184
+        ],
         "sprite": "status_hourly"
       },
       "alarm": {
-        "at": [230, 186],
+        "at": [
+          227,
+          184
+        ],
         "sprite": "status_alarm"
       }
     },
     "numbers": {
       "x": [
-        81,
-        111,
-        145,
-        158,
-        188
+        76,
+        107,
+        139,
+        153,
+        184
       ],
-      "y": 15,
+      "y": 11,
       "digits": 128,
       "colon": 138
     },
     "seconds": {
       "x": [
-        228,
-        239
+        223,
+        234
       ],
-      "y": 31,
+      "y": 29,
       "digits": 161
     },
+    "date_separator": "-",
     "date": {
       "box": [
-        74,
         68,
-        80,
-        14
+        71,
+        76,
+        16
       ],
-      "font": 0,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
     "weekday": {
       "box": [
-        161,
-        68,
-        48,
-        14
+        150,
+        71,
+        54,
+        16
       ],
-      "font": 0,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
     "lunar": {
       "box": [
-        230,
-        68,
-        85,
-        14
+        229,
+        71,
+        66,
+        16
       ],
-      "font": 0,
-      "color": "#48220A"
-    },
-    "temperature": {
-      "box": [
-        115,
-        97,
-        57,
-        17
-      ],
-      "font": 3,
-      "color": "#48220A"
-    },
-    "humidity": {
-      "box": [
-        246,
-        97,
-        53,
-        17
-      ],
-      "font": 3,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
     "temperature_label": {
       "box": [
-        82,
-        98,
-        24,
-        14
+        85,
+        106,
+        27,
+        16
       ],
-      "font": 0,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
     "humidity_label": {
       "box": [
-        214,
-        98,
-        24,
-        14
+        193,
+        106,
+        27,
+        16
       ],
-      "font": 0,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
-    "assistant_label": {
+    "temperature": {
       "box": [
-        109,
-        131,
-        100,
-        14
+        112,
+        107,
+        38,
+        15
       ],
-      "font": 0,
-      "color": "#48220A"
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
     },
-    "assistant_rule": [
-      111,
-      147,
-      71,
-      2
-    ],
+    "temperature_unit": "combined",
+    "humidity": {
+      "box": [
+        223,
+        107,
+        37,
+        15
+      ],
+      "font": 2,
+      "color": "#48220A",
+      "centered": true
+    },
     "bubble": {
       "area": [
-        117,
-        147,
-        190
+        129,
+        136,
+        116
       ],
-      "font": 1,
-      "line_height": 17,
+      "font": 0,
+      "small_font": 0,
+      "line_height": 12,
       "lines": 2,
-      "color": "#96785F",
-      "default_text": "主人，有什么需要帮助的吗？",
-      "centered": false,
-      "small_font": 0
+      "centered": true,
+      "color": "#48220A",
+      "default_text": "主人，\n有什么需要帮助的吗？"
     },
     "robot": {
       "idle": {
@@ -148,70 +191,79 @@
       "wake": {
         "first": 16,
         "count": 16
+      },
+      "ring": {
+        "first": 16,
+        "count": 16
       }
     }
   },
   "countdown": {
     "digits": {
-      "y": 55,
+      "y": 52,
       "short_x": [
-        73,
-        102,
-        141,
-        156,
-        193
+        70,
+        106,
+        142,
+        158,
+        194
       ],
       "long_x": [
-        64,
-        94,
-        124,
-        154,
-        168,
-        198
+        57,
+        90,
+        123,
+        156,
+        170,
+        203
       ],
       "clear": [
-        56,
-        50,
-        184,
-        52
+        57,
+        52,
+        179,
+        46
       ],
       "digits": 150,
       "colon": 160
     },
     "progress": {
       "type": "bar",
-      "rect": [249, 53, 9, 81],
-      "color": "#788A3E"
+      "rect": [
+        246,
+        57,
+        13,
+        73
+      ],
+      "color": "#79854C"
     },
     "title": {
-      "center": 148,
-      "y": 100,
-      "font": 0,
+      "center": 149,
+      "y": 101,
+      "font": 2,
       "color": "#48220A",
       "rules": [
         [
-          97,
+          98,
           108,
           21,
-          2
+          1
         ],
         [
           181,
           108,
           21,
-          2
+          1
         ]
       ]
     },
     "buttons": {
       "centers": [
-        89,
+        91,
         162,
         232
       ],
-      "y": 143,
-      "font": 3,
-      "color": "#FAFAF9",
+      "y": 140,
+      "font": 4,
+      "color": "#FFF3DB",
       "actions": [
         "toggle",
         "reset",
@@ -220,17 +272,17 @@
     },
     "bubble": {
       "area": [
-        99,
-        192,
-        146
+        98,
+        188,
+        135
       ],
-      "font": 0,
-      "line_height": 15,
+      "font": 2,
+      "small_font": 1,
+      "line_height": 16,
       "lines": 2,
-      "color": "#FAF6EE",
-      "default_text": "主人，开启国风倒计时吧！",
       "centered": true,
-      "small_font": 0
+      "color": "#FFF3DB",
+      "default_text": "主人，\n开启国风计时啦！"
     },
     "robot": {
       "idle": {
@@ -244,69 +296,125 @@
       "ack": {
         "first": 64,
         "count": 16
+      },
+      "ring": {
+        "first": 48,
+        "count": 16
       }
     }
   },
   "alarm": {
     "numbers": {
       "x": [
-        27,
-        60,
-        92,
-        106,
-        136
+        25,
+        55,
+        85,
+        97,
+        127
       ],
-      "y": 26,
+      "y": 24,
       "digits": 139,
       "colon": 149
     },
     "slot": {
-      "sprites": 179,
-      "at": [214, 57]
+      "text": {
+        "box": [
+          209,
+          54,
+          12,
+          16
+        ],
+        "font": 3,
+        "color": "#48220A",
+        "centered": true
+      }
     },
     "switch": {
-      "at": [247, 48],
+      "at": [
+        244,
+        45
+      ],
       "off": 172,
       "on": 171
     },
+    "switch_blink_cover": {
+      "at": [
+        241,
+        26
+      ],
+      "sprite": "switch_blink"
+    },
     "weekdays": [
-      null,
-      null,
-      null,
-      null,
       {
-        "at": [184, 104],
-        "off": 174,
-        "on": 173
+        "at": [
+          18,
+          84
+        ],
+        "on": "weekday_1_on",
+        "off": null
       },
       {
-        "at": [227, 104],
-        "off": 176,
-        "on": 175
+        "at": [
+          61,
+          84
+        ],
+        "on": "weekday_2_on",
+        "off": null
       },
       {
-        "at": [267, 104],
-        "off": 178,
-        "on": 177
+        "at": [
+          102,
+          84
+        ],
+        "on": "weekday_3_on",
+        "off": null
+      },
+      {
+        "at": [
+          142,
+          84
+        ],
+        "on": "weekday_4_on",
+        "off": null
+      },
+      {
+        "at": [
+          183,
+          84
+        ],
+        "on": "weekday_5_on",
+        "off": null
+      },
+      {
+        "at": [
+          226,
+          84
+        ],
+        "on": "weekday_6_on",
+        "off": null
+      },
+      {
+        "at": [
+          269,
+          84
+        ],
+        "on": "weekday_7_on",
+        "off": null
       }
     ],
-    "switch_blink_cover": {
-      "at": [240, 25],
-      "sprite": 182
-    },
     "bubble": {
       "area": [
-        143,
+        141,
         162,
-        88
+        91
       ],
-      "font": 2,
-      "line_height": 18,
+      "font": 1,
+      "small_font": 0,
+      "line_height": 15,
       "lines": 2,
-      "color": "#48220A",
-      "default_text": "主人，需要设置闹钟吗？",
       "centered": true,
-      "small_font": 0
+      "color": "#48220A",
+      "default_text": "主人，需要\n设置闹钟吗？"
     },
     "robot": {
       "idle": {
@@ -319,6 +427,10 @@
       },
       "ack": {
         "first": 112,
+        "count": 16
+      },
+      "ring": {
+        "first": 96,
         "count": 16
       }
     }
