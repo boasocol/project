@@ -258,6 +258,8 @@ void UI_Anim_DrawFrame(int card_x, int half_y0, int digit, int half_idx, int fra
 u32 UI_SpriteCount(void);
 void UI_DrawSprite(u32 id, int x, int y);                        /* 设计坐标左上角贴精灵（带透明掩码） */
 void UI_DrawSpriteAuto(u32 id);                                  /* 按精灵索引里自带的 x,y 贴（GIF 自带位置用） */
+/* 返回从 y 起实际绘制的最大字模高度，无字模绘制时返回 0。 */
+int UI_DrawStrPxBoundedHeight(int x, int y, const char *s, u32 base, u16 color, int right);
 void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int right);
 void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color); /* 变宽字符串（base=UI_PX_*） */
 int  UI_StrPxWidth(const char *s, u32 base);                     /* 字符串像素宽（居中排版用） */

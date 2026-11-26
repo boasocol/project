@@ -121,7 +121,7 @@ static u32 g_cnt_ret_ms = 0;           /* 结束/停止后回主屏的 bftm0_ct 
 static u8  g_up = 0;                   /* 1=当前为【正计时】模式（g_cnt_remain 递增显示；0=倒计时） */
 static u32 g_up_sec = 0;               /* 正计时已过秒数（从 0 往上；u32 防溢出） */
 static u8  g_cnt_ringing = 0;          /* 倒计时到点响铃标志（DONE 60s 内响；回主屏/别响时停，2026-08-28） */
-static u8  g_cnt_pending_ring = 0;     /* 坑#93：倒计时到点遇闹钟响铃/设置态时的【待响】标志——闹钟响完（Screen_AlarmRingStop）后补响倒计时钟声+切倒计时屏 */
+static u8  g_cnt_pending_ring = 0;     /* 只在手动设置期间延后倒计时提醒 */
 static u32 g_cnt_idle_ms = 0;          /* 倒计时屏最后操作时刻（进屏/按键/命令刷新；未运行空闲 15s 自动回主屏，坑#71 2026-09-05） */
 static u8  g_disp_off = 0;             /* 1=显示已关（语音 0xB5 关显示；倒计时/闹钟响铃时自动亮屏，坑#71 #15 2026-09-05） */
 
@@ -348,26 +348,36 @@ static u16  g_bub_seq = 0;              /* 文案版本号（每次变更自增�
 static u8   c_bub_scr = 0xFF;           /* 上次绘制气泡的屏号 */
 static u16  c_bub_seq = 0xFFFF;         /* 上次绘制气泡的文案版本 */
 static u16  c_bub_bg  = 0xFFFF;         /* 上次绘制气泡时的背景版本 */
+static u16  c_bub_bottom = 0;          /* 上一条文案实际绘制的底边（不含此行） */
 
 /* ==================== 小工具 ==================== */
 
-static void disp_wake(void);   /* 前置声明：响铃自动亮屏（cnt_pending_ring_play 在定义前调用，防 C89 隐式 extern 与 static 定义冲突） */
+static void disp_wake(void);
+static void alm_ring_stop_core(void);
 
-/* 坑#93（2026-11-04）：倒计时到点待响（cnt_tick 置 g_cnt_pending_ring：遇闹钟响铃/设置态）——
-   补响 = 切倒计时屏（显示 00:00 已结束红）+ 播倒计时钟声 + 60s 自动停回主屏。
-   goto_main（闹钟响停/0xEF 等回主屏路径）与 set_exit（主屏设置退出，不回 goto_main）都调。 */
-static void cnt_pending_ring_play(void)
+static void cnt_ring_start(void)
 {
-  if (!g_cnt_pending_ring) return;
   g_cnt_pending_ring = 0;
+  g_alm_set_exit_ms = 0;            /* 旧设置页的延迟返回不能带走新的响铃页 */
+  printf("[CNT] 响铃：倒计时到点%s\r\n", g_alm.ringing ? "（接管正在响的闹钟）" : "");
+  if (g_alm.ringing) alm_ring_stop_core();
   g_cnt_ringing = 1;
-  g_cnt_ret_ms  = (u32)bftm0_ct + 60000u;   /* 补响 60s 自动停回主屏 */
-  disp_wake();                              /* 响铃自动亮屏（坑#71 #15） */
+  g_cnt_ret_ms = (u32)bftm0_ct + 60000u;
+  disp_wake();
   (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);
   Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);
-  UI_SetScreen(UI_SCREEN_CNT);
+  Screen_Bubble("时间到了");
+  if (UI_GetScreen() != UI_SCREEN_CNT) UI_SetScreen(UI_SCREEN_CNT);
   g_cnt_idle_ms = (u32)bftm0_ct;
-  printf("[KEY] 倒计时待响补响（闹钟响停/设置退出）\r\n");
+}
+
+static int cnt_pending_ring_play(void)
+{
+  if (!g_cnt_pending_ring) return 0;
+  g_cnt_pending_ring = 0;
+  if (g_cnt != CNT_DONE || g_cnt_remain != 0u) return 0;
+  cnt_ring_start();
+  return 1;
 }
 
 /* 回主屏统一入口：切屏上传干净主屏背景后，必须重置 calendar 增量缓存，
@@ -383,13 +393,7 @@ static void goto_main(void)
   g_alm_idle_ms = 0;       /* 离开闹钟屏：清空闲计时（2026-09-05） */
   c_cnt_blink_on = 0xFF; c_cnt_blink_act = 0xFF; c_cnt_blink_drawn = 0;  /* 回主屏：沙漏缓存重置（背景重传已覆盖） */
   g_cnt_idle_ms = (u32)bftm0_ct;                  /* 回主屏：倒计时屏空闲计时重新起算 */
-  /* 坑#93（2026-11-04）：倒计时到点待响（遇闹钟响铃/设置态，cnt_tick 置 g_cnt_pending_ring）——
-     任何回主屏路径（闹钟响停/设置退出/0xEF 等）在此补响倒计时钟声 + 切倒计时屏（显示 00:00 已结束红） */
-  if (g_cnt_pending_ring)
-  {
-    cnt_pending_ring_play();
-    return;                                   /* 已切倒计时屏响铃 */
-  }
+  if (cnt_pending_ring_play()) return;            /* 退出手动设置后的倒计时提醒 */
   UI_SetScreen(UI_SCREEN_MAIN);
   Calendar_ForceRedraw();
 }
@@ -434,8 +438,7 @@ void Screen_StatusIcons(void)
    这 4 个原语只被 draw_cnt / draw_alarm / draw_screen_static 里已 #if 0 的旧绘制调用，
    这里把定义也一起 #if 0（否则 -Wall 报 -Wunused-function）。
    回退旧 UI 时：把本块和那几处 #if 0 一起打开即可。
-   注：进度条填充 cnt_prog_fill（下方）**保持启用**——它作为「辅助叠加」继续在
-   倒计时屏画计时进度（见 draw_cnt 新 UI 分支）。 */
+   当前倒计时进度条由 CountdownView_Draw 按布局统一绘制。 */
 #if 0
 static void draw_digit_at(int x, int y, u8 d, u16 color)
 {
@@ -524,6 +527,7 @@ void Screen_CntStart(u16 total_s)
   g_cnt_total  = total_s;
   g_cnt_remain = total_s;
   g_cnt_ret_ms = 0;
+  g_cnt_pending_ring = 0;
   g_up = 0;                            /* 切回倒计时模式（正计时未跑则无影响） */
   g_cnt_idle_ms = (u32)bftm0_ct;       /* 计时活动：刷新倒计时屏空闲计时（坑#71） */
   if (UI_GetScreen() != UI_SCREEN_CNT) UI_SetScreen(UI_SCREEN_CNT);  /* 已在倒计时屏则不重传背景，改状态由 draw_cnt 增量刷新 */
@@ -539,6 +543,7 @@ void Screen_UpStart(void)
   g_cnt_total  = 0;                    /* 正计时无进度条（分母 0） */
   g_cnt_remain = 0;
   g_cnt_ret_ms = 0;
+  g_cnt_pending_ring = 0;
   g_up = 1;
   g_up_sec = 0;
   g_cnt_sel = CNT_SEL_MODE;              /* 正计时含模式项：选中项强制到模式（2026-09-05 模式入光标） */
@@ -566,6 +571,7 @@ void Screen_CntStop(void)
 {
   if (g_cnt == CNT_STOP) return;
   g_cnt = CNT_DONE;
+  g_cnt_pending_ring = 0;
   g_cnt_ret_ms = (u32)bftm0_ct + 3000u;   /* 停 3s 回主屏 */
   g_cnt_idle_ms = (u32)bftm0_ct;          /* 停止是活动：刷新空闲计时（坑#71） */
   Voice_Send(VOICE_TX_STOP_SOUND, 0, 0, 0, 0);   /* 坑#93：停止停掉正在播的声音（0x0C 声音停止） */
@@ -616,7 +622,7 @@ void Screen_CntBlink(u32 now_ms)
 }
 
 /* 计时每秒推进（Screen_OnSecond 调）：倒计时递减，正计时递增 */
-static void cnt_tick(void)
+static void cnt_tick(int alarm_started)
 {
   if (g_cnt != CNT_RUN) return;
   if (g_up)                        /* 正计时：从 0 往上累计 */
@@ -631,39 +637,14 @@ static void cnt_tick(void)
     if (g_cnt_remain == 0)
     {
       g_cnt = CNT_DONE;
-      /* 坑#71（倒计时与闹钟同时到达 → 用户定 优先闹钟，只跳闹钟界面）：Screen_OnSecond 已改为
-         先 alarm_tick 后 cnt_tick——同秒两者都到点时闹钟先响（g_alm.ringing=1、已切闹钟屏），
-         这里倒计时到点【不播铃/不切屏】，仅置 DONE 结束。
-         坑#93（2026-11-04）：【不静默丢弃】——遇闹钟响铃/设置态置 g_cnt_pending_ring 待响，
-         闹钟响完（Screen_AlarmRingStop、60s 自动停、0xB1 别响/按键打断）后补响倒计时钟声 + 切倒计时屏
-         （用户实测：在闹钟响闹期间，倒计时到达。倒计时不会提醒）。
-         坑#79：设置模式（时间/闹钟设置）中倒计时到点同样不响不切屏——设置态待响，
-         退出设置后由谁补响？设置退出走 alm_set_exit（3s 后 goto_main）不回 Screen_AlarmRingStop，
-         故 g_cnt_pending_ring 在 goto_main 里统一补响（见 goto_main）。 */
-      if (g_alm.ringing || g_set_active || g_alm_set_active)
+      g_cnt_ret_ms = 0;
+      if (alarm_started) return;       /* 同一次秒节拍内，闹钟优先，倒计时结束 */
+      if (g_set_active || g_alm_set_active)
       {
-        g_cnt_ret_ms    = 0;      /* 不设自动回屏计时（闹钟响铃路径负责回主屏） */
-        g_cnt_ringing   = 0;      /* 不立即播倒计时钟声（不打断闹钟铃声/不打断设置） */
-        g_cnt_pending_ring = 1;   /* 坑#93：待响——闹钟响完/设置退出后补响 */
-        printf("[KEY] 倒计时到点遇闹钟响铃/设置态：待响（稍后补响）\r\n");
+        g_cnt_pending_ring = 1;
+        return;
       }
-      else
-      {
-        g_cnt_ret_ms = (u32)bftm0_ct + 60000u;   /* 到点响铃停 60s 回主屏（与闹钟 1 分钟一致，2026-08-28） */
-        g_cnt_ringing = 1;
-        disp_wake();                              /* 响铃自动亮屏（显示若已关则开，坑#71 #15） */
-        (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);   /* 到点响铃：人物切闹铃动画（2026-09-04 接线） */
-        Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);   /* 到点响铃（2026-08-28 由 0x05 滴声改为播铃声） */
-        Screen_Bubble("时间到了");                            /* 新 UI：气泡同步「时间到了」（0x0E 计时结束文案） */
-        /* 2026-09-05：倒计时可在后台运行（退出按钮回主屏不停止）——到点须切回倒计时屏
-           显示 00:00 + 已结束 + 响铃，否则主屏上只会响铃无画面。
-           正处闹钟响铃/任一设置态时不切走（不打断），照常响铃。60s 后自动回主屏。 */
-        if (UI_GetScreen() != UI_SCREEN_CNT && !g_alm.ringing && !g_alm_set_active && !g_set_active)
-        {
-          UI_SetScreen(UI_SCREEN_CNT);
-          g_cnt_idle_ms = (u32)bftm0_ct;   /* 坑#83：切回倒计时屏立即刷新空闲计时（防旧值被 15s 自动回误判） */
-        }
-      }
+      cnt_ring_start();
     }
   }
 }
@@ -705,6 +686,10 @@ static void cnt_ring_break(void)
 /* 调整分/秒字段（自动暂停；待启动时同步 total=remain 保持进度条分母一致） */
 static void cnt_adjust(int field, int delta)
 {
+  const u32 now = (u32)bftm0_ct;
+  g_cnt_idle_ms = now;        /* 短按和长按连发都算倒计时屏操作 */
+  g_cnt_sel_awake = 1;
+  g_cnt_sel_awake_ms = now;   /* 调整期间保持选中态提示 */
   if (g_cnt == CNT_RUN) g_cnt = CNT_PAUSE;      /* 调整自动暂停 */
   u32 rem = g_cnt_remain;
   if (field == CNT_SEL_MIN)                     /* 分（M 段）：±1 分钟，0..120 回绕（坑#93 支持 120 分钟） */
@@ -1027,29 +1012,6 @@ static void draw_cnt(TimeStruct *t)
     }
   }
 
-  /* 进度条（辅助叠加，用户要求保留）：沿用旧胶囊填充 cnt_prog_fill + 旧缓存
-     c_cnt_prog/c_prog_bar —— 坐标仍是旧奶油风轨道（x57..260 / y122..143），
-     新背景若无对应轨道会显得位置不对；不需要时把本块 #if 0 即可（不越界：全在屏内）。
-     方向（坑#93）：filled = remain/total（剩余比例），随时间减少=消失；
-     缩短时先把超出尾段恢复背景（UI_DrawGlyphRect 0xFFFF 还原新背景）。 */
-  {
-    int filled = 0;
-    u16 bar = SC_C_CNT_ORANGE;
-    if (!g_up && g_cnt_total > 0)
-    {
-      filled = (int)((u32)g_cnt_remain * CNT_PROG_MAX / g_cnt_total);
-      bar = (g_cnt == CNT_PAUSE) ? SC_C_YELLOW : (g_cnt == CNT_DONE ? SC_C_RED : SC_C_CNT_ORANGE);
-    }
-    if (filled != c_cnt_prog || bar != c_prog_bar)
-    {
-      if (filled < c_cnt_prog && c_cnt_prog >= 0)
-        UI_DrawGlyphRect(CNT_PROG_X + filled, 239 - (CNT_PROG_Y + CNT_PROG_H) + 1,
-                         c_cnt_prog - filled, CNT_PROG_H, 0xFFFFu, 0);
-      if (filled > 0) { }   /* 新 UI：旧橙色横条停用 */
-      c_cnt_prog = filled;
-      c_prog_bar = bar;
-    }
-  }
 #endif
 
   cnt_sel_line();   /* 选择光标常驻（切项/进出调整/背景重传时清旧画新，2026-09-05）
@@ -1091,12 +1053,9 @@ int Screen_Ringing(void)
   return (g_alm.ringing || g_cnt_ringing) ? 1 : 0;
 }
 
-/* 闹钟停响核心：只改状态/语音/单次自动关，不碰屏幕、不设气泡。
-   两处调用：① 正常停响（Screen_AlarmRingStop，之后回主屏 + 气泡）
-             ② 到点换支（alarm_tick 里上一支还在响，就地切到下一支，不闪屏） */
+/* 结束当前闹钟及其单次状态，切屏由调用者决定。 */
 static void alm_ring_stop_core(void)
 {
-  if (g_cnt == CNT_DONE) { g_cnt = CNT_STOP; g_cnt_ret_ms = 0; }  /* 清倒计时结束残留，防 60s 后再触发一次回主屏 */
   if (g_alm.ringing)
   {
     g_alm.ringing = 0;
@@ -1141,7 +1100,27 @@ void Screen_AlarmRungReset(void)
    实测 el：08:02:00 → 60000（成功停响并响下一支）；08:03:00 → **59935**（被吞）。
    修法：**到点判定提到最前面**——本分钟有槽命中就响，哪怕上一支还在响（就地换支，
    不回主屏、不设"闹钟已结束"气泡，防闪两下）；响满 60s 的自动停退到后面兜底。 */
-static void alarm_tick(TimeStruct *t)
+static void alm_ring_start(u8 index, u16 minute)
+{
+  if (g_alm.ringing) alm_ring_stop_core();
+  cnt_ring_stop();
+  g_cnt_ret_ms = 0;       /* 旧倒计时的停铃或延迟返回不能带走闹钟界面 */
+  g_cnt_pending_ring = 0;
+  g_alm_set_exit_ms = 0;
+  g_alm_ring_idx = index;
+  g_alm.ringing = 1;
+  g_alm.ring_start = (u32)bftm0_ct;
+  g_alm.rung = 1;
+  g_alm.rung_min = minute;
+  g_alm_once = g_alm_loop[index] == 0u ? (u8)(index + 1u) : 0u;
+  disp_wake();
+  (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);
+  if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
+  Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);
+}
+
+/* 返回 1 表示这一秒有新闹钟起响，供同时到点的倒计时判断优先级。 */
+static int alarm_tick(TimeStruct *t)
 {
   u16 cur_min = (u16)(t->hour * 60u + t->minute);   /* 坑#90：rung 按分钟绑定，跨分钟自动失效 */
 
@@ -1149,62 +1128,38 @@ static void alarm_tick(TimeStruct *t)
   if (t->second == 0)
   {
     /* 坑#79：设置模式（时间设置/倒计时分秒调整/闹钟设置）不触发任何响闹 */
-    if (g_set_active || g_alm_set_active || g_cnt_adj) return;
+    if (g_set_active || g_alm_set_active || g_cnt_adj) return 0;
     for (u8 i = 0; i < 3; i++)
     {
       if (!g_alm_on[i]) continue;                                          /* 槽关 */
       if (t->hour != g_alm_hour[i] || t->minute != g_alm_min[i]) continue;  /* 时间不匹配 */
-      if (g_alm.ringing && g_alm_ring_idx == i) return;   /* 这一支正在响：不重入 */
-      if (g_alm.rung && g_alm.rung_min == cur_min) return;/* 本分钟已响过：整分钟不再判 */
+      if (g_alm.ringing && g_alm_ring_idx == i) return 0;    /* 这一支正在响：不重入 */
+      if (g_alm.rung && g_alm.rung_min == cur_min) return 0; /* 本分钟已响过：整分钟不再判 */
       if (!weekday_match(g_alm_loop[i], g_alm_wd[i])) continue;   /* 今天不匹配：看下一槽 */
-      /* 上一支还在响（没满 60s）：就地换支——不 goto_main，避免"回主屏→再进闹钟屏"闪两下 */
-      if (g_alm.ringing) alm_ring_stop_core();
-      g_alm_ring_idx = i;
-      g_alm.ringing    = 1;
-      g_alm.ring_start = (u32)bftm0_ct;
-      g_alm.rung       = 1;
-      g_alm.rung_min   = cur_min;      /* 坑#90：记分钟戳 */
-      g_alm_once       = (g_alm_loop[i] == 0u) ? (u8)(i + 1u) : 0u;  /* 单次：响完自动关 */
       printf("[ALM] 响铃：槽%u %02u:%02u（loop=%u）\r\n", (unsigned)i + 1u,
              (unsigned)g_alm_hour[i], (unsigned)g_alm_min[i], (unsigned)g_alm_loop[i]);
-      disp_wake();                       /* 响铃自动亮屏（坑#71 #15） */
-      (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);   /* 闹铃动画（2026-09-04） */
-      if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
-      Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);   /* 播放铃声 */
-      return;
+      alm_ring_start(i, cur_min);
+      return 1;
     }
     g_alm.rung = 0;   /* 当前分钟无任何槽命中：允许后续分钟重新判定 */
   }
 
-  /* ② 响铃中：满 60s 自动停（会回主屏）；没满就等它响完，不做其它判定 */
-  if (g_alm.ringing)
-  {
-    if ((u32)(bftm0_ct - g_alm.ring_start) >= 60000u) Screen_AlarmRingStop();
-    return;
-  }
-
-  if (g_set_active || g_alm_set_active || g_cnt_adj) return;
-  /* ③ 贪睡待响：到点一次性重响（配置不变，响完即结束——坑#71 #9 一次性延迟语义） */
+  if (g_alm.ringing || g_set_active || g_alm_set_active || g_cnt_adj) return 0;
+  /* 贪睡待响：到点一次性重响。 */
   if (g_alm.snooze)
   {
     if ((u32)(bftm0_ct - g_alm_snooze_ms) < 0x80000000u)   /* 时间到（unsigned 回绕安全） */
     {
       u8 i = (g_alm_ring_idx < 3) ? g_alm_ring_idx : g_alm_sel;
       alm_snooze_clear();
-      if (!g_alm_on[i]) return;              /* 防御：贪睡槽已被关（正常路径 0x8B 已清） */
+      if (!g_alm_on[i]) return 0;            /* 防御：贪睡槽已被关 */
       printf("[VOICE] 贪睡到点：闹钟%u 重响一次\r\n", (unsigned)i + 1);
-      g_alm.ringing    = 1;
-      g_alm.ring_start = (u32)bftm0_ct;
-      g_alm.rung       = 1;
-      g_alm.rung_min   = cur_min;        /* 坑#90：记分钟戳，防同分钟正常判定重复触发 */
-      disp_wake();                       /* 响铃自动亮屏（显示若已关则开，坑#71 #15） */
-      (void)UI_CharAnim_SetState(UI_CANI_STATE_ALARM);
-      if (UI_GetScreen() != UI_SCREEN_ALARM) UI_SetScreen(UI_SCREEN_ALARM);
-      Voice_Send(VOICE_TX_RING, g_alm.ring_sel, 1, 0, 0);
-      return;
+      alm_ring_start(i, cur_min);
+      return 1;
     }
     /* 坑#93：贪睡未到点不 return——贪睡期间其他闹钟到点照常响（上面①已处理） */
   }
+  return 0;
 }
 
 /* 闹钟屏每帧增量绘制：显示目标槽（响铃中=响铃槽，否则当前选中槽 g_alm_sel）
@@ -1469,12 +1424,11 @@ void Screen_Poll(void)
 /* 每秒：倒计时/正计时推进 + 闹钟判定 + 整点报时 + 设置模式超时退出 */
 void Screen_OnSecond(TimeStruct *t)
 {
-  /* 坑#71（倒计时与闹钟同时到达 → 优先闹钟）：先判闹钟后判倒计时——
-     同秒两者都到点时闹钟先响（g_alm.ringing=1 + 切闹钟屏），cnt_tick 看到闹钟响铃
-     即让倒计时静默结束（不播铃/不切屏）。原顺序 cnt_tick 先会把屏抢成倒计时屏，
-     闹钟被"只在主屏触发"挡住，等回主屏才补响。 */
-  alarm_tick(t);
-  cnt_tick();
+  const int alarm_started = alarm_tick(t);
+  cnt_tick(alarm_started);
+  /* 先处理新到点事件，避免旧闹钟正好满 60 秒时先回主屏再切到倒计时。 */
+  if (g_alm.ringing && (u32)(bftm0_ct - g_alm.ring_start) >= 60000u)
+    Screen_AlarmRingStop();
   /* 倒计时到点响铃：若响铃瞬间正处设置态被拦住未切倒计时屏（cnt_tick 只判定一次），
      设置退出后每秒补切一次到倒计时屏，保证任意键可打断（坑#70 补充，2026-09-05）。 */
   if (g_cnt_ringing && UI_GetScreen() != UI_SCREEN_CNT &&
@@ -1844,7 +1798,7 @@ static void set_exit(void)
   printf("[KEY] 设置退出 RTC=%04u-%02u-%02u %02u:%02u:%02u\r\n",
          (unsigned)g_set_ws.year, (unsigned)g_set_ws.month, (unsigned)g_set_ws.day,
          (unsigned)g_set_ws.hour, (unsigned)g_set_ws.minute, (unsigned)g_set_ws.second);
-  cnt_pending_ring_play();   /* 坑#93：主屏设置退出（不回 goto_main）——设置中倒计时到点待响在此补响（切倒计时屏响铃） */
+  (void)cnt_pending_ring_play();   /* 主屏手动设置退出后，处理延后的倒计时提醒 */
 }
 
 /* ==================== 闹钟屏按键设置系统（2026-09-05，参考时间模式） ====================
@@ -2046,7 +2000,7 @@ void Screen_HandleKey(const KeyEvent *ke)
         return;
       }
       if (UI_GetScreen() == UI_SCREEN_CNT && g_cnt_adj &&
-          (g_cnt_sel == CNT_SEL_MIN || g_cnt_sel == CNT_SEL_SEC))   /* 倒计时分/秒调整：长按=快加快速 */
+          (g_cnt_sel == CNT_SEL_MIN || g_cnt_sel == CNT_SEL_SEC))   /* 倒计时分/秒调整：长按=快加快减 */
       {
         cnt_adjust((int)g_cnt_sel, delta);
         return;
@@ -2509,7 +2463,7 @@ static int bub_line_span(const char *p, int maxw, u32 base, int *pxw)
  * bub_wrap_draw：按可用宽度逐字折行绘制（CJK 按实际字宽累加，超宽换行）。
  * 参数: x,y=左上角（设计坐标）；s=文本；maxw=可用宽度 px；maxlines=最多行数；
  *       base=字号档位（UI_PX_*）；col=字色；lh=行高（px）；center=1 时每行水平居中
- * 返回: 实际画出的行数（>=1；文本空时返回 0）
+ * 返回: 实际绘制的底边（不含此行）；没有绘制字模时返回 0。
  * 说明: center=1 用于闹钟屏的气泡——它是椭圆，左对齐会让首行第一个字压到左上弧线外；
  *       逐行居中后两行左右对称，和设计稿一致（2026-11-19）。
  * ------------------------------------------------------------------ */
@@ -2519,6 +2473,7 @@ static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
   char ch[8];
   const char *p = s;
   int line = 0;
+  int drawn_bottom = 0;
 
   while (*p != 0 && line < maxlines)
   {
@@ -2526,6 +2481,7 @@ static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
     if (*p == '\n') { ++p; ++line; continue; }
     int nb = bub_line_span(p, maxw, base, &linew);
     int cx = center ? (x + (maxw - linew) / 2) : x;
+    const int line_y = y + line * lh;
     int i = 0;
 
     if (nb <= 0) break;
@@ -2534,32 +2490,33 @@ static int bub_wrap_draw(int x, int y, const char *s, int maxw, int maxlines,
       int cl = bub_chlen(p + i), k, cw;
       for (k = 0; k < cl && p[i + k] != 0; k++) ch[k] = p[i + k];
       ch[k] = 0;
-    cw = UI_StrPxWidth(ch, base);
+      cw = UI_StrPxWidth(ch, base);
       if (cw <= 0) cw = 12;
       if (cx + cw > x + maxw) break;              /* 屏幕右缘保护：UI_DrawGlyphRect 不裁切 */
-    UI_DrawStrPxBounded(cx, y + line * lh, ch, base, col, x + maxw);
-    cx += cw;
+      const int height = UI_DrawStrPxBoundedHeight(cx, line_y, ch, base, col, x + maxw);
+      if (height && line_y + height > drawn_bottom) drawn_bottom = line_y + height;
+      cx += cw;
       i += cl;
-  }
+    }
     p += nb;
     if (*p == '\n') ++p;
     line++;
-}
-  return (s[0] != 0) ? line : 0;
+  }
+  return drawn_bottom;
 }
 
 /* ------------------------------------------------------------------
  * bubble_paint：某屏气泡区「先整块恢复背景，再折行重画」。
  * 参数: scr=屏号（UI_SCREEN_*）；s=文案（非空）
- * 说明: 先 UI_DrawGlyphRect(0xFFFF) 只还原背景——旧文案更宽/行数更多时不留残影；
- *       再按该屏坐标/字号/行高折行画（清旧 + 重画是同一个矩形，无闪烁）。
+ * 说明: 字模实际高度可以超过行高。还原背景时覆盖上一条文案的实际底边，
+ *       再按该屏原有坐标、字号和行高折行重画。
  * 国风版（2026-11-19，椭体）：
  *   主屏   ：浅棕字 13px，气泡内区 x117..307 / 墨迹顶 152
  *   倒计时：深棕气泡上的白字 12px，x99..245 / 墨迹顶 196
  *   闹钟   ：深棕字 14px，椭圆气泡内区 x143..231 折两行、行距 18。**逐行居中**
  *   ☆ 自动降档：文案太长（放不进 maxlines 行）时整块降一档字号，宁可小一点也不要截断/顶出气泡。
  * ------------------------------------------------------------------ */
-static void bubble_paint(int scr, const char *s)
+static int bubble_paint(int scr, const char *s, int previous_bottom)
 {
   int x, y, w, lh, maxlines, h, center;
   u32 base, small;
@@ -2570,7 +2527,7 @@ static void bubble_paint(int scr, const char *s)
   if (page_bubble || scr == UI_SCREEN_CNT)
   {
     const CountdownBubbleLayout *bubble = page_bubble ? &page_bubble->layout : CountdownView_Bubble();
-    if (!bubble->lines || !bubble->width) return;
+    if (!bubble->lines || !bubble->width) return 0;
     x = bubble->x; y = bubble->y; w = bubble->width;
     base = (u32)bubble->font << 16; small = (u32)bubble->small_font << 16;
     lh = bubble->line_height; maxlines = bubble->lines;
@@ -2589,15 +2546,16 @@ static void bubble_paint(int scr, const char *s)
     if (lh > 16) lh -= 2;                  /* 小一档行距也收一点，避免第二行贴气泡底边 */
   }
 
-  h = lh * maxlines;                       /* 固定清一整块（覆盖旧文案所有行） */
   if (x < 0) x = 0;
   if (y < 0) y = 0;
+  h = lh * maxlines;
+  if (previous_bottom > y + h) h = previous_bottom - y;
   if (x + w > 320) w = 320 - x;
   if (y + h > 240) h = 240 - y;
-  if (w <= 0 || h <= 0) return;
+  if (w <= 0 || h <= 0) return 0;
 
   UI_DrawGlyphRect(x, 239 - (y + h) + 1, w, h, 0xFFFFu, 0);   /* 只还原背景（清旧文字） */
-  (void)bub_wrap_draw(x, y, s, w, maxlines, base, col, lh, center);
+  return bub_wrap_draw(x, y, s, w, maxlines, base, col, lh, center);
 }
 
 /* ------------------------------------------------------------------
@@ -2610,11 +2568,12 @@ static void bubble_draw(void)
   const char *s;
 
   if (scr == (int)c_bub_scr && g_bub_seq == c_bub_seq && g_ui_bg_ver == c_bub_bg) return;
+  const int previous_bottom = scr == (int)c_bub_scr ? c_bub_bottom : 0;
   c_bub_scr = (u8)scr;
   c_bub_seq = g_bub_seq;
   c_bub_bg  = g_ui_bg_ver;
   s = (g_bub_on && g_bub_text[0] != 0) ? g_bub_text : bub_default(scr);
-  bubble_paint(scr, s);
+  c_bub_bottom = (u16)bubble_paint(scr, s, previous_bottom);
 }
 
 /* 设置气泡文本（NULL/空 -> 恢复该屏默认文案），见 screen.h */

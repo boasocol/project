@@ -1720,10 +1720,10 @@ int UI_StrPxWidth(const char *s, u32 base)
 }
 
 /* 变宽字符串：逐字贴字模（背景保留），x,y 为设计坐标（y=字形顶部基线域顶部） */
-void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int right)
+int UI_DrawStrPxBoundedHeight(int x, int y, const char *s, u32 base, u16 color, int right)
 {
   const char *p = s;
-  int cx = x, h;
+  int cx = x, h, drawn_height = 0;
   while (*p)
   {
     u32 cp = utf8_next(&p);
@@ -1732,9 +1732,18 @@ void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int r
     if (w <= 0 || h <= 0) continue;
     if (cx + w > right) break;
     if (cx >= 0 && cx + w <= 320 && y >= 0 && y + h <= 240)
+    {
       UI_DrawGlyphRect(cx, 239 - (y + h) + 1, w, h, code, color);
+      if (h > drawn_height) drawn_height = h;
+    }
     cx += w;
   }
+  return drawn_height;
+}
+
+void UI_DrawStrPxBounded(int x, int y, const char *s, u32 base, u16 color, int right)
+{
+  (void)UI_DrawStrPxBoundedHeight(x, y, s, base, color, right);
 }
 
 void UI_DrawStrPx(int x, int y, const char *s, u32 base, u16 color)
